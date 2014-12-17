@@ -1,0 +1,9 @@
+apply plugin: 'java'
+
+group = "edu.wpi.frc.wpilib"
+version = "4.0"
+
+dependencies {
+    compile 'junit:junit:4.11'
+    compile project(':networktables:java')
+}

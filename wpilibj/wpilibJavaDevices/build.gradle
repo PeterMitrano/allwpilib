@@ -1,0 +1,26 @@
+apply plugin: 'java'
+
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        // disable the crazy super-strict doclint tool in Java 8
+        //noinspection SpellCheckingInspection
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            excludes = ["edu/wpi/first/wpilibj/image/", "edu/wpi/first/wpilibj/camera/"]
+        }
+        javadoc {
+            excludes = ["edu/wpi/first/wpilibj/image/", "edu/wpi/first/wpilibj/camera/"]
+        }
+    }
+}
+
+dependencies {
+    compile 'junit:junit:4.11'
+    compile project(':networktables:java')
+    compile project(':wpilibj:wpilibJava')
+}

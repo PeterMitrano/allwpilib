@@ -26,7 +26,14 @@ jdk-7u45-linux-arm-vfp-sflt.gz
 *.iml
 .idea/
 
-# Created by http://www.gitignore.io
+# Created by https://www.gitignore.io
+
+### Gradle ###
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
 
 ### Linux ###
 *~
