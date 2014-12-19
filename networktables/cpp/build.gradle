@@ -1,15 +1,21 @@
 apply plugin: 'cpp'
 
+model {
+  buildTypes {
+    debug
+  }
+}
+
 libraries {
-  main {}
+  networkTables {}
 }
 
 sources {
-  main {
+  networkTables {
     cpp {
       source {
         srcDirs = ["lib/share", "lib/Athena"]
-        // includes = "**/*.cpp"
+        includes = ["**/*.cpp"]
       }
       exportedHeaders {
         srcDirs = ["include"]
