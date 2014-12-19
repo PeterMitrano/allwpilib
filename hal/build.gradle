@@ -21,6 +21,7 @@ sources {
 model {
     repositories {
         libs(PrebuiltLibraries) { libs ->
+            // Loops through all .so files in ../ni-libraries and includes them for linking
             def niLibraries = fileTree(dir: "../ni-libraries")
             niLibraries.include '*.so'
             niLibraries.each { niLib ->
