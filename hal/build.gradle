@@ -1,11 +1,11 @@
 apply plugin: 'cpp'
 
 libraries {
-    hal {}
+    HALAthena {}
 }
 
 sources {
-    hal {
+    HALAthena {
         cpp {
             source {
                 srcDirs = ["lib/Athena", "lib/Athena/FRC_FPGA_ChipObject"]

@@ -1,14 +1,19 @@
 apply plugin: 'cpp'
 
 def jdkDownloadSite = "http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html"
+def jdkFolder = "jdk-linux-arm-vfp-sflt"
 def jdkVersion = "jdk1.8.0_06"
-def jdkLocation = System.getProperty("user.home") + File.separator + "jdk-linux-arm-vfp-sflt" + File.separator + jdkVersion
+def jdkLocation = System.getProperty("user.home") + File.separator + jdkFolder + File.separator + jdkVersion
+
+evaluationDependsOn(':wpilibj:wpilibJavaDevices')
 
 libraries {
     wpilibJavaJNI {
         binaries.all {
             tasks.withType(CppCompile) {
+                // Ensure the jni headers are generated and put in the build directory
                 dependsOn project(":wpilibj:wpilibJavaDevices").jniHeaders
+                // Ensure the user has the JDK installed
                 dependsOn verifyJre
             }
         }
@@ -23,10 +28,13 @@ sources {
                 includes = ["**/*.cpp"]
             }
             exportedHeaders {
+                // JDK is included for jni.h. We also need the arm-linux specific headers. This does not need to change
+                // when compiling on Windows
+                // The JNI headers are put into the build/include directory by the jniHeaders task on wpilibJavaDevices
                 def includeLocation = jdkLocation + File.separator + "include"
                 srcDirs = ["include", "build/include", includeLocation, includeLocation + File.separator + "linux"]
             }
-            lib project: ':hal', library: 'hal'
+            lib project: ':hal', library: 'HALAthena', linkage: 'static'
         }
     }
 }
@@ -42,5 +50,19 @@ task verifyJre {
                     System.lineSeparator() + jdkDownloadSite
             throw new GradleException(errorMessage)
         }
+    }
+}
+
+// Creates the jni jar, putting the .so in the correct location. This needs to be named jar, so that the
+// buildWPILibJ project finds the task along with all the other projects
+task jar(type: Jar) {
+    description 'Puts the produced shared library into a jar in the linux/ directory'
+    dependsOn { wpilibJavaJNISharedLibrary }
+    destinationDir = file('build')
+    appendix = 'wpilibJavaJNI'
+    binaries.withType(SharedLibraryBinarySpec) { bin ->
+        println bin
+        from file(bin.sharedLibraryFile)
+        into 'linux-arm'
     }
 }

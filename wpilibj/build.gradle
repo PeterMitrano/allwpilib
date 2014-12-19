@@ -1,0 +1,10 @@
+evaluationDependsOn(':wpilibj:wpilibJavaJNI')
+task buildWPILibJ(type: Jar) {
+    description 'Generates the WPILibJ uberjar, with the wpilibJava, wpilibJavaDevices, and wpilibJavaJNI projects included'
+    dependsOn { subprojects.jar }
+    destinationDir = file("build")
+    subprojects.each { proj ->
+        from { zipTree(proj.jar.archivePath) }
+        appendix = "wpilibJavaFinal"
+    }
+}
