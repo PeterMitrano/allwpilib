@@ -1,0 +1,46 @@
+apply plugin: 'cpp'
+
+def jdkDownloadSite = "http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html"
+def jdkVersion = "jdk1.8.0_06"
+def jdkLocation = System.getProperty("user.home") + File.separator + "jdk-linux-arm-vfp-sflt" + File.separator + jdkVersion
+
+libraries {
+    wpilibJavaJNI {
+        binaries.all {
+            tasks.withType(CppCompile) {
+                dependsOn project(":wpilibj:wpilibJavaDevices").jniHeaders
+                dependsOn verifyJre
+            }
+        }
+    }
+}
+
+sources {
+    wpilibJavaJNI {
+        cpp {
+            source {
+                srcDirs = ["lib"]
+                includes = ["**/*.cpp"]
+            }
+            exportedHeaders {
+                def includeLocation = jdkLocation + File.separator + "include"
+                srcDirs = ["include", "build/include", includeLocation, includeLocation + File.separator + "linux"]
+            }
+            lib project: ':hal', library: 'hal'
+        }
+    }
+}
+
+task verifyJre {
+    description 'Verifies that the ARM JDK is downloaded in the user directory'
+    doLast {
+        def jdkFile = new File(jdkLocation)
+        if (!jdkFile.exists() && !jdkFile.isDirectory()) {
+            def errorMessage = 'The ARM JDK was not found. Please install the JDK in the following location:' +
+                    System.lineSeparator() + jdkLocation +
+                    System.lineSeparator() + 'You can download the JDK here:' +
+                    System.lineSeparator() + jdkDownloadSite
+            throw new GradleException(errorMessage)
+        }
+    }
+}
