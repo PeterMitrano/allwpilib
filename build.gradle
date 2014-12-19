@@ -4,3 +4,30 @@ subprojects {
         mavenCentral()
     }
 }
+
+allprojects {
+    plugins.withType(CppPlugin).whenPluginAdded {
+        model {
+            buildTypes {
+                debug
+            }
+            platforms {
+                arm {
+                    architecture "arm"
+                    operatingSystem "linux"
+                }
+            }
+            toolChains {
+                gcc(Gcc) {
+                    target("arm") {
+                        cppCompiler.executable = "arm-frc-linux-gnueabi-" + cppCompiler.executable
+                        linker.executable = "arm-frc-linux-gnueabi-" + linker.executable
+                    }
+                    target("sparc")
+                }
+            }
+        }
+    }
+}
+
+
