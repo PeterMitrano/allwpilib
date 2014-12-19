@@ -1,0 +1,39 @@
+apply plugin: 'cpp'
+
+libraries {
+    hal {}
+}
+
+sources {
+    hal {
+        cpp {
+            source {
+                srcDirs = ["lib/Athena", "lib/Athena/FRC_FPGA_ChipObject"]
+                includes = ["**/*.cpp"]
+            }
+            exportedHeaders {
+                srcDirs = ["include", "lib/Athena", "lib/Athena/FRC_FPGA_ChipObject"]
+            }
+        }
+    }
+}
+
+model {
+    println "model"
+    repositories {
+        libs(PrebuiltLibraries) { libs ->
+            println " libs"
+            def niLibraries = fileTree(dir: "../ni-libraries")
+            niLibraries.include '*.so'
+            niLibraries.each { niLib ->
+                println "Element is " + niLib.path
+                libs.create(niLib) {
+                    binaries.withType(SharedLibraryBinary) {
+                        println "Adding library " + niLib.path
+                        sharedLibraryFile = niLib.path
+                    }
+                }
+            }
+        }
+    }
+}

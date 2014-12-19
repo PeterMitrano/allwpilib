@@ -2,6 +2,7 @@ subprojects {
     apply plugin: 'eclipse'
     repositories {
         mavenCentral()
+        mavenLocal()
     }
 }
 
@@ -20,10 +21,15 @@ allprojects {
             toolChains {
                 gcc(Gcc) {
                     target("arm") {
-                        cppCompiler.executable = "arm-frc-linux-gnueabi-" + cppCompiler.executable
-                        linker.executable = "arm-frc-linux-gnueabi-" + linker.executable
+                        def compilerPrefix = "arm-frc-linux-gnueabi-"
+                        cppCompiler.executable = compilerPrefix + cppCompiler.executable
+                        linker.executable = compilerPrefix + linker.executable
+                        assembler.executable = compilerPrefix + assembler.executable
+                        cppCompiler.withArguments { args ->
+                            args << "-std=c++1y" << "-Wformat=2" << "-Wall" << "-Wextra" << "-Werror" << "-pedantic"
+                            args << "-Wno-psabi" << "-Wno-unused-parameter" << "-fPIC" << "-O0" << "-g3"
+                        }
                     }
-                    target("sparc")
                 }
             }
         }

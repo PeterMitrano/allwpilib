@@ -1,1 +1,1 @@
-include "networktables:java", "networktables:cpp", "wpilibj:wpilibJava", "wpilibj:wpilibJavaDevices"
+include "networktables:java", "networktables:cpp", "hal", "wpilibj:wpilibJava", "wpilibj:wpilibJavaDevices"

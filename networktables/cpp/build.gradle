@@ -1,6 +1,5 @@
 apply plugin: 'cpp'
 
-
 libraries {
     networkTables {}
 }
