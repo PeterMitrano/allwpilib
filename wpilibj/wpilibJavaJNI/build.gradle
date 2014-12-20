@@ -1,9 +1,13 @@
 apply plugin: 'cpp'
 
-def jdkDownloadSite = "http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html"
-def jdkFolder = "jdk-linux-arm-vfp-sflt"
-def jdkVersion = "jdk1.8.0_06"
+def jdkDownloadSite = 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html'
+def jdkFolder = 'jdk-linux-arm-vfp-sflt'
+def jdkVersion = 'jdk1.8.0_06'
 def jdkLocation = System.getProperty("user.home") + File.separator + jdkFolder + File.separator + jdkVersion
+def niLibraries = fileTree(dir: '../../ni-libraries')
+def jarFile = 'wpilibJavaJNI'
+niLibraries.include '*.so'
+niLibraries.exclude '*libwpi*'
 
 evaluationDependsOn(':wpilibj:wpilibJavaDevices')
 
@@ -12,9 +16,33 @@ libraries {
         binaries.all {
             tasks.withType(CppCompile) {
                 // Ensure the jni headers are generated and put in the build directory
-                dependsOn project(":wpilibj:wpilibJavaDevices").jniHeaders
+                dependsOn project(':wpilibj:wpilibJavaDevices').jniHeaders
                 // Ensure the user has the JDK installed
                 dependsOn verifyJre
+            }
+            linker.args '-L../../ni-libraries'
+            def libPattern = /\/lib(.+).so$/
+            niLibraries.each { niLib ->
+                def nameMatcher = ( niLib.path =~ libPattern)
+                if (nameMatcher[0].size() > 1) {
+                    def name = nameMatcher[0][1]
+                    linker.args '-l' + name
+                }
+            }
+        }
+    }
+}
+
+model {
+    repositories {
+        libs(PrebuiltLibraries) { libs ->
+            // Loops through all .so files in ../ni-libraries and includes them for linking
+            niLibraries.each { niLib ->
+                libs.create(niLib) {
+                    binaries.withType(SharedLibraryBinary) {
+                        sharedLibraryFile = file(niLib.path)
+                    }
+                }
             }
         }
     }
@@ -24,14 +52,14 @@ sources {
     wpilibJavaJNI {
         cpp {
             source {
-                srcDirs = ["lib"]
-                includes = ["**/*.cpp"]
+                srcDirs = ['lib']
+                includes = ['**/*.cpp']
             }
             exportedHeaders {
                 // JDK is included for jni.h. We also need the arm-linux specific headers. This does not need to change
                 // when compiling on Windows
                 // The JNI headers are put into the build/include directory by the jniHeaders task on wpilibJavaDevices
-                def includeLocation = jdkLocation + File.separator + "include"
+                def includeLocation = jdkLocation + File.separator + 'include'
                 srcDirs = ["include", "build/include", includeLocation, includeLocation + File.separator + "linux"]
             }
             lib project: ':hal', library: 'HALAthena', linkage: 'static'
@@ -58,11 +86,14 @@ task verifyJre {
 task jar(type: Jar) {
     description 'Puts the produced shared library into a jar in the linux/ directory'
     dependsOn { wpilibJavaJNISharedLibrary }
-    destinationDir = file('build')
-    appendix = 'wpilibJavaJNI'
+    destinationDir = buildDir
+    appendix = jarFile
     binaries.withType(SharedLibraryBinarySpec) { bin ->
-        println bin
         from file(bin.sharedLibraryFile)
         into 'linux-arm'
     }
+}
+
+clean {
+    delete file(buildDir.path + File.pathSeparator + jarFile + '.jar')
 }

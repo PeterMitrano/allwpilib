@@ -14,20 +14,20 @@ allprojects {
             }
             platforms {
                 arm {
-                    architecture "arm"
-                    operatingSystem "linux"
+                    architecture 'arm'
+                    operatingSystem 'linux'
                 }
             }
             toolChains {
                 gcc(Gcc) {
-                    target("arm") {
-                        def compilerPrefix = "arm-frc-linux-gnueabi-"
+                    target('arm') {
+                        def compilerPrefix = 'arm-frc-linux-gnueabi-'
                         cppCompiler.executable = compilerPrefix + cppCompiler.executable
                         linker.executable = compilerPrefix + linker.executable
                         assembler.executable = compilerPrefix + assembler.executable
                         cppCompiler.withArguments { args ->
-                            args << "-std=c++1y" << "-Wformat=2" << "-Wall" << "-Wextra" << "-Werror" << "-pedantic"
-                            args << "-Wno-psabi" << "-Wno-unused-parameter" << "-fPIC" << "-O0" << "-g3"
+                            args << '-std=c++1y' << '-Wformat=2' << '-Wall' << '-Wextra' << '-Werror' << '-pedantic'
+                            args << '-Wno-psabi' << '-Wno-unused-parameter' << '-fPIC' << '-O0' << '-g3'
                         }
                     }
                 }

@@ -1,7 +1,7 @@
-include "networktables:java",
-        "networktables:cpp",
-        "hal",
-        "wpilibj:wpilibJava",
-        "wpilibj:wpilibJavaDevices",
-        "wpilibj:wpilibJavaJNI",
-        "wpilibj"
+include 'networktables:java',
+        'networktables:cpp',
+        'hal',
+        'wpilibj:wpilibJava',
+        'wpilibj:wpilibJavaDevices',
+        'wpilibj:wpilibJavaJNI',
+        'wpilibj'

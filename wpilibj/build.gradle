@@ -1,10 +1,16 @@
+def jarName = 'wpilibJavaFinal'
 evaluationDependsOn(':wpilibj:wpilibJavaJNI')
 task buildWPILibJ(type: Jar) {
     description 'Generates the WPILibJ uberjar, with the wpilibJava, wpilibJavaDevices, and wpilibJavaJNI projects included'
     dependsOn { subprojects.jar }
-    destinationDir = file("build")
+    destinationDir = buildDir
     subprojects.each { proj ->
         from { zipTree(proj.jar.archivePath) }
-        appendix = "wpilibJavaFinal"
+        appendix = jarName
     }
+}
+
+task clean << {
+    delete buildDir.path + File.separator + jarName + '.jar'
+    delete buildDir.path + File.separator + 'tmp'
 }
