@@ -1,6 +1,10 @@
 def jarName = 'wpilibJavaFinal'
-evaluationDependsOn(':wpilibj:wpilibJavaJNI')
-task wpilibj(type: Jar) {
+def javadocFolder = 'javadoc'
+evaluationDependsOnChildren()
+
+task wpilibj << {}
+
+task wpilibjJar(type: Jar) {
     description 'Generates the WPILibJ uberjar, with the wpilibJava, wpilibJavaDevices, and wpilibJavaJNI projects included'
     dependsOn { subprojects.jar }
     destinationDir = buildDir
@@ -10,7 +14,44 @@ task wpilibj(type: Jar) {
     }
 }
 
+task wpilibjSources(type: Jar) {
+    description 'Generates the wpilibj sources jar'
+    classifier = 'sources'
+    destinationDir = buildDir
+    appendix = jarName
+    def javaProjs = subprojects.findAll { it.plugins.hasPlugin(JavaPlugin) }
+    dependsOn { javaProjs.classes }
+    javaProjs.each { proj ->
+        from { proj.sourceSets.main.allSource }
+    }
+}
+
+task wpilibjJavadoc(type: Jar) {
+    description 'Packages the wpilibj javadoc into the javadoc jar'
+    classifier = 'javadoc'
+    appendix = jarName
+    from { fileTree(buildDir.path + File.separator + javadocFolder) }
+    destinationDir = buildDir
+}
+
+task generateWpilibjJavadoc(type: Javadoc) {
+    description 'Generates the wpilibj javadoc'
+    def javaProjs = subprojects.findAll { it.plugins.hasPlugin(JavaPlugin) }
+    source javaProjs.collect { project -> project.sourceSets.main.allJava }
+    classpath = files(javaProjs.collect { project -> project.sourceSets.main.compileClasspath })
+    options.addStringOption('Xdoclint:none', '-quiet')
+    destinationDir = new File(buildDir, javadocFolder)
+}
+
+wpilibjJavadoc.dependsOn generateWpilibjJavadoc
+wpilibj.dependsOn wpilibjJar
+wpilibj.dependsOn wpilibjJavadoc
+wpilibj.dependsOn wpilibjSources
+
 task clean << {
+    delete buildDir.path + File.separator + jarName + '-sources.jar'
+    delete buildDir.path + File.separator + jarName + '-javadoc.jar'
     delete buildDir.path + File.separator + jarName + '.jar'
+    delete buildDir.path + File.separator + javadocFolder
     delete buildDir.path + File.separator + 'tmp'
 }
