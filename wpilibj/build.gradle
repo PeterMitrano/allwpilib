@@ -1,6 +1,6 @@
 def jarName = 'wpilibJavaFinal'
 evaluationDependsOn(':wpilibj:wpilibJavaJNI')
-task buildWPILibJ(type: Jar) {
+task wpilibj(type: Jar) {
     description 'Generates the WPILibJ uberjar, with the wpilibJava, wpilibJavaDevices, and wpilibJavaJNI projects included'
     dependsOn { subprojects.jar }
     destinationDir = buildDir
