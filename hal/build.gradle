@@ -1,7 +1,11 @@
 apply plugin: 'cpp'
 
 libraries {
-    HALAthena {}
+    HALAthena {
+        tasks.withType(CppCompile) {
+            dependsOn addNiLibraryLinks
+        }
+    }
 }
 
 sources {
