@@ -1,0 +1,31 @@
+apply plugin: 'cpp'
+
+def shared = 'wpilibC++' + File.separator
+def devices = 'wpilibC++Devices' + File.separator
+
+libraries {
+    wpilib_nonshared {
+        binaries.all {
+            tasks.withType(CppCompile) {
+                dependsOn addNiLibraryLinks
+            }
+        }
+    }
+}
+
+sources {
+    wpilib_nonshared {
+        cpp {
+            source {
+                srcDirs = [shared + 'src', devices + 'src']
+                includes = ['**/*.cpp']
+            }
+            exportedHeaders {
+                srcDirs = [shared + 'include', devices + 'include']
+                includes = ['**/*.h']
+            }
+            lib project: ':hal', library: 'HALAthena', linkage: 'static'
+            lib project: ':networktables:cpp', library: 'NetworkTables', linkage: 'static'
+        }
+    }
+}

@@ -1,11 +1,11 @@
 apply plugin: 'cpp'
 
 libraries {
-    networkTables {}
+    NetworkTables {}
 }
 
 sources {
-    networkTables {
+    NetworkTables {
         cpp {
             source {
                 srcDirs = ["lib/share", "lib/Athena"]

@@ -5,4 +5,5 @@ include 'networktables:java',
         'wpilibj:wpilibJavaDevices',
         'wpilibj:wpilibJavaJNI',
         'wpilibj:wpilibJavaSim',
-        'wpilibj'
+        'wpilibj',
+        'wpilibc'
