@@ -64,11 +64,39 @@ subprojects {
                 linker.args << '-L' + niLibraryPath
                 linker.args.addAll(niLibraryArgs)
             }
+            model {
+                repositories {
+                    libs(PrebuiltLibraries) { libs ->
+                        // Loops through all .so files in ../ni-libraries and includes them for linking
+                        niLibraryTree.each { niLib ->
+                            libs.create(niLib) {
+                                binaries.withType(SharedLibraryBinary) {
+                                    sharedLibraryFile = file(niLib.path)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         task addWpiLibraryLinks << {
             binaries.all {
                 linker.args.addAll(wpiLibraryArgs)
+            }
+            model {
+                repositories {
+                    libs(PrebuiltLibraries) { libs ->
+                        // Loops through all .so files in ../ni-libraries and includes them for linking
+                        wpiLibraryTree.each { niLib ->
+                            libs.create(niLib) {
+                                binaries.withType(SharedLibraryBinary) {
+                                    sharedLibraryFile = file(niLib.path)
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

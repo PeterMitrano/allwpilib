@@ -25,21 +25,6 @@ libraries {
     }
 }
 
-model {
-    repositories {
-        libs(PrebuiltLibraries) { libs ->
-            // Loops through all .so files in ../ni-libraries and includes them for linking
-            niLibraries.each { niLib ->
-                libs.create(niLib) {
-                    binaries.withType(SharedLibraryBinary) {
-                        sharedLibraryFile = file(niLib.path)
-                    }
-                }
-            }
-        }
-    }
-}
-
 sources {
     wpilibJavaJNI {
         cpp {
