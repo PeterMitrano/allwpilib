@@ -1,0 +1,15 @@
+apply plugin: 'java'
+
+if (JavaVersion.current().isJava8Compatible()) {
+    tasks.withType(Javadoc) {
+        // disable the crazy super-strict doclint tool in Java 8
+        //noinspection SpellCheckingInspection
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+}
+
+dependencies {
+    compile 'org.gazebosim:JavaGazebo:0.1.0-SNAPSHOT'
+    compile project(':wpilibj:wpilibJava')
+    compile project(':networktables:java')
+}
