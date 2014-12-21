@@ -1,12 +1,37 @@
+def libPattern = /\/lib(.+).so$/
+def niLibraryArgs = []
+def wpiLibraryArgs = []
+def niLibraryPath = file('ni-libraries').absolutePath
+
+def niLibraryTree = fileTree(niLibraryPath)
+niLibraryTree.include '*.so'
+niLibraryTree.exclude '*libwpi*.so'
+
+niLibraryTree.each { lib ->
+    def nameMatcher = (lib.path =~ libPattern)
+    if (nameMatcher[0].size() > 1) {
+        def name = nameMatcher[0][1]
+        niLibraryArgs << '-l' + name
+    }
+}
+
+def wpiLibraryTree = fileTree(niLibraryPath)
+wpiLibraryTree.include '*libwpi*.so'
+
+wpiLibraryTree.each { lib ->
+    def nameMatcher = (lib.path =~ libPattern)
+    if (nameMatcher[0].size() > 1) {
+        def name = nameMatcher[0][1]
+        wpiLibraryArgs << '-l' + name
+    }
+}
+
 subprojects {
     apply plugin: 'eclipse'
     repositories {
         mavenCentral()
         mavenLocal()
     }
-}
-
-allprojects {
     plugins.withType(CppPlugin).whenPluginAdded {
         model {
             buildTypes {
@@ -33,6 +58,21 @@ allprojects {
                 }
             }
         }
+
+        task addNiLibraryLinks << {
+            binaries.all {
+                linker.args << '-L' + niLibraryPath
+                linker.args.addAll(niLibraryArgs)
+            }
+        }
+
+        task addWpiLibraryLinks << {
+            binaries.all {
+                linker.args.addAll(wpiLibraryArgs)
+            }
+        }
+
+        addWpiLibraryLinks.dependsOn addNiLibraryLinks
     }
 }
 

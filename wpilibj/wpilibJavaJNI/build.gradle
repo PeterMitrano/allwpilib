@@ -19,15 +19,7 @@ libraries {
                 dependsOn project(':wpilibj:wpilibJavaDevices').jniHeaders
                 // Ensure the user has the JDK installed
                 dependsOn verifyJre
-            }
-            linker.args '-L../../ni-libraries'
-            def libPattern = /\/lib(.+).so$/
-            niLibraries.each { niLib ->
-                def nameMatcher = ( niLib.path =~ libPattern)
-                if (nameMatcher[0].size() > 1) {
-                    def name = nameMatcher[0][1]
-                    linker.args '-l' + name
-                }
+                dependsOn addNiLibraryLinks
             }
         }
     }
