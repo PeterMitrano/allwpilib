@@ -3,6 +3,7 @@ apply plugin: 'maven'
 
 group = "edu.wpi.frc.wpilib"
 version = "2.0"
+archivesBaseName = 'NetworkTables'
 
 if (JavaVersion.current().isJava8Compatible()) {
     tasks.withType(Javadoc) {

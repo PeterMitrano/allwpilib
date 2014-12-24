@@ -1,4 +1,6 @@
 apply plugin: 'cpp'
+evaluationDependsOn(':networktables:cpp')
+evaluationDependsOn(':hal')
 
 def shared = 'wpilibC++' + File.separator
 def devices = 'wpilibC++Devices' + File.separator
@@ -8,6 +10,9 @@ libraries {
         binaries.all {
             tasks.withType(CppCompile) {
                 dependsOn addNiLibraryLinks
+                dependsOn project(':hal').hALAthenaStaticLibrary
+                dependsOn project(':networktables:cpp').networkTablesStaticLibrary
+                wpilibc.dependsOn wpilib_nonsharedStaticLibrary
             }
         }
     }
@@ -29,3 +34,6 @@ sources {
         }
     }
 }
+
+task wpilibc << {}
+

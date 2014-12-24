@@ -28,9 +28,12 @@ wpiLibraryTree.each { lib ->
 
 subprojects {
     apply plugin: 'eclipse'
+    apply plugin: 'idea'
     repositories {
         mavenCentral()
         mavenLocal()
+    }
+    plugins.withType(JavaPlugin).whenPluginAdded {
     }
     plugins.withType(CppPlugin).whenPluginAdded {
         model {
