@@ -1,4 +1,4 @@
-def libPattern = /\/lib(.+).so$/
+def libPattern = /(\/|\\)lib(.+).so$/
 def niLibraryArgs = []
 def wpiLibraryArgs = []
 def niLibraryPath = file('ni-libraries').absolutePath
@@ -106,5 +106,3 @@ subprojects {
         addWpiLibraryLinks.dependsOn addNiLibraryLinks
     }
 }
-
-
