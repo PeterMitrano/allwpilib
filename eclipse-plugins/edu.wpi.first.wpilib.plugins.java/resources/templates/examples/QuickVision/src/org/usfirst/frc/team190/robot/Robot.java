@@ -1,14 +1,13 @@
 package $package;
 
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.SampleRobot;
-import edu.wpi.first.wpilibj.RobotDrive;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 
 /**
  * This is a demo program showing the use of the CameraServer class.
- * With start automatic capture, there is no opertunity to process the image.
- * Look at the AdvancedVision sample for how to process the image before sending it to the FRC PC Dashboard.
+ * With start automatic capture, there is no opportunity to process the image.
+ * Look at the IntermediateVision sample for how to process the image before sending it to the FRC PC Dashboard.
  */
 public class Robot extends SampleRobot {
 
@@ -17,6 +16,8 @@ public class Robot extends SampleRobot {
     public Robot() {
         server = CameraServer.getInstance();
         server.setQuality(50);
+        //the camera name (ex "cam0") can be found through the roborio web interface
+        server.startAutomaticCapture("cam0");
     }
 
     /**
@@ -25,10 +26,9 @@ public class Robot extends SampleRobot {
      */
     public void operatorControl() {
 
-        server.startAutomaticCapture("cam1");
-
         while (isOperatorControl() && isEnabled()) {
             /** robot code here! **/
+            Timer.delay(0.005);		// wait for a motor update time
         }
     }
 

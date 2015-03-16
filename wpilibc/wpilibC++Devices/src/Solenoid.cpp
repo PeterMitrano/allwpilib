@@ -42,9 +42,9 @@ void Solenoid::InitSolenoid()
 }
 
 /**
- * Constructor.
+ * Constructor using the default PCM ID (0).
  *
- * @param channel The channel on the solenoid module to control (1..8).
+ * @param channel The channel on the PCM to control (0..7).
  */
 Solenoid::Solenoid(uint32_t channel)
 	: SolenoidBase (GetDefaultSolenoidModule())
@@ -56,8 +56,8 @@ Solenoid::Solenoid(uint32_t channel)
 /**
  * Constructor.
  *
- * @param moduleNumber The solenoid module (1 or 2).
- * @param channel The channel on the solenoid module to control (1..8).
+ * @param moduleNumber The CAN ID of the PCM the solenoid is attached to
+ * @param channel The channel on the PCM to control (0..7).
  */
 Solenoid::Solenoid(uint8_t moduleNumber, uint32_t channel)
 	: SolenoidBase (moduleNumber)
@@ -102,7 +102,19 @@ bool Solenoid::Get()
 	uint8_t value = GetAll() & ( 1 << m_channel);
 	return (value != 0);
 }
-
+/**
+ * Check if solenoid is blacklisted.
+ *		If a solenoid is shorted, it is added to the blacklist and
+ *		disabled until power cycle, or until faults are cleared.
+ *		@see ClearAllPCMStickyFaults()
+ *
+ * @return If solenoid is disabled due to short.
+ */
+bool Solenoid::IsBlackListed()
+{
+	int value = GetPCMSolenoidBlackList() & ( 1 << m_channel);
+	return (value != 0);
+}
 
 void Solenoid::ValueChanged(ITable* source, const std::string& key, EntryValue value, bool isNew) {
 	Set(value.b);

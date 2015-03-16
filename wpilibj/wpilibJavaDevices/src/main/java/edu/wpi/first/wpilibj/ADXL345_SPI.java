@@ -13,13 +13,16 @@ import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInst
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
 import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
+import edu.wpi.first.wpilibj.tables.ITable;
 
 /**
  *
  * @author dtjones
  * @author mwills
  */
-public class ADXL345_SPI extends SensorBase implements Accelerometer {
+public class ADXL345_SPI extends SensorBase implements Accelerometer, LiveWindowSendable {
 	private static final int kPowerCtlRegister = 0x2D;
 	private static final int kDataFormatRegister = 0x31;
 	private static final int kDataRegister = 0x32;
@@ -69,12 +72,13 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer {
 	/**
 	 * Constructor.
 	 *
-	 * @param port the Port that the accelerometer is connected to
+	 * @param port The SPI port that the accelerometer is connected to
 	 * @param range The range (+ or -) that the accelerometer will measure.
 	 */
 	public ADXL345_SPI(SPI.Port port, Range range) {
 		m_spi = new SPI(port);
 		init(range);
+		LiveWindow.addSensor("ADXL345_SPI", port.getValue(), this);
 	}
 
 	public void free(){
@@ -170,7 +174,7 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer {
 	/**
 	 * Get the acceleration of all axes in Gs.
 	 *
-	 * @return Acceleration measured on all axes of the ADXL345 in Gs.
+	 * @return An object containing the acceleration measured on each axis of the ADXL345 in Gs.
 	 */
 	public ADXL345_SPI.AllAxes getAccelerations() {
 		ADXL345_SPI.AllAxes data = new ADXL345_SPI.AllAxes();
@@ -190,4 +194,33 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer {
 		}
 		return data;
 	}
+	
+	public String getSmartDashboardType(){
+		return "3AxisAccelerometer";
+	}
+
+	private ITable m_table;
+
+	/** {@inheritDoc} */
+	public void initTable(ITable subtable) {
+		m_table = subtable;
+		updateTable();
+	}
+
+	/** {@inheritDoc} */
+	public void updateTable() {
+		if (m_table != null) {
+			m_table.putNumber("X", getX());
+			m_table.putNumber("Y", getY());
+			m_table.putNumber("Z", getZ());
+		}
+	}
+
+	/** {@inheritDoc} */
+	public ITable getTable(){
+		return m_table;
+	}
+
+	public void startLiveWindowMode() {}
+	public void stopLiveWindowMode() {}	
 }

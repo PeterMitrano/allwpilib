@@ -75,9 +75,9 @@ public class DoubleSolenoid extends SolenoidBase implements LiveWindowSendable {
 
     /**
      * Constructor.
-     *
-     * @param forwardChannel The forward channel on the module to control.
-     * @param reverseChannel The reverse channel on the module to control.
+     * Uses the default PCM ID of 0
+     * @param forwardChannel The forward channel number on the PCM (0..7).
+     * @param reverseChannel The reverse channel number on the PCM (0..7).
      */
     public DoubleSolenoid(final int forwardChannel, final int reverseChannel) {
         super(getDefaultSolenoidModule());
@@ -90,8 +90,8 @@ public class DoubleSolenoid extends SolenoidBase implements LiveWindowSendable {
      * Constructor.
      *
      * @param moduleNumber The module number of the solenoid module to use.
-     * @param forwardChannel The forward channel on the module to control.
-     * @param reverseChannel The reverse channel on the module to control.
+     * @param forwardChannel The forward channel on the module to control (0..7).
+     * @param reverseChannel The reverse channel on the module to control (0..7).
      */
     public DoubleSolenoid(final int moduleNumber, final int forwardChannel, final int reverseChannel) {
         super(moduleNumber);
@@ -111,7 +111,7 @@ public class DoubleSolenoid extends SolenoidBase implements LiveWindowSendable {
     /**
      * Set the value of a solenoid.
      *
-     * @param value Move the solenoid to forward, reverse, or don't move it.
+     * @param value The value to set (Off, Forward, Reverse)
      */
     public void set(final Value value) {
         byte rawValue = 0;
@@ -143,6 +143,30 @@ public class DoubleSolenoid extends SolenoidBase implements LiveWindowSendable {
         if ((value & m_reverseMask) != 0) return Value.kReverse;
         return Value.kOff;
     }
+	/**
+	 * Check if the forward solenoid is blacklisted.
+	 *		If a solenoid is shorted, it is added to the blacklist and
+	 *		disabled until power cycle, or until faults are cleared.
+	 *		@see #clearAllPCMStickyFaults()
+	 *
+	 * @return If solenoid is disabled due to short.
+	 */
+	public boolean isFwdSolenoidBlackListed() {
+		int blackList = getPCMSolenoidBlackList();
+        return ((blackList & m_forwardMask) != 0);
+	}
+	/**
+	 * Check if the reverse solenoid is blacklisted.
+	 *		If a solenoid is shorted, it is added to the blacklist and
+	 *		disabled until power cycle, or until faults are cleared.
+	 *		@see #clearAllPCMStickyFaults()
+	 *
+	 * @return If solenoid is disabled due to short.
+	 */
+	public boolean isRevSolenoidBlackListed() {
+		int blackList = getPCMSolenoidBlackList();
+        return ((blackList & m_reverseMask) != 0);
+	}
 
     /*
      * Live Window code, only does anything if live window is activated.

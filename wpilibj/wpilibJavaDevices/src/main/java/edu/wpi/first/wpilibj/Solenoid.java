@@ -51,9 +51,9 @@ public class Solenoid extends SolenoidBase implements LiveWindowSendable {
     }
 
     /**
-     * Constructor.
+     * Constructor using the default PCM ID (0)
      *
-     * @param channel The channel on the module to control.
+     * @param channel The channel on the PCM to control (0..7).
      */
     public Solenoid(final int channel) {
         super(getDefaultSolenoidModule());
@@ -64,8 +64,8 @@ public class Solenoid extends SolenoidBase implements LiveWindowSendable {
     /**
      * Constructor.
      *
-     * @param moduleNumber The module number of the solenoid module to use.
-     * @param channel The channel on the module to control.
+     * @param moduleNumber The CAN ID of the PCM the solenoid is attached to.
+     * @param channel The channel on the PCM to control (0..7).
      */
     public Solenoid(final int moduleNumber, final int channel) {
         super(moduleNumber);
@@ -101,7 +101,18 @@ public class Solenoid extends SolenoidBase implements LiveWindowSendable {
         int value = getAll() & ( 1 << m_channel);
         return (value != 0);
     }
-
+	/**
+	 * Check if solenoid is blacklisted.
+	 *		If a solenoid is shorted, it is added to the blacklist and
+	 *		disabled until power cycle, or until faults are cleared.
+	 *		@see clearAllPCMStickyFaults()
+	 *
+	 * @return If solenoid is disabled due to short.
+	 */
+	public boolean isBlackListed() {
+		int value = getPCMSolenoidBlackList() & ( 1 << m_channel);
+		return (value != 0);
+	}
     /*
      * Live Window code, only does anything if live window is activated.
      */

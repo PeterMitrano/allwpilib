@@ -7,16 +7,18 @@
 
 package edu.wpi.first.wpilibj;
 
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
-
+import edu.wpi.first.wpilibj.AnalogTriggerOutput.AnalogTriggerType;
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
 import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.AnalogJNI;
 import edu.wpi.first.wpilibj.hal.HALUtil;
 import edu.wpi.first.wpilibj.util.BoundaryException;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
+
 //import com.sun.jna.Pointer;
-import edu.wpi.first.wpilibj.AnalogTriggerOutput.AnalogTriggerType;
 
 /**
  * Class for creating and configuring Analog Triggers
@@ -56,12 +58,14 @@ public class AnalogTrigger {
 	 */
 	protected void initTrigger(final int channel) {
 		ByteBuffer port_pointer = AnalogJNI.getPort((byte) channel);
-		IntBuffer index = ByteBuffer.allocateDirect(4).asIntBuffer();
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
+		ByteBuffer index = ByteBuffer.allocateDirect(4);
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		index.order(ByteOrder.LITTLE_ENDIAN);
+		status.order(ByteOrder.LITTLE_ENDIAN);
 
-		m_port = AnalogJNI.initializeAnalogTrigger(port_pointer, index, status);
-		HALUtil.checkStatus(status);
-		m_index = index.get(0);
+		m_port = AnalogJNI.initializeAnalogTrigger(port_pointer, index.asIntBuffer(), status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
+		m_index = index.asIntBuffer().get(0);
 
 		UsageReporting.report(tResourceType.kResourceType_AnalogTrigger, channel);
 	}
@@ -70,7 +74,7 @@ public class AnalogTrigger {
 	 * Constructor for an analog trigger given a channel number.
 	 *
 	 * @param channel
-	 *            the port to use for the analog trigger
+	 *            the port to use for the analog trigger 0-3 are on-board, 4-7 are on the MXP port
 	 */
 	public AnalogTrigger(final int channel) {
 		initTrigger(channel);
@@ -95,9 +99,10 @@ public class AnalogTrigger {
 	 * Release the resources used by this object
 	 */
 	public void free() {
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
-		AnalogJNI.cleanAnalogTrigger(m_port, status);
-		HALUtil.checkStatus(status);
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
+		AnalogJNI.cleanAnalogTrigger(m_port, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 		m_port = null;
 	}
 
@@ -115,9 +120,10 @@ public class AnalogTrigger {
 		if (lower > upper) {
 			throw new BoundaryException("Lower bound is greater than upper");
 		}
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
-		AnalogJNI.setAnalogTriggerLimitsRaw(m_port, lower, upper, status);
-		HALUtil.checkStatus(status);
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
+		AnalogJNI.setAnalogTriggerLimitsRaw(m_port, lower, upper, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 	}
 
 	/**
@@ -134,10 +140,11 @@ public class AnalogTrigger {
 			throw new BoundaryException(
 					"Lower bound is greater than upper bound");
 		}
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
 		AnalogJNI.setAnalogTriggerLimitsVoltage(m_port, (float) lower,
-				(float) upper, status);
-		HALUtil.checkStatus(status);
+				(float) upper, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 	}
 
 	/**
@@ -149,10 +156,11 @@ public class AnalogTrigger {
 	 *            true to use an averaged value, false otherwise
 	 */
 	public void setAveraged(boolean useAveragedValue) {
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
 		AnalogJNI.setAnalogTriggerAveraged(m_port,
-				(byte) (useAveragedValue ? 1 : 0), status);
-		HALUtil.checkStatus(status);
+				(byte) (useAveragedValue ? 1 : 0), status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 	}
 
 	/**
@@ -165,10 +173,11 @@ public class AnalogTrigger {
 	 *            true to use a filterd value, false otherwise
 	 */
 	public void setFiltered(boolean useFilteredValue) {
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
 		AnalogJNI.setAnalogTriggerFiltered(m_port,
-				(byte) (useFilteredValue ? 1 : 0), status);
-		HALUtil.checkStatus(status);
+				(byte) (useFilteredValue ? 1 : 0), status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 	}
 
 	/**
@@ -188,9 +197,10 @@ public class AnalogTrigger {
 	 * @return The InWindow output of the analog trigger.
 	 */
 	public boolean getInWindow() {
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
-		byte value = AnalogJNI.getAnalogTriggerInWindow(m_port, status);
-		HALUtil.checkStatus(status);
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
+		byte value = AnalogJNI.getAnalogTriggerInWindow(m_port, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 		return value != 0;
 	}
 
@@ -202,9 +212,10 @@ public class AnalogTrigger {
 	 * @return The TriggerState output of the analog trigger.
 	 */
 	public boolean getTriggerState() {
-		IntBuffer status = ByteBuffer.allocateDirect(4).asIntBuffer();
-		byte value = AnalogJNI.getAnalogTriggerTriggerState(m_port, status);
-		HALUtil.checkStatus(status);
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
+		byte value = AnalogJNI.getAnalogTriggerTriggerState(m_port, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
 		return value != 0;
 	}
 
@@ -217,7 +228,7 @@ public class AnalogTrigger {
 	 *            An enum of the type of output object to create.
 	 * @return A pointer to a new AnalogTriggerOutput object.
 	 */
-	AnalogTriggerOutput createOutput(AnalogTriggerType type) {
+	public AnalogTriggerOutput createOutput(AnalogTriggerType type) {
 		return new AnalogTriggerOutput(this, type);
 	}
 }

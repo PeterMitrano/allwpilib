@@ -184,6 +184,7 @@ public class SerialPort {
      * Create an instance of a Serial Port class.
      *
      * @param baudRate The baud rate to configure the serial port.
+	 * @param port The Serial port to use
      * @param dataBits The number of data bits per transfer.  Valid values are between 5 and 8 bits.
      * @param parity Select the type of parity checking to use.
      * @param stopBits The number of stop bits to use as defined by the enum StopBits.
@@ -361,9 +362,9 @@ public class SerialPort {
 	    ByteBuffer status = ByteBuffer.allocateDirect(4);
 		status.order(ByteOrder.LITTLE_ENDIAN);
 		ByteBuffer dataReceivedBuffer = ByteBuffer.allocateDirect(count);
-        SerialPortJNI.serialRead(m_port, dataReceivedBuffer, count, status.asIntBuffer());
+        int gotten = SerialPortJNI.serialRead(m_port, dataReceivedBuffer, count, status.asIntBuffer());
 		HALUtil.checkStatus(status.asIntBuffer());
-		byte[] retVal = new byte[count];
+		byte[] retVal = new byte[gotten];
 		dataReceivedBuffer.get(retVal);
 		return retVal;
     }

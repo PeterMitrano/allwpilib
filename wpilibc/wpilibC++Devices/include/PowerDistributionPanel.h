@@ -9,12 +9,14 @@
 #define __WPILIB_POWER_DISTRIBUTION_PANEL_H__
 
 #include "SensorBase.h"
+#include "LiveWindow/LiveWindowSendable.h"
 
 /**
- * Class for getting voltage, current, and temperature from the CAN PDP
+ * Class for getting voltage, current, temperature, power and energy from the CAN PDP.
+ * The PDP must be at CAN Address 0.
  * @author Thomas Clark
  */
-class PowerDistributionPanel : public SensorBase {
+class PowerDistributionPanel : public SensorBase, public LiveWindowSendable {
 	public:
 		PowerDistributionPanel();
 		
@@ -26,6 +28,16 @@ class PowerDistributionPanel : public SensorBase {
 		double GetTotalEnergy();
 		void ResetTotalEnergy();
 		void ClearStickyFaults();
+
+		void UpdateTable();
+		void StartLiveWindowMode();
+		void StopLiveWindowMode();
+		std::string GetSmartDashboardType();
+		void InitTable(ITable *subTable);
+		ITable * GetTable();
+
+	private:
+		ITable *m_table;
 };
 
 #endif /* __WPILIB_POWER_DISTRIBUTION_PANEL_H__ */

@@ -281,7 +281,7 @@
   </example>
 
     <example>
-        <name>Simple vision program</name>
+        <name>Simple Vision</name>
         <description>The minimal program to acquire images from an attached USB camera on the robot
         and send them to the dashboard.</description>
         <tags>
@@ -298,7 +298,7 @@
     </example>
 
     <example>
-        <name>Intermediate vision</name>
+        <name>Intermediate Vision</name>
         <description>An example program that acquires images from an attached USB camera and adds some
             annotation to the image as you might do for showing operators the result of some image
             recognition, and sends it to the dashboard for display.
@@ -316,6 +316,65 @@
         </files>
     </example>
 
+    <example>
+        <name>Axis Camera Sample</name>
+        <description>An example program that acquires images from an Axis network camera and adds some
+            annotation to the image as you might do for showing operators the result of some image
+            recognition, and sends it to the dashboard for display. This demonstrates the use of the
+            AxisCamera class.
+        </description>
+        <tags>
+            <tag>Vision</tag>
+            <tag>Complete List</tag>
+        </tags>
+        <packages>
+            <package>src</package>
+        </packages>
+        <files>
+            <file source="examples/AxisCameraSample/src/Robot.cpp"
+                  destination="src/Robot.cpp"></file>
+        </files>
+    </example>
+	
+	<example>
+		<name>2015 Vision Color Sample</name>
+        <description>An example program that demonstrates image processing to locate Yellow totes by color.
+			This example uses a file which must be copied over to the roboRIO via FTP to demonstrate processing.
+			To use this code with a camera, you must integrate the code for image acquisition from the appropriate
+			camera example;
+        </description>
+        <tags>
+            <tag>Vision</tag>
+            <tag>Complete List</tag>
+        </tags>
+        <packages>
+            <package>src</package>
+        </packages>
+        <files>
+            <file source="examples/2015Vision/Color_src/Robot.cpp"
+                  destination="src/Robot.cpp"></file>
+		</files>
+    </example>
+
+	<example>
+		<name>2015 Vision Retro Sample</name>
+        <description>An example program that demonstrates image processing to locate Yellow totes by the retroreflective target.
+			This example uses a file which must be copied over to the roboRIO via FTP to demonstrate processing.
+			To use this code with a camera, you must integrate the code for image acquisition from the appropriate
+			camera example;
+        </description>
+        <tags>
+            <tag>Vision</tag>
+            <tag>Complete List</tag>
+        </tags>
+        <packages>
+            <package>src</package>
+        </packages>
+        <files>
+            <file source="examples/2015Vision/Retro_src/Robot.cpp"
+                  destination="src/Robot.cpp"></file>
+		</files>
+    </example>
 
     <example>
     <name>GearsBot</name>

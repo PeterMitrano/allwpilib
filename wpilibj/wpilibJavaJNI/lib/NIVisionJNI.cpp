@@ -10,14 +10,15 @@
 #include <nivision.h>
 #include <NIIMAQdx.h>
 
+static const char* getErrorText(int err);
+
 // throw java exception
 static void throwJavaException(JNIEnv *env) {
     jclass je = env->FindClass("com/ni/vision/VisionException");
     int err = imaqGetLastError();
-    char* err_text = imaqGetErrorText(err);
+    const char* err_text = getErrorText(err);
     char* full_err_msg = (char*)malloc(30+strlen(err_text));
     sprintf(full_err_msg, "imaqError: %d: %s", err, err_text);
-    imaqDispose(err_text);
     env->ThrowNew(je, full_err_msg);
     free(full_err_msg);
 }
@@ -25,11 +26,9 @@ static void throwJavaException(JNIEnv *env) {
 // throw IMAQdx java exception
 static void dxthrowJavaException(JNIEnv *env, IMAQdxError err) {
     jclass je = env->FindClass("com/ni/vision/VisionException");
-    char* err_text = (char*)malloc(200);
-    IMAQdxGetErrorString(err, err_text, 200);
-    char* full_err_msg = (char*)malloc(250);
+    const char* err_text = getErrorText(err);
+    char* full_err_msg = (char*)malloc(30+strlen(err_text));
     sprintf(full_err_msg, "IMAQdxError: %d: %s", err, err_text);
-    free(err_text);
     env->ThrowNew(je, full_err_msg);
     free(full_err_msg);
 }
@@ -40,6 +39,96 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision_imaqDispose(JNIEnv* , jclass 
 {
     imaqDispose((void*)addr);
 }
+
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeU32(IMAQdxSession id, const char* name, uInt32* value)
+{
+    return IMAQdxGetAttribute(id, name, IMAQdxValueTypeU32, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeI64(IMAQdxSession id, const char* name, Int64* value)
+{
+    return IMAQdxGetAttribute(id, name, IMAQdxValueTypeI64, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeF64(IMAQdxSession id, const char* name, float64* value)
+{
+    return IMAQdxGetAttribute(id, name, IMAQdxValueTypeF64, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeString(IMAQdxSession id, const char* name, char value[IMAQDX_MAX_API_STRING_LENGTH])
+{
+    return IMAQdxGetAttribute(id, name, IMAQdxValueTypeString, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeEnum(IMAQdxSession id, const char* name, IMAQdxEnumItem* value)
+{
+    return IMAQdxGetAttribute(id, name, IMAQdxValueTypeEnumItem, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeBool(IMAQdxSession id, const char* name, bool32* value)
+{
+    return IMAQdxGetAttribute(id, name, IMAQdxValueTypeBool, (void*)value);
+}
+
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeMinimumU32(IMAQdxSession id, const char* name, uInt32* value)
+{
+    return IMAQdxGetAttributeMinimum(id, name, IMAQdxValueTypeU32, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeMinimumI64(IMAQdxSession id, const char* name, Int64* value)
+{
+    return IMAQdxGetAttributeMinimum(id, name, IMAQdxValueTypeI64, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeMinimumF64(IMAQdxSession id, const char* name, float64* value)
+{
+    return IMAQdxGetAttributeMinimum(id, name, IMAQdxValueTypeF64, (void*)value);
+}
+
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeMaximumU32(IMAQdxSession id, const char* name, uInt32* value)
+{
+    return IMAQdxGetAttributeMaximum(id, name, IMAQdxValueTypeU32, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeMaximumI64(IMAQdxSession id, const char* name, Int64* value)
+{
+    return IMAQdxGetAttributeMaximum(id, name, IMAQdxValueTypeI64, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeMaximumF64(IMAQdxSession id, const char* name, float64* value)
+{
+    return IMAQdxGetAttributeMaximum(id, name, IMAQdxValueTypeF64, (void*)value);
+}
+
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeIncrementU32(IMAQdxSession id, const char* name, uInt32* value)
+{
+    return IMAQdxGetAttributeIncrement(id, name, IMAQdxValueTypeU32, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeIncrementI64(IMAQdxSession id, const char* name, Int64* value)
+{
+    return IMAQdxGetAttributeIncrement(id, name, IMAQdxValueTypeI64, (void*)value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxGetAttributeIncrementF64(IMAQdxSession id, const char* name, float64* value)
+{
+    return IMAQdxGetAttributeIncrement(id, name, IMAQdxValueTypeF64, (void*)value);
+}
+
+static inline IMAQdxError NI_FUNC IMAQdxSetAttributeU32(IMAQdxSession id, const char* name, uInt32 value)
+{
+    return IMAQdxSetAttribute(id, name, IMAQdxValueTypeU32, value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxSetAttributeI64(IMAQdxSession id, const char* name, Int64 value)
+{
+    return IMAQdxSetAttribute(id, name, IMAQdxValueTypeI64, value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxSetAttributeF64(IMAQdxSession id, const char* name, float64 value)
+{
+    return IMAQdxSetAttribute(id, name, IMAQdxValueTypeF64, value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxSetAttributeString(IMAQdxSession id, const char* name, const char* value)
+{
+    return IMAQdxSetAttribute(id, name, IMAQdxValueTypeString, value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxSetAttributeEnum(IMAQdxSession id, const char* name, const IMAQdxEnumItem* value)
+{
+    return IMAQdxSetAttribute(id, name, IMAQdxValueTypeU32, value->Value);
+}
+static inline IMAQdxError NI_FUNC IMAQdxSetAttributeBool(IMAQdxSession id, const char* name, bool32 value)
+{
+    return IMAQdxSetAttribute(id, name, IMAQdxValueTypeBool, value);
+}
+
 
 /*
  * Opaque Structures
@@ -165,28 +254,26 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqXor(JNIEnv* env, jclass
  * Particle Analysis functions
  */
 
-/* J: int imaqCountParticles(Image image, int connectivity8)
- * JN: int imaqCountParticles(long image, int connectivity8, long numParticles)
+/* J: void imaqCountParticles(Image image, int connectivity8)
+ * JN: void imaqCountParticles(long image, int connectivity8, long numParticles)
  * C: int imaqCountParticles(Image* image, int connectivity8, int* numParticles)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqCountParticles(JNIEnv* env, jclass , jlong image, jint connectivity8, jlong numParticles)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCountParticles(JNIEnv* env, jclass , jlong image, jint connectivity8, jlong numParticles)
 {
     int rv = imaqCountParticles((Image*)image, (int)connectivity8, (int*)numParticles);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
-/* J: double imaqMeasureParticle(Image image, int particleNumber, int calibrated, MeasurementType measurement)
- * JN: double imaqMeasureParticle(long image, int particleNumber, int calibrated, int measurement, long value)
+/* J: void imaqMeasureParticle(Image image, int particleNumber, int calibrated, MeasurementType measurement)
+ * JN: void imaqMeasureParticle(long image, int particleNumber, int calibrated, int measurement, long value)
  * C: int imaqMeasureParticle(Image* image, int particleNumber, int calibrated, MeasurementType measurement, double* value)
  */
 
-JNIEXPORT jdouble JNICALL Java_com_ni_vision_NIVision__1imaqMeasureParticle(JNIEnv* env, jclass , jlong image, jint particleNumber, jint calibrated, jint measurement, jlong value)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqMeasureParticle(JNIEnv* env, jclass , jlong image, jint particleNumber, jint calibrated, jint measurement, jlong value)
 {
     int rv = imaqMeasureParticle((Image*)image, (int)particleNumber, (int)calibrated, (MeasurementType)measurement, (double*)value);
     if (rv == 0) throwJavaException(env);
-    return (jdouble)rv;
 }
 
 /* J: MeasureParticlesReport imaqMeasureParticles(Image image, MeasureParticlesCalibrationMode calibrationMode, MeasurementType[] measurements)
@@ -201,16 +288,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqMeasureParticles(JNIEn
     return (jlong)rv;
 }
 
-/* J: int imaqParticleFilter4(Image dest, Image source, ParticleFilterCriteria2[] criteria, ParticleFilterOptions2 options, ROI roi)
- * JN: int imaqParticleFilter4(long dest, long source, long criteria, int criteriaCount, long options, long roi, long numParticles)
+/* J: void imaqParticleFilter4(Image dest, Image source, ParticleFilterCriteria2[] criteria, ParticleFilterOptions2 options, ROI roi)
+ * JN: void imaqParticleFilter4(long dest, long source, long criteria, int criteriaCount, long options, long roi, long numParticles)
  * C: int imaqParticleFilter4(Image* dest, Image* source, const ParticleFilterCriteria2* criteria, int criteriaCount, const ParticleFilterOptions2* options, const ROI* roi, int* numParticles)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqParticleFilter4(JNIEnv* env, jclass , jlong dest, jlong source, jlong criteria, jint criteriaCount, jlong options, jlong roi, jlong numParticles)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqParticleFilter4(JNIEnv* env, jclass , jlong dest, jlong source, jlong criteria, jint criteriaCount, jlong options, jlong roi, jlong numParticles)
 {
     int rv = imaqParticleFilter4((Image*)dest, (Image*)source, (const ParticleFilterCriteria2*)criteria, (int)criteriaCount, (const ParticleFilterOptions2*)options, (const ROI*)roi, (int*)numParticles);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /*
@@ -262,16 +348,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqFindCircles(JNIEnv* en
     return (jlong)rv;
 }
 
-/* J: int imaqLabel2(Image dest, Image source, int connectivity8)
- * JN: int imaqLabel2(long dest, long source, int connectivity8, long particleCount)
+/* J: void imaqLabel2(Image dest, Image source, int connectivity8)
+ * JN: void imaqLabel2(long dest, long source, int connectivity8, long particleCount)
  * C: int imaqLabel2(Image* dest, Image* source, int connectivity8, int* particleCount)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqLabel2(JNIEnv* env, jclass , jlong dest, jlong source, jint connectivity8, jlong particleCount)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLabel2(JNIEnv* env, jclass , jlong dest, jlong source, jint connectivity8, jlong particleCount)
 {
     int rv = imaqLabel2((Image*)dest, (Image*)source, (int)connectivity8, (int*)particleCount);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /* J: void imaqMorphology(Image dest, Image source, MorphologyMethod method, StructuringElement structuringElement)
@@ -354,132 +439,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSkeleton(JNIEnv* env, j
 /*
  * Acquisition functions
  */
-
-/* J: Image imaqCopyFromRing(long sessionID, Image image, int imageToCopy, Rect rect)
- * JN: long imaqCopyFromRing(long sessionID, long image, int imageToCopy, long imageNumber, long rect)
- * C: Image* imaqCopyFromRing(SESSION_ID sessionID, Image* image, int imageToCopy, int* imageNumber, Rect rect)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCopyFromRing(JNIEnv* env, jclass , jlong sessionID, jlong image, jint imageToCopy, jlong imageNumber, jlong rect)
-{
-    Image* rv = imaqCopyFromRing((SESSION_ID)sessionID, (Image*)image, (int)imageToCopy, (int*)imageNumber, *((Rect*)rect));
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: Image imaqEasyAcquire(String interfaceName)
- * JN: long imaqEasyAcquire(long interfaceName)
- * C: Image* imaqEasyAcquire(const char* interfaceName)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqEasyAcquire(JNIEnv* env, jclass , jlong interfaceName)
-{
-    Image* rv = imaqEasyAcquire((const char*)interfaceName);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: Image imaqExtractFromRing(long sessionID, int imageToExtract)
- * JN: long imaqExtractFromRing(long sessionID, int imageToExtract, long imageNumber)
- * C: Image* imaqExtractFromRing(SESSION_ID sessionID, int imageToExtract, int* imageNumber)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqExtractFromRing(JNIEnv* env, jclass , jlong sessionID, jint imageToExtract, jlong imageNumber)
-{
-    Image* rv = imaqExtractFromRing((SESSION_ID)sessionID, (int)imageToExtract, (int*)imageNumber);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: Image imaqGrab(long sessionID, Image image, int immediate)
- * JN: long imaqGrab(long sessionID, long image, int immediate)
- * C: Image* imaqGrab(SESSION_ID sessionID, Image* image, int immediate)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGrab(JNIEnv* env, jclass , jlong sessionID, jlong image, jint immediate)
-{
-    Image* rv = imaqGrab((SESSION_ID)sessionID, (Image*)image, (int)immediate);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqReleaseImage(long sessionID)
- * JN: void imaqReleaseImage(long sessionID)
- * C: int imaqReleaseImage(SESSION_ID sessionID)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqReleaseImage(JNIEnv* env, jclass , jlong sessionID)
-{
-    int rv = imaqReleaseImage((SESSION_ID)sessionID);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetupGrab(long sessionID, Rect rect)
- * JN: void imaqSetupGrab(long sessionID, long rect)
- * C: int imaqSetupGrab(SESSION_ID sessionID, Rect rect)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetupGrab(JNIEnv* env, jclass , jlong sessionID, jlong rect)
-{
-    int rv = imaqSetupGrab((SESSION_ID)sessionID, *((Rect*)rect));
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetupRing(long sessionID, Image[] images, int skipCount, Rect rect)
- * JN: void imaqSetupRing(long sessionID, long images, int numImages, int skipCount, long rect)
- * C: int imaqSetupRing(SESSION_ID sessionID, Image** images, int numImages, int skipCount, Rect rect)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetupRing(JNIEnv* env, jclass , jlong sessionID, jlong images, jint numImages, jint skipCount, jlong rect)
-{
-    int rv = imaqSetupRing((SESSION_ID)sessionID, (Image**)images, (int)numImages, (int)skipCount, *((Rect*)rect));
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetupSequence(long sessionID, Image[] images, int skipCount, Rect rect)
- * JN: void imaqSetupSequence(long sessionID, long images, int numImages, int skipCount, long rect)
- * C: int imaqSetupSequence(SESSION_ID sessionID, Image** images, int numImages, int skipCount, Rect rect)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetupSequence(JNIEnv* env, jclass , jlong sessionID, jlong images, jint numImages, jint skipCount, jlong rect)
-{
-    int rv = imaqSetupSequence((SESSION_ID)sessionID, (Image**)images, (int)numImages, (int)skipCount, *((Rect*)rect));
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: Image imaqSnap(long sessionID, Image image, Rect rect)
- * JN: long imaqSnap(long sessionID, long image, long rect)
- * C: Image* imaqSnap(SESSION_ID sessionID, Image* image, Rect rect)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqSnap(JNIEnv* env, jclass , jlong sessionID, jlong image, jlong rect)
-{
-    Image* rv = imaqSnap((SESSION_ID)sessionID, (Image*)image, *((Rect*)rect));
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqStartAcquisition(long sessionID)
- * JN: void imaqStartAcquisition(long sessionID)
- * C: int imaqStartAcquisition(SESSION_ID sessionID)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqStartAcquisition(JNIEnv* env, jclass , jlong sessionID)
-{
-    int rv = imaqStartAcquisition((SESSION_ID)sessionID);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqStopAcquisition(long sessionID)
- * JN: void imaqStopAcquisition(long sessionID)
- * C: int imaqStopAcquisition(SESSION_ID sessionID)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqStopAcquisition(JNIEnv* env, jclass , jlong sessionID)
-{
-    int rv = imaqStopAcquisition((SESSION_ID)sessionID);
-    if (rv == 0) throwJavaException(env);
-}
 
 /*
  * Arithmetic functions
@@ -635,16 +594,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqDetectExtremes(JNIEnv*
     return (jlong)rv;
 }
 
-/* J: double imaqDetectRotation(Image referenceImage, Image testImage, PointFloat referenceCenter, PointFloat testCenter, int radius, float precision)
- * JN: double imaqDetectRotation(long referenceImage, long testImage, long referenceCenter, long testCenter, int radius, float precision, long angle)
+/* J: void imaqDetectRotation(Image referenceImage, Image testImage, PointFloat referenceCenter, PointFloat testCenter, int radius, float precision)
+ * JN: void imaqDetectRotation(long referenceImage, long testImage, long referenceCenter, long testCenter, int radius, float precision, long angle)
  * C: int imaqDetectRotation(const Image* referenceImage, const Image* testImage, PointFloat referenceCenter, PointFloat testCenter, int radius, float precision, double* angle)
  */
 
-JNIEXPORT jdouble JNICALL Java_com_ni_vision_NIVision__1imaqDetectRotation(JNIEnv* env, jclass , jlong referenceImage, jlong testImage, jlong referenceCenter, jlong testCenter, jint radius, jfloat precision, jlong angle)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqDetectRotation(JNIEnv* env, jclass , jlong referenceImage, jlong testImage, jlong referenceCenter, jlong testCenter, jint radius, jfloat precision, jlong angle)
 {
     int rv = imaqDetectRotation((const Image*)referenceImage, (const Image*)testImage, *((PointFloat*)referenceCenter), *((PointFloat*)testCenter), (int)radius, (float)precision, (double*)angle);
     if (rv == 0) throwJavaException(env);
-    return (jdouble)rv;
 }
 
 /* J: EdgeReport2 imaqEdgeTool4(Image image, ROI roi, EdgeProcess processType, int reverseDirection)
@@ -693,16 +651,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqFindTransformRects2(JNI
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: float imaqLineGaugeTool2(Image image, Point start, Point end, LineGaugeMethod method, EdgeOptions edgeOptions, CoordinateTransform2 transform)
- * JN: float imaqLineGaugeTool2(long image, long start, long end, int method, long edgeOptions, long transform, long distance)
+/* J: void imaqLineGaugeTool2(Image image, Point start, Point end, LineGaugeMethod method, EdgeOptions edgeOptions, CoordinateTransform2 transform)
+ * JN: void imaqLineGaugeTool2(long image, long start, long end, int method, long edgeOptions, long transform, long distance)
  * C: int imaqLineGaugeTool2(const Image* image, Point start, Point end, LineGaugeMethod method, const EdgeOptions* edgeOptions, const CoordinateTransform2* transform, float* distance)
  */
 
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqLineGaugeTool2(JNIEnv* env, jclass , jlong image, jlong start, jlong end, jint method, jlong edgeOptions, jlong transform, jlong distance)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLineGaugeTool2(JNIEnv* env, jclass , jlong image, jlong start, jlong end, jint method, jlong edgeOptions, jlong transform, jlong distance)
 {
     int rv = imaqLineGaugeTool2((const Image*)image, *((Point*)start), *((Point*)end), (LineGaugeMethod)method, (const EdgeOptions*)edgeOptions, (const CoordinateTransform2*)transform, (float*)distance);
     if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
 }
 
 /* J: RakeReport2 imaqRake2(Image image, ROI roi, RakeDirection direction, EdgeProcess process, int stepSize)
@@ -861,18 +818,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqDrawShapeOnImage(JNIEnv
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: int imaqDrawTextOnImage(Image dest, Image source, Point coord, String text, DrawTextOptions options)
- * JN: int imaqDrawTextOnImage(long dest, long source, long coord, long text, long options, long fontNameUsed)
- * C: int imaqDrawTextOnImage(Image* dest, const Image* source, Point coord, const char* text, const DrawTextOptions* options, int* fontNameUsed)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqDrawTextOnImage(JNIEnv* env, jclass , jlong dest, jlong source, jlong coord, jlong text, jlong options, jlong fontNameUsed)
-{
-    int rv = imaqDrawTextOnImage((Image*)dest, (const Image*)source, *((Point*)coord), (const char*)text, (const DrawTextOptions*)options, (int*)fontNameUsed);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
 /*
  * Interlacing functions
  */
@@ -915,40 +860,37 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqEnumerateCustomKeys(JN
     return (jlong)rv;
 }
 
-/* J: int imaqGetBitDepth(Image image)
- * JN: int imaqGetBitDepth(long image, long bitDepth)
+/* J: void imaqGetBitDepth(Image image)
+ * JN: void imaqGetBitDepth(long image, long bitDepth)
  * C: int imaqGetBitDepth(const Image* image, unsigned int* bitDepth)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetBitDepth(JNIEnv* env, jclass , jlong image, jlong bitDepth)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetBitDepth(JNIEnv* env, jclass , jlong image, jlong bitDepth)
 {
     int rv = imaqGetBitDepth((const Image*)image, (unsigned int*)bitDepth);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
-/* J: int imaqGetBytesPerPixel(Image image)
- * JN: int imaqGetBytesPerPixel(long image, long byteCount)
+/* J: void imaqGetBytesPerPixel(Image image)
+ * JN: void imaqGetBytesPerPixel(long image, long byteCount)
  * C: int imaqGetBytesPerPixel(const Image* image, int* byteCount)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetBytesPerPixel(JNIEnv* env, jclass , jlong image, jlong byteCount)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetBytesPerPixel(JNIEnv* env, jclass , jlong image, jlong byteCount)
 {
     int rv = imaqGetBytesPerPixel((const Image*)image, (int*)byteCount);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
-/* J: ImageInfo imaqGetImageInfo(Image image)
- * JN: long imaqGetImageInfo(long image, long info)
+/* J: void imaqGetImageInfo(Image image)
+ * JN: void imaqGetImageInfo(long image, long info)
  * C: int imaqGetImageInfo(const Image* image, ImageInfo* info)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetImageInfo(JNIEnv* env, jclass , jlong image, jlong info)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetImageInfo(JNIEnv* env, jclass , jlong image, jlong info)
 {
     int rv = imaqGetImageInfo((const Image*)image, (ImageInfo*)info);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqGetImageSize(Image image)
@@ -962,52 +904,48 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetImageSize(JNIEnv* en
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: ImageType imaqGetImageType(Image image)
- * JN: int imaqGetImageType(long image, long type)
+/* J: void imaqGetImageType(Image image)
+ * JN: void imaqGetImageType(long image, long type)
  * C: int imaqGetImageType(const Image* image, ImageType* type)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetImageType(JNIEnv* env, jclass , jlong image, jlong type)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetImageType(JNIEnv* env, jclass , jlong image, jlong type)
 {
     int rv = imaqGetImageType((const Image*)image, (ImageType*)type);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
-/* J: Point imaqGetMaskOffset(Image image)
- * JN: long imaqGetMaskOffset(long image, long offset)
+/* J: void imaqGetMaskOffset(Image image)
+ * JN: void imaqGetMaskOffset(long image, long offset)
  * C: int imaqGetMaskOffset(const Image* image, Point* offset)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetMaskOffset(JNIEnv* env, jclass , jlong image, jlong offset)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetMaskOffset(JNIEnv* env, jclass , jlong image, jlong offset)
 {
     int rv = imaqGetMaskOffset((const Image*)image, (Point*)offset);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
-/* J: int imaqGetVisionInfoTypes(Image image)
- * JN: int imaqGetVisionInfoTypes(long image, long present)
+/* J: void imaqGetVisionInfoTypes(Image image)
+ * JN: void imaqGetVisionInfoTypes(long image, long present)
  * C: int imaqGetVisionInfoTypes(const Image* image, unsigned int* present)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetVisionInfoTypes(JNIEnv* env, jclass , jlong image, jlong present)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetVisionInfoTypes(JNIEnv* env, jclass , jlong image, jlong present)
 {
     int rv = imaqGetVisionInfoTypes((const Image*)image, (unsigned int*)present);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
-/* J: int imaqIsImageEmpty(Image image)
- * JN: int imaqIsImageEmpty(long image, long empty)
+/* J: void imaqIsImageEmpty(Image image)
+ * JN: void imaqIsImageEmpty(long image, long empty)
  * C: int imaqIsImageEmpty(const Image* image, int* empty)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqIsImageEmpty(JNIEnv* env, jclass , jlong image, jlong empty)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqIsImageEmpty(JNIEnv* env, jclass , jlong image, jlong empty)
 {
     int rv = imaqIsImageEmpty((const Image*)image, (int*)empty);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /* J: RawData imaqReadCustomData(Image image, String key)
@@ -1091,85 +1029,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWriteCustomData(JNIEnv*
 /*
  * Display functions
  */
-
-/* J: int imaqAreToolsContextSensitive()
- * JN: int imaqAreToolsContextSensitive(long sensitive)
- * C: int imaqAreToolsContextSensitive(int* sensitive)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqAreToolsContextSensitive(JNIEnv* env, jclass , jlong sensitive)
-{
-    int rv = imaqAreToolsContextSensitive((int*)sensitive);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: void imaqCloseWindow(int windowNumber)
- * JN: void imaqCloseWindow(int windowNumber)
- * C: int imaqCloseWindow(int windowNumber)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCloseWindow(JNIEnv* env, jclass , jint windowNumber)
-{
-    int rv = imaqCloseWindow((int)windowNumber);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqDisplayImage(Image image, int windowNumber, int resize)
- * JN: void imaqDisplayImage(long image, int windowNumber, int resize)
- * C: int imaqDisplayImage(const Image* image, int windowNumber, int resize)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqDisplayImage(JNIEnv* env, jclass , jlong image, jint windowNumber, jint resize)
-{
-    int rv = imaqDisplayImage((const Image*)image, (int)windowNumber, (int)resize);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqGetLastKey()
- * JN: void imaqGetLastKey(long keyPressed, long windowNumber, long modifiers)
- * C: int imaqGetLastKey(char* keyPressed, int* windowNumber, int* modifiers)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetLastKey(JNIEnv* env, jclass , jlong keyPressed, jlong windowNumber, jlong modifiers)
-{
-    int rv = imaqGetLastKey((char*)keyPressed, (int*)windowNumber, (int*)modifiers);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: Point imaqGetWindowCenterPos(int windowNumber)
- * JN: long imaqGetWindowCenterPos(int windowNumber, long centerPosition)
- * C: int imaqGetWindowCenterPos(int windowNumber, Point* centerPosition)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowCenterPos(JNIEnv* env, jclass , jint windowNumber, jlong centerPosition)
-{
-    int rv = imaqGetWindowCenterPos((int)windowNumber, (Point*)centerPosition);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqSetToolContextSensitivity(int sensitive)
- * JN: void imaqSetToolContextSensitivity(int sensitive)
- * C: int imaqSetToolContextSensitivity(int sensitive)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetToolContextSensitivity(JNIEnv* env, jclass , jint sensitive)
-{
-    int rv = imaqSetToolContextSensitivity((int)sensitive);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqShowWindow(int windowNumber, int visible)
- * JN: void imaqShowWindow(int windowNumber, int visible)
- * C: int imaqShowWindow(int windowNumber, int visible)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqShowWindow(JNIEnv* env, jclass , jint windowNumber, jint visible)
-{
-    int rv = imaqShowWindow((int)windowNumber, (int)visible);
-    if (rv == 0) throwJavaException(env);
-}
 
 /*
  * Image Manipulation functions
@@ -1301,41 +1160,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqView3D(JNIEnv* env, jcl
  * File I/O functions
  */
 
-/* J: void imaqCloseAVI(int session)
- * JN: void imaqCloseAVI(int session)
- * C: int imaqCloseAVI(AVISession session)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCloseAVI(JNIEnv* env, jclass , jint session)
-{
-    int rv = imaqCloseAVI((AVISession)session);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqCreateAVI(String fileName, String compressionFilter, int quality, int framesPerSecond, int maxDataSize)
- * JN: int imaqCreateAVI(long fileName, long compressionFilter, int quality, int framesPerSecond, int maxDataSize)
- * C: AVISession imaqCreateAVI(const char* fileName, const char* compressionFilter, int quality, unsigned int framesPerSecond, unsigned int maxDataSize)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqCreateAVI(JNIEnv* env, jclass , jlong fileName, jlong compressionFilter, jint quality, jint framesPerSecond, jint maxDataSize)
-{
-    AVISession rv = imaqCreateAVI((const char*)fileName, (const char*)compressionFilter, (int)quality, (unsigned int)framesPerSecond, (unsigned int)maxDataSize);
-    
-    return (jint)rv;
-}
-
-/* J: AVIInfo imaqGetAVIInfo(int session)
- * JN: long imaqGetAVIInfo(int session, long info)
- * C: int imaqGetAVIInfo(AVISession session, AVIInfo* info)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetAVIInfo(JNIEnv* env, jclass , jint session, jlong info)
-{
-    int rv = imaqGetAVIInfo((AVISession)session, (AVIInfo*)info);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
 /* J: void imaqGetFileInfo(String fileName)
  * JN: void imaqGetFileInfo(long fileName, long calibrationUnit, long calibrationX, long calibrationY, long width, long height, long imageType)
  * C: int imaqGetFileInfo(const char* fileName, CalibrationUnit* calibrationUnit, float* calibrationX, float* calibrationY, int* width, int* height, ImageType* imageType)
@@ -1346,47 +1170,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetFileInfo(JNIEnv* env
     int rv = imaqGetFileInfo((const char*)fileName, (CalibrationUnit*)calibrationUnit, (float*)calibrationX, (float*)calibrationY, (int*)width, (int*)height, (ImageType*)imageType);
     if (rv == 0) throwJavaException(env);
 }
-
-/* J: GetFilterNamesResult imaqGetFilterNames()
- * JN: long imaqGetFilterNames(long numFilters)
- * C: FilterName* imaqGetFilterNames(int* numFilters)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetFilterNames(JNIEnv* env, jclass , jlong numFilters)
-{
-    FilterName* rv = imaqGetFilterNames((int*)numFilters);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: LoadImagePopupResult imaqLoadImagePopup(String defaultDirectory, String defaultFileSpec, String fileTypeList, String title, int allowMultiplePaths, ButtonLabel buttonLabel, int restrictDirectory, int restrictExtension, int allowCancel, int allowMakeDirectory)
- * JN: long imaqLoadImagePopup(long defaultDirectory, long defaultFileSpec, long fileTypeList, long title, int allowMultiplePaths, int buttonLabel, int restrictDirectory, int restrictExtension, int allowCancel, int allowMakeDirectory, long cancelled, long numPaths)
- * C: char** imaqLoadImagePopup(const char* defaultDirectory, const char* defaultFileSpec, const char* fileTypeList, const char* title, int allowMultiplePaths, ButtonLabel buttonLabel, int restrictDirectory, int restrictExtension, int allowCancel, int allowMakeDirectory, int* cancelled, int* numPaths)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqLoadImagePopup(JNIEnv* env, jclass , jlong defaultDirectory, jlong defaultFileSpec, jlong fileTypeList, jlong title, jint allowMultiplePaths, jint buttonLabel, jint restrictDirectory, jint restrictExtension, jint allowCancel, jint allowMakeDirectory, jlong cancelled, jlong numPaths)
-{
-    char** rv = imaqLoadImagePopup((const char*)defaultDirectory, (const char*)defaultFileSpec, (const char*)fileTypeList, (const char*)title, (int)allowMultiplePaths, (ButtonLabel)buttonLabel, (int)restrictDirectory, (int)restrictExtension, (int)allowCancel, (int)allowMakeDirectory, (int*)cancelled, (int*)numPaths);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: int imaqOpenAVI(String fileName)
- * JN: int imaqOpenAVI(long fileName)
- * C: AVISession imaqOpenAVI(const char* fileName)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqOpenAVI(JNIEnv* env, jclass , jlong fileName)
-{
-    AVISession rv = imaqOpenAVI((const char*)fileName);
-    
-    return (jint)rv;
-}
-
-/* J: void imaqReadFile(Image image, String fileName)
- * JN: void imaqReadFile(long image, long fileName, long colorTable, long numColors)
- * C: int imaqReadFile(Image* image, const char* fileName, RGBValue* colorTable, int* numColors)
- */
 
 JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqReadFile(JNIEnv* env, jclass , jlong image, jlong fileName, jlong colorTable, jlong numColors)
 {
@@ -1402,17 +1185,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqReadFile(JNIEnv* env, j
 JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqReadVisionFile(JNIEnv* env, jclass , jlong image, jlong fileName, jlong colorTable, jlong numColors)
 {
     int rv = imaqReadVisionFile((Image*)image, (const char*)fileName, (RGBValue*)colorTable, (int*)numColors);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqWriteAVIFrame(Image image, int session, RawData data, int dataLength)
- * JN: void imaqWriteAVIFrame(long image, int session, long data, int dataLength)
- * C: int imaqWriteAVIFrame(Image* image, AVISession session, const void* data, unsigned int dataLength)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWriteAVIFrame(JNIEnv* env, jclass , jlong image, jint session, jlong data, jint dataLength)
-{
-    int rv = imaqWriteAVIFrame((Image*)image, (AVISession)session, (const void*)data, (unsigned int)dataLength);
     if (rv == 0) throwJavaException(env);
 }
 
@@ -1446,17 +1218,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWriteFile(JNIEnv* env, 
 JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWriteJPEGFile(JNIEnv* env, jclass , jlong image, jlong fileName, jint quality, jlong colorTable)
 {
     int rv = imaqWriteJPEGFile((const Image*)image, (const char*)fileName, (unsigned int)quality, (void*)colorTable);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqWriteJPEG2000File(Image image, String fileName, int lossless, float compressionRatio, JPEG2000FileAdvancedOptions advancedOptions, RGBValue colorTable)
- * JN: void imaqWriteJPEG2000File(long image, long fileName, int lossless, float compressionRatio, long advancedOptions, long colorTable)
- * C: int imaqWriteJPEG2000File(const Image* image, const char* fileName, int lossless, float compressionRatio, const JPEG2000FileAdvancedOptions* advancedOptions, const RGBValue* colorTable)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWriteJPEG2000File(JNIEnv* env, jclass , jlong image, jlong fileName, jint lossless, jfloat compressionRatio, jlong advancedOptions, jlong colorTable)
-{
-    int rv = imaqWriteJPEG2000File((const Image*)image, (const char*)fileName, (int)lossless, (float)compressionRatio, (const JPEG2000FileAdvancedOptions*)advancedOptions, (const RGBValue*)colorTable);
     if (rv == 0) throwJavaException(env);
 }
 
@@ -1497,16 +1258,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWriteVisionFile(JNIEnv*
  * Analytic Geometry functions
  */
 
-/* J: CoordinateSystem imaqBuildCoordinateSystem(Point points, ReferenceMode mode, AxisOrientation orientation)
- * JN: long imaqBuildCoordinateSystem(long points, int mode, int orientation, long system)
+/* J: void imaqBuildCoordinateSystem(Point points, ReferenceMode mode, AxisOrientation orientation)
+ * JN: void imaqBuildCoordinateSystem(long points, int mode, int orientation, long system)
  * C: int imaqBuildCoordinateSystem(const Point* points, ReferenceMode mode, AxisOrientation orientation, CoordinateSystem* system)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqBuildCoordinateSystem(JNIEnv* env, jclass , jlong points, jint mode, jint orientation, jlong system)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqBuildCoordinateSystem(JNIEnv* env, jclass , jlong points, jint mode, jint orientation, jlong system)
 {
     int rv = imaqBuildCoordinateSystem((const Point*)points, (ReferenceMode)mode, (AxisOrientation)orientation, (CoordinateSystem*)system);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: BestCircle2 imaqFitCircle2(PointFloat[] points, FitCircleOptions options)
@@ -1545,16 +1305,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqFitLine(JNIEnv* env, j
     return (jlong)rv;
 }
 
-/* J: float imaqGetAngle(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2)
- * JN: float imaqGetAngle(long start1, long end1, long start2, long end2, long angle)
+/* J: void imaqGetAngle(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2)
+ * JN: void imaqGetAngle(long start1, long end1, long start2, long end2, long angle)
  * C: int imaqGetAngle(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2, float* angle)
  */
 
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqGetAngle(JNIEnv* env, jclass , jlong start1, jlong end1, jlong start2, jlong end2, jlong angle)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetAngle(JNIEnv* env, jclass , jlong start1, jlong end1, jlong start2, jlong end2, jlong angle)
 {
     int rv = imaqGetAngle(*((PointFloat*)start1), *((PointFloat*)end1), *((PointFloat*)start2), *((PointFloat*)end2), (float*)angle);
     if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
 }
 
 /* J: void imaqGetBisectingLine(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2)
@@ -1568,28 +1327,26 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetBisectingLine(JNIEnv
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: float imaqGetDistance(PointFloat point1, PointFloat point2)
- * JN: float imaqGetDistance(long point1, long point2, long distance)
+/* J: void imaqGetDistance(PointFloat point1, PointFloat point2)
+ * JN: void imaqGetDistance(long point1, long point2, long distance)
  * C: int imaqGetDistance(PointFloat point1, PointFloat point2, float* distance)
  */
 
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqGetDistance(JNIEnv* env, jclass , jlong point1, jlong point2, jlong distance)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetDistance(JNIEnv* env, jclass , jlong point1, jlong point2, jlong distance)
 {
     int rv = imaqGetDistance(*((PointFloat*)point1), *((PointFloat*)point2), (float*)distance);
     if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
 }
 
-/* J: PointFloat imaqGetIntersection(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2)
- * JN: long imaqGetIntersection(long start1, long end1, long start2, long end2, long intersection)
+/* J: void imaqGetIntersection(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2)
+ * JN: void imaqGetIntersection(long start1, long end1, long start2, long end2, long intersection)
  * C: int imaqGetIntersection(PointFloat start1, PointFloat end1, PointFloat start2, PointFloat end2, PointFloat* intersection)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetIntersection(JNIEnv* env, jclass , jlong start1, jlong end1, jlong start2, jlong end2, jlong intersection)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetIntersection(JNIEnv* env, jclass , jlong start1, jlong end1, jlong start2, jlong end2, jlong intersection)
 {
     int rv = imaqGetIntersection(*((PointFloat*)start1), *((PointFloat*)end1), *((PointFloat*)start2), *((PointFloat*)end2), (PointFloat*)intersection);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqGetMidLine(PointFloat refLineStart, PointFloat refLineEnd, PointFloat point)
@@ -1638,16 +1395,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetPointsOnLine(JNIEnv
     return (jlong)rv;
 }
 
-/* J: float imaqGetPolygonArea(PointFloat points, int numPoints)
- * JN: float imaqGetPolygonArea(long points, int numPoints, long area)
+/* J: void imaqGetPolygonArea(PointFloat points, int numPoints)
+ * JN: void imaqGetPolygonArea(long points, int numPoints, long area)
  * C: int imaqGetPolygonArea(const PointFloat* points, int numPoints, float* area)
  */
 
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqGetPolygonArea(JNIEnv* env, jclass , jlong points, jint numPoints, jlong area)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetPolygonArea(JNIEnv* env, jclass , jlong points, jint numPoints, jlong area)
 {
     int rv = imaqGetPolygonArea((const PointFloat*)points, (int)numPoints, (float*)area);
     if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
 }
 
 /* J: InterpolatePointsResult imaqInterpolatePoints(Image image, Point[] points, InterpolationMethod method, int subpixel)
@@ -1666,29 +1422,6 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqInterpolatePoints(JNIE
  * Clipboard functions
  */
 
-/* J: RGBValue imaqClipboardToImage(Image dest)
- * JN: long imaqClipboardToImage(long dest, long palette)
- * C: int imaqClipboardToImage(Image* dest, RGBValue* palette)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqClipboardToImage(JNIEnv* env, jclass , jlong dest, jlong palette)
-{
-    int rv = imaqClipboardToImage((Image*)dest, (RGBValue*)palette);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqImageToClipboard(Image image, RGBValue palette)
- * JN: void imaqImageToClipboard(long image, long palette)
- * C: int imaqImageToClipboard(const Image* image, const RGBValue* palette)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqImageToClipboard(JNIEnv* env, jclass , jlong image, jlong palette)
-{
-    int rv = imaqImageToClipboard((const Image*)image, (const RGBValue*)palette);
-    if (rv == 0) throwJavaException(env);
-}
-
 /*
  * Border functions
  */
@@ -1704,16 +1437,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqFillBorder(JNIEnv* env,
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: int imaqGetBorderSize(Image image)
- * JN: int imaqGetBorderSize(long image, long borderSize)
+/* J: void imaqGetBorderSize(Image image)
+ * JN: void imaqGetBorderSize(long image, long borderSize)
  * C: int imaqGetBorderSize(const Image* image, int* borderSize)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetBorderSize(JNIEnv* env, jclass , jlong image, jlong borderSize)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetBorderSize(JNIEnv* env, jclass , jlong image, jlong borderSize)
 {
     int rv = imaqGetBorderSize((const Image*)image, (int*)borderSize);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /* J: void imaqSetBorderSize(Image image, int size)
@@ -1815,16 +1547,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqSupervisedColorSegment
     return (jlong)rv;
 }
 
-/* J: int imaqGetColorSegmentationMaxDistance(ClassifierSession session, ColorSegmenationOptions segmentOptions, SegmentationDistanceLevel distLevel)
- * JN: int imaqGetColorSegmentationMaxDistance(long session, long segmentOptions, int distLevel, long maxDistance)
+/* J: void imaqGetColorSegmentationMaxDistance(ClassifierSession session, ColorSegmenationOptions segmentOptions, SegmentationDistanceLevel distLevel)
+ * JN: void imaqGetColorSegmentationMaxDistance(long session, long segmentOptions, int distLevel, long maxDistance)
  * C: int imaqGetColorSegmentationMaxDistance(ClassifierSession* session, const ColorSegmenationOptions* segmentOptions, SegmentationDistanceLevel distLevel, int* maxDistance)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetColorSegmentationMaxDistance(JNIEnv* env, jclass , jlong session, jlong segmentOptions, jint distLevel, jlong maxDistance)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetColorSegmentationMaxDistance(JNIEnv* env, jclass , jlong session, jlong segmentOptions, jint distLevel, jlong maxDistance)
 {
     int rv = imaqGetColorSegmentationMaxDistance((ClassifierSession*)session, (const ColorSegmenationOptions*)segmentOptions, (SegmentationDistanceLevel)distLevel, (int*)maxDistance);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /*
@@ -1875,458 +1606,39 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqMathTransform(JNIEnv* e
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: int imaqWatershedTransform(Image dest, Image source, int connectivity8)
- * JN: int imaqWatershedTransform(long dest, long source, int connectivity8, long zoneCount)
+/* J: void imaqWatershedTransform(Image dest, Image source, int connectivity8)
+ * JN: void imaqWatershedTransform(long dest, long source, int connectivity8, long zoneCount)
  * C: int imaqWatershedTransform(Image* dest, const Image* source, int connectivity8, int* zoneCount)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqWatershedTransform(JNIEnv* env, jclass , jlong dest, jlong source, jint connectivity8, jlong zoneCount)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWatershedTransform(JNIEnv* env, jclass , jlong dest, jlong source, jint connectivity8, jlong zoneCount)
 {
     int rv = imaqWatershedTransform((Image*)dest, (const Image*)source, (int)connectivity8, (int*)zoneCount);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /*
  * Window Management functions
  */
 
-/* J: int imaqAreScrollbarsVisible(int windowNumber)
- * JN: int imaqAreScrollbarsVisible(int windowNumber, long visible)
- * C: int imaqAreScrollbarsVisible(int windowNumber, int* visible)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqAreScrollbarsVisible(JNIEnv* env, jclass , jint windowNumber, jlong visible)
-{
-    int rv = imaqAreScrollbarsVisible((int)windowNumber, (int*)visible);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: void imaqBringWindowToTop(int windowNumber)
- * JN: void imaqBringWindowToTop(int windowNumber)
- * C: int imaqBringWindowToTop(int windowNumber)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqBringWindowToTop(JNIEnv* env, jclass , jint windowNumber)
-{
-    int rv = imaqBringWindowToTop((int)windowNumber);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqGetMousePos()
- * JN: void imaqGetMousePos(long position, long windowNumber)
- * C: int imaqGetMousePos(Point* position, int* windowNumber)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetMousePos(JNIEnv* env, jclass , jlong position, jlong windowNumber)
-{
-    int rv = imaqGetMousePos((Point*)position, (int*)windowNumber);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqGetWindowBackground(int windowNumber)
- * JN: void imaqGetWindowBackground(int windowNumber, long fillStyle, long hatchStyle, long fillColor, long backgroundColor)
- * C: int imaqGetWindowBackground(int windowNumber, WindowBackgroundFillStyle* fillStyle, WindowBackgroundHatchStyle* hatchStyle, RGBValue* fillColor, RGBValue* backgroundColor)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowBackground(JNIEnv* env, jclass , jint windowNumber, jlong fillStyle, jlong hatchStyle, jlong fillColor, jlong backgroundColor)
-{
-    int rv = imaqGetWindowBackground((int)windowNumber, (WindowBackgroundFillStyle*)fillStyle, (WindowBackgroundHatchStyle*)hatchStyle, (RGBValue*)fillColor, (RGBValue*)backgroundColor);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: DisplayMapping imaqGetWindowDisplayMapping(int windowNum)
- * JN: long imaqGetWindowDisplayMapping(int windowNum, long mapping)
- * C: int imaqGetWindowDisplayMapping(int windowNum, DisplayMapping* mapping)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowDisplayMapping(JNIEnv* env, jclass , jint windowNum, jlong mapping)
-{
-    int rv = imaqGetWindowDisplayMapping((int)windowNum, (DisplayMapping*)mapping);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqGetWindowGrid(int windowNumber)
- * JN: void imaqGetWindowGrid(int windowNumber, long xResolution, long yResolution)
- * C: int imaqGetWindowGrid(int windowNumber, int* xResolution, int* yResolution)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowGrid(JNIEnv* env, jclass , jint windowNumber, jlong xResolution, jlong yResolution)
-{
-    int rv = imaqGetWindowGrid((int)windowNumber, (int*)xResolution, (int*)yResolution);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqGetWindowHandle()
- * JN: int imaqGetWindowHandle(long handle)
- * C: int imaqGetWindowHandle(int* handle)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowHandle(JNIEnv* env, jclass , jlong handle)
-{
-    int rv = imaqGetWindowHandle((int*)handle);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: Point imaqGetWindowPos(int windowNumber)
- * JN: long imaqGetWindowPos(int windowNumber, long position)
- * C: int imaqGetWindowPos(int windowNumber, Point* position)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowPos(JNIEnv* env, jclass , jint windowNumber, jlong position)
-{
-    int rv = imaqGetWindowPos((int)windowNumber, (Point*)position);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqGetWindowSize(int windowNumber)
- * JN: void imaqGetWindowSize(int windowNumber, long width, long height)
- * C: int imaqGetWindowSize(int windowNumber, int* width, int* height)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowSize(JNIEnv* env, jclass , jint windowNumber, jlong width, jlong height)
-{
-    int rv = imaqGetWindowSize((int)windowNumber, (int*)width, (int*)height);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: String imaqGetWindowTitle(int windowNumber)
- * JN: String imaqGetWindowTitle(int windowNumber)
- * C: char* imaqGetWindowTitle(int windowNumber)
- */
-
-JNIEXPORT jstring JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowTitle(JNIEnv* env, jclass , jint windowNumber)
-{
-    char* rv = imaqGetWindowTitle((int)windowNumber);
-    if (!rv) throwJavaException(env);
-    return (jstring)rv;
-}
-
-/* J: void imaqGetWindowZoom2(int windowNumber)
- * JN: void imaqGetWindowZoom2(int windowNumber, long xZoom, long yZoom)
- * C: int imaqGetWindowZoom2(int windowNumber, float* xZoom, float* yZoom)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowZoom2(JNIEnv* env, jclass , jint windowNumber, jlong xZoom, jlong yZoom)
-{
-    int rv = imaqGetWindowZoom2((int)windowNumber, (float*)xZoom, (float*)yZoom);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqIsWindowNonTearing(int windowNumber)
- * JN: int imaqIsWindowNonTearing(int windowNumber, long nonTearing)
- * C: int imaqIsWindowNonTearing(int windowNumber, int* nonTearing)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqIsWindowNonTearing(JNIEnv* env, jclass , jint windowNumber, jlong nonTearing)
-{
-    int rv = imaqIsWindowNonTearing((int)windowNumber, (int*)nonTearing);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: int imaqIsWindowVisible(int windowNumber)
- * JN: int imaqIsWindowVisible(int windowNumber, long visible)
- * C: int imaqIsWindowVisible(int windowNumber, int* visible)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqIsWindowVisible(JNIEnv* env, jclass , jint windowNumber, jlong visible)
-{
-    int rv = imaqIsWindowVisible((int)windowNumber, (int*)visible);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: void imaqMoveWindow(int windowNumber, Point position)
- * JN: void imaqMoveWindow(int windowNumber, long position)
- * C: int imaqMoveWindow(int windowNumber, Point position)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqMoveWindow(JNIEnv* env, jclass , jint windowNumber, jlong position)
-{
-    int rv = imaqMoveWindow((int)windowNumber, *((Point*)position));
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetupWindow(int windowNumber, int configuration)
- * JN: void imaqSetupWindow(int windowNumber, int configuration)
- * C: int imaqSetupWindow(int windowNumber, int configuration)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetupWindow(JNIEnv* env, jclass , jint windowNumber, jint configuration)
-{
-    int rv = imaqSetupWindow((int)windowNumber, (int)configuration);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowBackground(int windowNumber, WindowBackgroundFillStyle fillStyle, WindowBackgroundHatchStyle hatchStyle, RGBValue fillColor, RGBValue backgroundColor)
- * JN: void imaqSetWindowBackground(int windowNumber, int fillStyle, int hatchStyle, long fillColor, long backgroundColor)
- * C: int imaqSetWindowBackground(int windowNumber, WindowBackgroundFillStyle fillStyle, WindowBackgroundHatchStyle hatchStyle, const RGBValue* fillColor, const RGBValue* backgroundColor)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowBackground(JNIEnv* env, jclass , jint windowNumber, jint fillStyle, jint hatchStyle, jlong fillColor, jlong backgroundColor)
-{
-    int rv = imaqSetWindowBackground((int)windowNumber, (WindowBackgroundFillStyle)fillStyle, (WindowBackgroundHatchStyle)hatchStyle, (const RGBValue*)fillColor, (const RGBValue*)backgroundColor);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowDisplayMapping(int windowNumber, DisplayMapping mapping)
- * JN: void imaqSetWindowDisplayMapping(int windowNumber, long mapping)
- * C: int imaqSetWindowDisplayMapping(int windowNumber, const DisplayMapping* mapping)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowDisplayMapping(JNIEnv* env, jclass , jint windowNumber, jlong mapping)
-{
-    int rv = imaqSetWindowDisplayMapping((int)windowNumber, (const DisplayMapping*)mapping);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowGrid(int windowNumber, int xResolution, int yResolution)
- * JN: void imaqSetWindowGrid(int windowNumber, int xResolution, int yResolution)
- * C: int imaqSetWindowGrid(int windowNumber, int xResolution, int yResolution)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowGrid(JNIEnv* env, jclass , jint windowNumber, jint xResolution, jint yResolution)
-{
-    int rv = imaqSetWindowGrid((int)windowNumber, (int)xResolution, (int)yResolution);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowMaxContourCount(int windowNumber, int maxContourCount)
- * JN: void imaqSetWindowMaxContourCount(int windowNumber, int maxContourCount)
- * C: int imaqSetWindowMaxContourCount(int windowNumber, unsigned int maxContourCount)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowMaxContourCount(JNIEnv* env, jclass , jint windowNumber, jint maxContourCount)
-{
-    int rv = imaqSetWindowMaxContourCount((int)windowNumber, (unsigned int)maxContourCount);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowNonTearing(int windowNumber, int nonTearing)
- * JN: void imaqSetWindowNonTearing(int windowNumber, int nonTearing)
- * C: int imaqSetWindowNonTearing(int windowNumber, int nonTearing)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowNonTearing(JNIEnv* env, jclass , jint windowNumber, jint nonTearing)
-{
-    int rv = imaqSetWindowNonTearing((int)windowNumber, (int)nonTearing);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowPalette(int windowNumber, PaletteType type, RGBValue[] palette)
- * JN: void imaqSetWindowPalette(int windowNumber, int type, long palette, int numColors)
- * C: int imaqSetWindowPalette(int windowNumber, PaletteType type, const RGBValue* palette, int numColors)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowPalette(JNIEnv* env, jclass , jint windowNumber, jint type, jlong palette, jint numColors)
-{
-    int rv = imaqSetWindowPalette((int)windowNumber, (PaletteType)type, (const RGBValue*)palette, (int)numColors);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowSize(int windowNumber, int width, int height)
- * JN: void imaqSetWindowSize(int windowNumber, int width, int height)
- * C: int imaqSetWindowSize(int windowNumber, int width, int height)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowSize(JNIEnv* env, jclass , jint windowNumber, jint width, jint height)
-{
-    int rv = imaqSetWindowSize((int)windowNumber, (int)width, (int)height);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowThreadPolicy(WindowThreadPolicy policy)
- * JN: void imaqSetWindowThreadPolicy(int policy)
- * C: int imaqSetWindowThreadPolicy(WindowThreadPolicy policy)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowThreadPolicy(JNIEnv* env, jclass , jint policy)
-{
-    int rv = imaqSetWindowThreadPolicy((WindowThreadPolicy)policy);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowTitle(int windowNumber, String title)
- * JN: void imaqSetWindowTitle(int windowNumber, long title)
- * C: int imaqSetWindowTitle(int windowNumber, const char* title)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowTitle(JNIEnv* env, jclass , jint windowNumber, jlong title)
-{
-    int rv = imaqSetWindowTitle((int)windowNumber, (const char*)title);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetWindowZoomToFit(int windowNumber, int zoomToFit)
- * JN: void imaqSetWindowZoomToFit(int windowNumber, int zoomToFit)
- * C: int imaqSetWindowZoomToFit(int windowNumber, int zoomToFit)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowZoomToFit(JNIEnv* env, jclass , jint windowNumber, jint zoomToFit)
-{
-    int rv = imaqSetWindowZoomToFit((int)windowNumber, (int)zoomToFit);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqShowScrollbars(int windowNumber, int visible)
- * JN: void imaqShowScrollbars(int windowNumber, int visible)
- * C: int imaqShowScrollbars(int windowNumber, int visible)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqShowScrollbars(JNIEnv* env, jclass , jint windowNumber, jint visible)
-{
-    int rv = imaqShowScrollbars((int)windowNumber, (int)visible);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqZoomWindow2(int windowNumber, float xZoom, float yZoom, Point center)
- * JN: void imaqZoomWindow2(int windowNumber, float xZoom, float yZoom, long center)
- * C: int imaqZoomWindow2(int windowNumber, float xZoom, float yZoom, Point center)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqZoomWindow2(JNIEnv* env, jclass , jint windowNumber, jfloat xZoom, jfloat yZoom, jlong center)
-{
-    int rv = imaqZoomWindow2((int)windowNumber, (float)xZoom, (float)yZoom, *((Point*)center));
-    if (rv == 0) throwJavaException(env);
-}
-
 /*
  * Utilities functions
  */
 
-/* J: int imaqMulticoreOptions(MulticoreOperation operation)
- * JN: int imaqMulticoreOptions(int operation, long customNumCores)
+/* J: void imaqMulticoreOptions(MulticoreOperation operation)
+ * JN: void imaqMulticoreOptions(int operation, long customNumCores)
  * C: int imaqMulticoreOptions(MulticoreOperation operation, unsigned int* customNumCores)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqMulticoreOptions(JNIEnv* env, jclass , jint operation, jlong customNumCores)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqMulticoreOptions(JNIEnv* env, jclass , jint operation, jlong customNumCores)
 {
     int rv = imaqMulticoreOptions((MulticoreOperation)operation, (unsigned int*)customNumCores);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /*
  * Tool Window functions
  */
-
-/* J: void imaqCloseToolWindow()
- * JN: void imaqCloseToolWindow()
- * C: int imaqCloseToolWindow( void)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCloseToolWindow(JNIEnv* env, jclass )
-{
-    int rv = imaqCloseToolWindow();
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: Tool imaqGetCurrentTool()
- * JN: int imaqGetCurrentTool(long currentTool)
- * C: int imaqGetCurrentTool(Tool* currentTool)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetCurrentTool(JNIEnv* env, jclass , jlong currentTool)
-{
-    int rv = imaqGetCurrentTool((Tool*)currentTool);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: void imaqGetLastEvent()
- * JN: void imaqGetLastEvent(long type, long windowNumber, long tool, long rect)
- * C: int imaqGetLastEvent(WindowEventType* type, int* windowNumber, Tool* tool, Rect* rect)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetLastEvent(JNIEnv* env, jclass , jlong type, jlong windowNumber, jlong tool, jlong rect)
-{
-    int rv = imaqGetLastEvent((WindowEventType*)type, (int*)windowNumber, (Tool*)tool, (Rect*)rect);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: Point imaqGetToolWindowPos()
- * JN: long imaqGetToolWindowPos(long position)
- * C: int imaqGetToolWindowPos(Point* position)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetToolWindowPos(JNIEnv* env, jclass , jlong position)
-{
-    int rv = imaqGetToolWindowPos((Point*)position);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: int imaqIsToolWindowVisible()
- * JN: int imaqIsToolWindowVisible(long visible)
- * C: int imaqIsToolWindowVisible(int* visible)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqIsToolWindowVisible(JNIEnv* env, jclass , jlong visible)
-{
-    int rv = imaqIsToolWindowVisible((int*)visible);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: void imaqMoveToolWindow(Point position)
- * JN: void imaqMoveToolWindow(long position)
- * C: int imaqMoveToolWindow(Point position)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqMoveToolWindow(JNIEnv* env, jclass , jlong position)
-{
-    int rv = imaqMoveToolWindow(*((Point*)position));
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetCurrentTool(Tool currentTool)
- * JN: void imaqSetCurrentTool(int currentTool)
- * C: int imaqSetCurrentTool(Tool currentTool)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetCurrentTool(JNIEnv* env, jclass , jint currentTool)
-{
-    int rv = imaqSetCurrentTool((Tool)currentTool);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetToolColor(RGBValue color)
- * JN: void imaqSetToolColor(long color)
- * C: int imaqSetToolColor(const RGBValue* color)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetToolColor(JNIEnv* env, jclass , jlong color)
-{
-    int rv = imaqSetToolColor((const RGBValue*)color);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSetupToolWindow(int showCoordinates, int maxIconsPerLine, ToolWindowOptions options)
- * JN: void imaqSetupToolWindow(int showCoordinates, int maxIconsPerLine, long options)
- * C: int imaqSetupToolWindow(int showCoordinates, int maxIconsPerLine, const ToolWindowOptions* options)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetupToolWindow(JNIEnv* env, jclass , jint showCoordinates, jint maxIconsPerLine, jlong options)
-{
-    int rv = imaqSetupToolWindow((int)showCoordinates, (int)maxIconsPerLine, (const ToolWindowOptions*)options);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqShowToolWindow(int visible)
- * JN: void imaqShowToolWindow(int visible)
- * C: int imaqShowToolWindow(int visible)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqShowToolWindow(JNIEnv* env, jclass , jint visible)
-{
-    int rv = imaqShowToolWindow((int)visible);
-    if (rv == 0) throwJavaException(env);
-}
 
 /*
  * Meter functions
@@ -2394,28 +1706,26 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetCalibrationInfo3(JN
     return (jlong)rv;
 }
 
-/* J: float imaqLearnCalibrationGrid(Image image, ROI roi, LearnCalibrationOptions options, GridDescriptor grid, CoordinateSystem system, RangeFloat range)
- * JN: float imaqLearnCalibrationGrid(long image, long roi, long options, long grid, long system, long range, long quality)
+/* J: void imaqLearnCalibrationGrid(Image image, ROI roi, LearnCalibrationOptions options, GridDescriptor grid, CoordinateSystem system, RangeFloat range)
+ * JN: void imaqLearnCalibrationGrid(long image, long roi, long options, long grid, long system, long range, long quality)
  * C: int imaqLearnCalibrationGrid(Image* image, const ROI* roi, const LearnCalibrationOptions* options, const GridDescriptor* grid, const CoordinateSystem* system, const RangeFloat* range, float* quality)
  */
 
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqLearnCalibrationGrid(JNIEnv* env, jclass , jlong image, jlong roi, jlong options, jlong grid, jlong system, jlong range, jlong quality)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnCalibrationGrid(JNIEnv* env, jclass , jlong image, jlong roi, jlong options, jlong grid, jlong system, jlong range, jlong quality)
 {
     int rv = imaqLearnCalibrationGrid((Image*)image, (const ROI*)roi, (const LearnCalibrationOptions*)options, (const GridDescriptor*)grid, (const CoordinateSystem*)system, (const RangeFloat*)range, (float*)quality);
     if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
 }
 
-/* J: float imaqLearnCalibrationPoints(Image image, CalibrationPoints points, ROI roi, LearnCalibrationOptions options, GridDescriptor grid, CoordinateSystem system)
- * JN: float imaqLearnCalibrationPoints(long image, long points, long roi, long options, long grid, long system, long quality)
+/* J: void imaqLearnCalibrationPoints(Image image, CalibrationPoints points, ROI roi, LearnCalibrationOptions options, GridDescriptor grid, CoordinateSystem system)
+ * JN: void imaqLearnCalibrationPoints(long image, long points, long roi, long options, long grid, long system, long quality)
  * C: int imaqLearnCalibrationPoints(Image* image, const CalibrationPoints* points, const ROI* roi, const LearnCalibrationOptions* options, const GridDescriptor* grid, const CoordinateSystem* system, float* quality)
  */
 
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqLearnCalibrationPoints(JNIEnv* env, jclass , jlong image, jlong points, jlong roi, jlong options, jlong grid, jlong system, jlong quality)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnCalibrationPoints(JNIEnv* env, jclass , jlong image, jlong points, jlong roi, jlong options, jlong grid, jlong system, jlong quality)
 {
     int rv = imaqLearnCalibrationPoints((Image*)image, (const CalibrationPoints*)points, (const ROI*)roi, (const LearnCalibrationOptions*)options, (const GridDescriptor*)grid, (const CoordinateSystem*)system, (float*)quality);
     if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
 }
 
 /* J: void imaqSetCoordinateSystem(Image image, CoordinateSystem system)
@@ -2475,16 +1785,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetSimpleCalibration2(J
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: CoordinateSystem imaqCalibrationSetAxisInfo(Image image)
- * JN: long imaqCalibrationSetAxisInfo(long image, long axisInfo)
+/* J: void imaqCalibrationSetAxisInfo(Image image)
+ * JN: void imaqCalibrationSetAxisInfo(long image, long axisInfo)
  * C: int imaqCalibrationSetAxisInfo(Image* image, CoordinateSystem* axisInfo)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCalibrationSetAxisInfo(JNIEnv* env, jclass , jlong image, jlong axisInfo)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCalibrationSetAxisInfo(JNIEnv* env, jclass , jlong image, jlong axisInfo)
 {
     int rv = imaqCalibrationSetAxisInfo((Image*)image, (CoordinateSystem*)axisInfo);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqCalibrationGetThumbnailImage(Image templateImage, Image image, CalibrationThumbnailType type, int index)
@@ -2683,16 +1992,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqTruncate(JNIEnv* env, j
  * Barcode I/O functions
  */
 
-/* J: AIMGradeReport imaqGradeDataMatrixBarcodeAIM(Image image)
- * JN: long imaqGradeDataMatrixBarcodeAIM(long image, long report)
+/* J: void imaqGradeDataMatrixBarcodeAIM(Image image)
+ * JN: void imaqGradeDataMatrixBarcodeAIM(long image, long report)
  * C: int imaqGradeDataMatrixBarcodeAIM(const Image* image, AIMGradeReport* report)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGradeDataMatrixBarcodeAIM(JNIEnv* env, jclass , jlong image, jlong report)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGradeDataMatrixBarcodeAIM(JNIEnv* env, jclass , jlong image, jlong report)
 {
     int rv = imaqGradeDataMatrixBarcodeAIM((const Image*)image, (AIMGradeReport*)report);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: BarcodeInfo imaqReadBarcode(Image image, BarcodeType type, ROI roi, int validate)
@@ -2910,16 +2218,15 @@ JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqGetContour(JNIEnv* env,
     return (jint)rv;
 }
 
-/* J: RGBValue imaqGetContourColor(ROI roi, int id)
- * JN: long imaqGetContourColor(long roi, int id, long contourColor)
+/* J: void imaqGetContourColor(ROI roi, int id)
+ * JN: void imaqGetContourColor(long roi, int id, long contourColor)
  * C: int imaqGetContourColor(const ROI* roi, ContourID id, RGBValue* contourColor)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetContourColor(JNIEnv* env, jclass , jlong roi, jint id, jlong contourColor)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetContourColor(JNIEnv* env, jclass , jlong roi, jint id, jlong contourColor)
 {
     int rv = imaqGetContourColor((const ROI*)roi, (ContourID)id, (RGBValue*)contourColor);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqGetContourCount(ROI roi)
@@ -2982,18 +2289,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetContourColor(JNIEnv*
  * Regions of Interest functions
  */
 
-/* J: int imaqConstructROI2(Image image, ROI roi, Tool initialTool, ToolWindowOptions tools, ConstructROIOptions2 options)
- * JN: int imaqConstructROI2(long image, long roi, int initialTool, long tools, long options, long okay)
- * C: int imaqConstructROI2(const Image* image, ROI* roi, Tool initialTool, const ToolWindowOptions* tools, const ConstructROIOptions2* options, int* okay)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqConstructROI2(JNIEnv* env, jclass , jlong image, jlong roi, jint initialTool, jlong tools, jlong options, jlong okay)
-{
-    int rv = imaqConstructROI2((const Image*)image, (ROI*)roi, (Tool)initialTool, (const ToolWindowOptions*)tools, (const ConstructROIOptions2*)options, (int*)okay);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
 /* J: ROI imaqCreateROI()
  * JN: long imaqCreateROI()
  * C: ROI* imaqCreateROI( void)
@@ -3006,40 +2301,26 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCreateROI(JNIEnv* env,
     return (jlong)rv;
 }
 
-/* J: Rect imaqGetROIBoundingBox(ROI roi)
- * JN: long imaqGetROIBoundingBox(long roi, long boundingBox)
+/* J: void imaqGetROIBoundingBox(ROI roi)
+ * JN: void imaqGetROIBoundingBox(long roi, long boundingBox)
  * C: int imaqGetROIBoundingBox(const ROI* roi, Rect* boundingBox)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetROIBoundingBox(JNIEnv* env, jclass , jlong roi, jlong boundingBox)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetROIBoundingBox(JNIEnv* env, jclass , jlong roi, jlong boundingBox)
 {
     int rv = imaqGetROIBoundingBox((const ROI*)roi, (Rect*)boundingBox);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
-/* J: RGBValue imaqGetROIColor(ROI roi)
- * JN: long imaqGetROIColor(long roi, long roiColor)
+/* J: void imaqGetROIColor(ROI roi)
+ * JN: void imaqGetROIColor(long roi, long roiColor)
  * C: int imaqGetROIColor(const ROI* roi, RGBValue* roiColor)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetROIColor(JNIEnv* env, jclass , jlong roi, jlong roiColor)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetROIColor(JNIEnv* env, jclass , jlong roi, jlong roiColor)
 {
     int rv = imaqGetROIColor((const ROI*)roi, (RGBValue*)roiColor);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: ROI imaqGetWindowROI(int windowNumber)
- * JN: long imaqGetWindowROI(int windowNumber)
- * C: ROI* imaqGetWindowROI(int windowNumber)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowROI(JNIEnv* env, jclass , jint windowNumber)
-{
-    ROI* rv = imaqGetWindowROI((int)windowNumber);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqSetROIColor(ROI roi, RGBValue color)
@@ -3053,31 +2334,19 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetROIColor(JNIEnv* env
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: void imaqSetWindowROI(int windowNumber, ROI roi)
- * JN: void imaqSetWindowROI(int windowNumber, long roi)
- * C: int imaqSetWindowROI(int windowNumber, const ROI* roi)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowROI(JNIEnv* env, jclass , jint windowNumber, jlong roi)
-{
-    int rv = imaqSetWindowROI((int)windowNumber, (const ROI*)roi);
-    if (rv == 0) throwJavaException(env);
-}
-
 /*
  * Image Analysis functions
  */
 
-/* J: PointFloat imaqCentroid(Image image, Image mask)
- * JN: long imaqCentroid(long image, long centroid, long mask)
+/* J: void imaqCentroid(Image image, Image mask)
+ * JN: void imaqCentroid(long image, long centroid, long mask)
  * C: int imaqCentroid(const Image* image, PointFloat* centroid, const Image* mask)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCentroid(JNIEnv* env, jclass , jlong image, jlong centroid, jlong mask)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCentroid(JNIEnv* env, jclass , jlong image, jlong centroid, jlong mask)
 {
     int rv = imaqCentroid((const Image*)image, (PointFloat*)centroid, (const Image*)mask);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: ExtractCurvesResult imaqExtractCurves(Image image, ROI roi, CurveOptions curveOptions)
@@ -3302,16 +2571,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnGeometricPattern(J
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: LearnPatternAdvancedOptions imaqLearnPattern3(Image image, LearningMode learningMode, Image mask)
- * JN: long imaqLearnPattern3(long image, int learningMode, long advancedOptions, long mask)
+/* J: void imaqLearnPattern3(Image image, LearningMode learningMode, Image mask)
+ * JN: void imaqLearnPattern3(long image, int learningMode, long advancedOptions, long mask)
  * C: int imaqLearnPattern3(Image* image, LearningMode learningMode, LearnPatternAdvancedOptions* advancedOptions, const Image* mask)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqLearnPattern3(JNIEnv* env, jclass , jlong image, jint learningMode, jlong advancedOptions, jlong mask)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnPattern3(JNIEnv* env, jclass , jlong image, jint learningMode, jlong advancedOptions, jlong mask)
 {
     int rv = imaqLearnPattern3((Image*)image, (LearningMode)learningMode, (LearnPatternAdvancedOptions*)advancedOptions, (const Image*)mask);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: MatchColorPatternResult imaqMatchColorPattern(Image image, Image pattern, MatchColorPatternOptions options, Rect searchRect)
@@ -3457,16 +2725,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCopyOverlay(JNIEnv* env
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: TransformBehaviors imaqGetOverlayProperties(Image image, String group)
- * JN: long imaqGetOverlayProperties(long image, long group, long transformBehaviors)
+/* J: void imaqGetOverlayProperties(Image image, String group)
+ * JN: void imaqGetOverlayProperties(long image, long group, long transformBehaviors)
  * C: int imaqGetOverlayProperties(const Image* image, const char* group, TransformBehaviors* transformBehaviors)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetOverlayProperties(JNIEnv* env, jclass , jlong image, jlong group, jlong transformBehaviors)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetOverlayProperties(JNIEnv* env, jclass , jlong image, jlong group, jlong transformBehaviors)
 {
     int rv = imaqGetOverlayProperties((const Image*)image, (const char*)group, (TransformBehaviors*)transformBehaviors);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqMergeOverlay(Image dest, Image source, RGBValue[] palette, String group)
@@ -3524,17 +2791,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqOverlayLine(JNIEnv* env
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: void imaqOverlayMetafile(Image image, RawData metafile, Rect rect, String group)
- * JN: void imaqOverlayMetafile(long image, long metafile, long rect, long group)
- * C: int imaqOverlayMetafile(Image* image, const void* metafile, Rect rect, const char* group)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqOverlayMetafile(JNIEnv* env, jclass , jlong image, jlong metafile, jlong rect, jlong group)
-{
-    int rv = imaqOverlayMetafile((Image*)image, (const void*)metafile, *((Rect*)rect), (const char*)group);
-    if (rv == 0) throwJavaException(env);
-}
-
 /* J: void imaqOverlayOpenContour(Image image, Point[] points, RGBValue color, String group)
  * JN: void imaqOverlayOpenContour(long image, long points, int numPoints, long color, long group)
  * C: int imaqOverlayOpenContour(Image* image, const Point* points, int numPoints, const RGBValue* color, const char* group)
@@ -3546,16 +2802,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqOverlayOpenContour(JNIE
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: byte imaqOverlayOval(Image image, Rect boundingBox, RGBValue color, DrawMode drawMode)
- * JN: byte imaqOverlayOval(long image, long boundingBox, long color, int drawMode, long group)
+/* J: void imaqOverlayOval(Image image, Rect boundingBox, RGBValue color, DrawMode drawMode)
+ * JN: void imaqOverlayOval(long image, long boundingBox, long color, int drawMode, long group)
  * C: int imaqOverlayOval(Image* image, Rect boundingBox, const RGBValue* color, DrawMode drawMode, char* group)
  */
 
-JNIEXPORT jbyte JNICALL Java_com_ni_vision_NIVision__1imaqOverlayOval(JNIEnv* env, jclass , jlong image, jlong boundingBox, jlong color, jint drawMode, jlong group)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqOverlayOval(JNIEnv* env, jclass , jlong image, jlong boundingBox, jlong color, jint drawMode, jlong group)
 {
     int rv = imaqOverlayOval((Image*)image, *((Rect*)boundingBox), (const RGBValue*)color, (DrawMode)drawMode, (char*)group);
     if (rv == 0) throwJavaException(env);
-    return (jbyte)rv;
 }
 
 /* J: void imaqOverlayPoints(Image image, Point[] points, RGBValue[] colors, PointSymbol symbol, UserPointSymbol userSymbol, String group)
@@ -3602,16 +2857,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqOverlayText(JNIEnv* env
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: TransformBehaviors imaqSetOverlayProperties(Image image, String group)
- * JN: long imaqSetOverlayProperties(long image, long group, long transformBehaviors)
+/* J: void imaqSetOverlayProperties(Image image, String group)
+ * JN: void imaqSetOverlayProperties(long image, long group, long transformBehaviors)
  * C: int imaqSetOverlayProperties(Image* image, const char* group, TransformBehaviors* transformBehaviors)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqSetOverlayProperties(JNIEnv* env, jclass , jlong image, jlong group, jlong transformBehaviors)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetOverlayProperties(JNIEnv* env, jclass , jlong image, jlong group, jlong transformBehaviors)
 {
     int rv = imaqSetOverlayProperties((Image*)image, (const char*)group, (TransformBehaviors*)transformBehaviors);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /*
@@ -3842,16 +3096,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqContourSetupMatchPatte
     return (jlong)rv;
 }
 
-/* J: SetupMatchPatternData imaqContourAdvancedSetupMatchPattern(GeometricAdvancedSetupDataOption[] geometricOptions)
- * JN: long imaqContourAdvancedSetupMatchPattern(long matchSetupData, long geometricOptions, int numGeometricOptions)
+/* J: void imaqContourAdvancedSetupMatchPattern(GeometricAdvancedSetupDataOption[] geometricOptions)
+ * JN: void imaqContourAdvancedSetupMatchPattern(long matchSetupData, long geometricOptions, int numGeometricOptions)
  * C: int imaqContourAdvancedSetupMatchPattern(SetupMatchPatternData* matchSetupData, GeometricAdvancedSetupDataOption* geometricOptions, unsigned int numGeometricOptions)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqContourAdvancedSetupMatchPattern(JNIEnv* env, jclass , jlong matchSetupData, jlong geometricOptions, jint numGeometricOptions)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqContourAdvancedSetupMatchPattern(JNIEnv* env, jclass , jlong matchSetupData, jlong geometricOptions, jint numGeometricOptions)
 {
     int rv = imaqContourAdvancedSetupMatchPattern((SetupMatchPatternData*)matchSetupData, (GeometricAdvancedSetupDataOption*)geometricOptions, (unsigned int)numGeometricOptions);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: ContourFitLineReport imaqContourFitLine(Image image, double pixelRadius)
@@ -4011,16 +3264,15 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqROIProfile(JNIEnv* env
     return (jlong)rv;
 }
 
-/* J: int imaqROIToMask(Image mask, ROI roi, int fillValue, Image imageModel)
- * JN: int imaqROIToMask(long mask, long roi, int fillValue, long imageModel, long inSpace)
+/* J: void imaqROIToMask(Image mask, ROI roi, int fillValue, Image imageModel)
+ * JN: void imaqROIToMask(long mask, long roi, int fillValue, long imageModel, long inSpace)
  * C: int imaqROIToMask(Image* mask, const ROI* roi, int fillValue, const Image* imageModel, int* inSpace)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqROIToMask(JNIEnv* env, jclass , jlong mask, jlong roi, jint fillValue, jlong imageModel, jlong inSpace)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqROIToMask(JNIEnv* env, jclass , jlong mask, jlong roi, jint fillValue, jlong imageModel, jlong inSpace)
 {
     int rv = imaqROIToMask((Image*)mask, (const ROI*)roi, (int)fillValue, (const Image*)imageModel, (int*)inSpace);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
 /* J: void imaqTransformROI2(ROI roi, CoordinateSystem baseSystem, CoordinateSystem newSystem)
@@ -4147,28 +3399,26 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetClassifierSampleInf
     return (jlong)rv;
 }
 
-/* J: ColorOptions imaqGetColorClassifierOptions(ClassifierSession session)
- * JN: long imaqGetColorClassifierOptions(long session, long options)
+/* J: void imaqGetColorClassifierOptions(ClassifierSession session)
+ * JN: void imaqGetColorClassifierOptions(long session, long options)
  * C: int imaqGetColorClassifierOptions(const ClassifierSession* session, ColorOptions* options)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetColorClassifierOptions(JNIEnv* env, jclass , jlong session, jlong options)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetColorClassifierOptions(JNIEnv* env, jclass , jlong session, jlong options)
 {
     int rv = imaqGetColorClassifierOptions((const ClassifierSession*)session, (ColorOptions*)options);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
-/* J: NearestNeighborOptions imaqGetNearestNeighborOptions(ClassifierSession session)
- * JN: long imaqGetNearestNeighborOptions(long session, long options)
+/* J: void imaqGetNearestNeighborOptions(ClassifierSession session)
+ * JN: void imaqGetNearestNeighborOptions(long session, long options)
  * C: int imaqGetNearestNeighborOptions(const ClassifierSession* session, NearestNeighborOptions* options)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetNearestNeighborOptions(JNIEnv* env, jclass , jlong session, jlong options)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetNearestNeighborOptions(JNIEnv* env, jclass , jlong session, jlong options)
 {
     int rv = imaqGetNearestNeighborOptions((const ClassifierSession*)session, (NearestNeighborOptions*)options);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqGetParticleClassifierOptions2(ClassifierSession session)
@@ -4296,307 +3546,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnGoldenTemplate(JNI
  * Obsolete functions
  */
 
-/* J: void imaqWritePNGFile(Image image, String fileName, int compressionSpeed, RGBValue colorTable)
- * JN: void imaqWritePNGFile(long image, long fileName, int compressionSpeed, long colorTable)
- * C: int imaqWritePNGFile(const Image* image, const char* fileName, unsigned int compressionSpeed, const RGBValue* colorTable)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqWritePNGFile(JNIEnv* env, jclass , jlong image, jlong fileName, jint compressionSpeed, jlong colorTable)
-{
-    int rv = imaqWritePNGFile((const Image*)image, (const char*)fileName, (unsigned int)compressionSpeed, (const RGBValue*)colorTable);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: SelectParticlesResult imaqSelectParticles(Image image, ParticleReport reports, int reportCount, int rejectBorder, SelectParticleCriteria criteria, int criteriaCount)
- * JN: long imaqSelectParticles(long image, long reports, int reportCount, int rejectBorder, long criteria, int criteriaCount, long selectedCount)
- * C: ParticleReport* imaqSelectParticles(const Image* image, const ParticleReport* reports, int reportCount, int rejectBorder, const SelectParticleCriteria* criteria, int criteriaCount, int* selectedCount)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqSelectParticles(JNIEnv* env, jclass , jlong image, jlong reports, jint reportCount, jint rejectBorder, jlong criteria, jint criteriaCount, jlong selectedCount)
-{
-    ParticleReport* rv = imaqSelectParticles((const Image*)image, (const ParticleReport*)reports, (int)reportCount, (int)rejectBorder, (const SelectParticleCriteria*)criteria, (int)criteriaCount, (int*)selectedCount);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqParticleFilter(Image dest, Image source, ParticleFilterCriteria criteria, int criteriaCount, int rejectMatches, int connectivity8)
- * JN: void imaqParticleFilter(long dest, long source, long criteria, int criteriaCount, int rejectMatches, int connectivity8)
- * C: int imaqParticleFilter(Image* dest, Image* source, const ParticleFilterCriteria* criteria, int criteriaCount, int rejectMatches, int connectivity8)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqParticleFilter(JNIEnv* env, jclass , jlong dest, jlong source, jlong criteria, jint criteriaCount, jint rejectMatches, jint connectivity8)
-{
-    int rv = imaqParticleFilter((Image*)dest, (Image*)source, (const ParticleFilterCriteria*)criteria, (int)criteriaCount, (int)rejectMatches, (int)connectivity8);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: GetParticleInfoResult imaqGetParticleInfo(Image image, int connectivity8, ParticleInfoMode mode)
- * JN: long imaqGetParticleInfo(long image, int connectivity8, int mode, long reportCount)
- * C: ParticleReport* imaqGetParticleInfo(Image* image, int connectivity8, ParticleInfoMode mode, int* reportCount)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetParticleInfo(JNIEnv* env, jclass , jlong image, jint connectivity8, jint mode, jlong reportCount)
-{
-    ParticleReport* rv = imaqGetParticleInfo((Image*)image, (int)connectivity8, (ParticleInfoMode)mode, (int*)reportCount);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: float imaqCalcCoeff(Image image, ParticleReport report, MeasurementValue parameter)
- * JN: float imaqCalcCoeff(long image, long report, int parameter, long coefficient)
- * C: int imaqCalcCoeff(const Image* image, const ParticleReport* report, MeasurementValue parameter, float* coefficient)
- */
-
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqCalcCoeff(JNIEnv* env, jclass , jlong image, jlong report, jint parameter, jlong coefficient)
-{
-    int rv = imaqCalcCoeff((const Image*)image, (const ParticleReport*)report, (MeasurementValue)parameter, (float*)coefficient);
-    if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
-}
-
-/* J: EdgeToolResult imaqEdgeTool(Image image, Point points, int numPoints, EdgeOptions options)
- * JN: long imaqEdgeTool(long image, long points, int numPoints, long options, long numEdges)
- * C: EdgeReport* imaqEdgeTool(const Image* image, const Point* points, int numPoints, const EdgeOptions* options, int* numEdges)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqEdgeTool(JNIEnv* env, jclass , jlong image, jlong points, jint numPoints, jlong options, jlong numEdges)
-{
-    EdgeReport* rv = imaqEdgeTool((const Image*)image, (const Point*)points, (int)numPoints, (const EdgeOptions*)options, (int*)numEdges);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: CirclesResult imaqCircles(Image dest, Image source, float minRadius, float maxRadius)
- * JN: long imaqCircles(long dest, long source, float minRadius, float maxRadius, long numCircles)
- * C: CircleReport* imaqCircles(Image* dest, const Image* source, float minRadius, float maxRadius, int* numCircles)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCircles(JNIEnv* env, jclass , jlong dest, jlong source, jfloat minRadius, jfloat maxRadius, jlong numCircles)
-{
-    CircleReport* rv = imaqCircles((Image*)dest, (const Image*)source, (float)minRadius, (float)maxRadius, (int*)numCircles);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: int imaqLabel(Image dest, Image source, int connectivity8)
- * JN: int imaqLabel(long dest, long source, int connectivity8, long particleCount)
- * C: int imaqLabel(Image* dest, Image* source, int connectivity8, int* particleCount)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqLabel(JNIEnv* env, jclass , jlong dest, jlong source, jint connectivity8, jlong particleCount)
-{
-    int rv = imaqLabel((Image*)dest, (Image*)source, (int)connectivity8, (int*)particleCount);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: BestEllipse imaqFitEllipse(PointFloat[] points)
- * JN: long imaqFitEllipse(long points, int numPoints, long ellipse)
- * C: int imaqFitEllipse(const PointFloat* points, int numPoints, BestEllipse* ellipse)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqFitEllipse(JNIEnv* env, jclass , jlong points, jint numPoints, jlong ellipse)
-{
-    int rv = imaqFitEllipse((const PointFloat*)points, (int)numPoints, (BestEllipse*)ellipse);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: BestCircle imaqFitCircle(PointFloat[] points)
- * JN: long imaqFitCircle(long points, int numPoints, long circle)
- * C: int imaqFitCircle(const PointFloat* points, int numPoints, BestCircle* circle)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqFitCircle(JNIEnv* env, jclass , jlong points, jint numPoints, jlong circle)
-{
-    int rv = imaqFitCircle((const PointFloat*)points, (int)numPoints, (BestCircle*)circle);
-    if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: MatchPatternResult imaqMatchPattern(Image image, Image pattern, MatchPatternOptions options, Rect searchRect)
- * JN: long imaqMatchPattern(long image, long pattern, long options, long searchRect, long numMatches)
- * C: PatternMatch* imaqMatchPattern(const Image* image, Image* pattern, const MatchPatternOptions* options, Rect searchRect, int* numMatches)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqMatchPattern(JNIEnv* env, jclass , jlong image, jlong pattern, jlong options, jlong searchRect, jlong numMatches)
-{
-    PatternMatch* rv = imaqMatchPattern((const Image*)image, (Image*)pattern, (const MatchPatternOptions*)options, *((Rect*)searchRect), (int*)numMatches);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqConvex(Image dest, Image source)
- * JN: void imaqConvex(long dest, long source)
- * C: int imaqConvex(Image* dest, const Image* source)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqConvex(JNIEnv* env, jclass , jlong dest, jlong source)
-{
-    int rv = imaqConvex((Image*)dest, (const Image*)source);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqIsVisionInfoPresent(Image image, VisionInfoType type)
- * JN: int imaqIsVisionInfoPresent(long image, int type, long present)
- * C: int imaqIsVisionInfoPresent(const Image* image, VisionInfoType type, int* present)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqIsVisionInfoPresent(JNIEnv* env, jclass , jlong image, jint type, jlong present)
-{
-    int rv = imaqIsVisionInfoPresent((const Image*)image, (VisionInfoType)type, (int*)present);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: float imaqLineGaugeTool(Image image, Point start, Point end, LineGaugeMethod method, EdgeOptions edgeOptions, CoordinateTransform reference)
- * JN: float imaqLineGaugeTool(long image, long start, long end, int method, long edgeOptions, long reference, long distance)
- * C: int imaqLineGaugeTool(const Image* image, Point start, Point end, LineGaugeMethod method, const EdgeOptions* edgeOptions, const CoordinateTransform* reference, float* distance)
- */
-
-JNIEXPORT jfloat JNICALL Java_com_ni_vision_NIVision__1imaqLineGaugeTool(JNIEnv* env, jclass , jlong image, jlong start, jlong end, jint method, jlong edgeOptions, jlong reference, jlong distance)
-{
-    int rv = imaqLineGaugeTool((const Image*)image, *((Point*)start), *((Point*)end), (LineGaugeMethod)method, (const EdgeOptions*)edgeOptions, (const CoordinateTransform*)reference, (float*)distance);
-    if (rv == 0) throwJavaException(env);
-    return (jfloat)rv;
-}
-
-/* J: void imaqBestCircle(PointFloat[] points)
- * JN: void imaqBestCircle(long points, int numPoints, long center, long radius)
- * C: int imaqBestCircle(const PointFloat* points, int numPoints, PointFloat* center, double* radius)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqBestCircle(JNIEnv* env, jclass , jlong points, jint numPoints, jlong center, jlong radius)
-{
-    int rv = imaqBestCircle((const PointFloat*)points, (int)numPoints, (PointFloat*)center, (double*)radius);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqSavePattern(Image pattern, String fileName)
- * JN: void imaqSavePattern(long pattern, long fileName)
- * C: int imaqSavePattern(const Image* pattern, const char* fileName)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSavePattern(JNIEnv* env, jclass , jlong pattern, jlong fileName)
-{
-    int rv = imaqSavePattern((const Image*)pattern, (const char*)fileName);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqLoadPattern(Image pattern, String fileName)
- * JN: void imaqLoadPattern(long pattern, long fileName)
- * C: int imaqLoadPattern(Image* pattern, const char* fileName)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLoadPattern(JNIEnv* env, jclass , jlong pattern, jlong fileName)
-{
-    int rv = imaqLoadPattern((Image*)pattern, (const char*)fileName);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqTransformROI(ROI roi, Point originStart, float angleStart, Point originFinal, float angleFinal)
- * JN: void imaqTransformROI(long roi, long originStart, float angleStart, long originFinal, float angleFinal)
- * C: int imaqTransformROI(ROI* roi, Point originStart, float angleStart, Point originFinal, float angleFinal)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqTransformROI(JNIEnv* env, jclass , jlong roi, jlong originStart, jfloat angleStart, jlong originFinal, jfloat angleFinal)
-{
-    int rv = imaqTransformROI((ROI*)roi, *((Point*)originStart), (float)angleStart, *((Point*)originFinal), (float)angleFinal);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqCoordinateReference(Point points, ReferenceMode mode)
- * JN: void imaqCoordinateReference(long points, int mode, long origin, long angle)
- * C: int imaqCoordinateReference(const Point* points, ReferenceMode mode, Point* origin, float* angle)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCoordinateReference(JNIEnv* env, jclass , jlong points, jint mode, jlong origin, jlong angle)
-{
-    int rv = imaqCoordinateReference((const Point*)points, (ReferenceMode)mode, (Point*)origin, (float*)angle);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: ContourInfo imaqGetContourInfo(ROI roi, int id)
- * JN: long imaqGetContourInfo(long roi, int id)
- * C: ContourInfo* imaqGetContourInfo(const ROI* roi, ContourID id)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetContourInfo(JNIEnv* env, jclass , jlong roi, jint id)
-{
-    ContourInfo* rv = imaqGetContourInfo((const ROI*)roi, (ContourID)id);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqSetWindowOverlay(int windowNumber, Overlay overlay)
- * JN: void imaqSetWindowOverlay(int windowNumber, long overlay)
- * C: int imaqSetWindowOverlay(int windowNumber, const Overlay* overlay)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetWindowOverlay(JNIEnv* env, jclass , jint windowNumber, jlong overlay)
-{
-    int rv = imaqSetWindowOverlay((int)windowNumber, (const Overlay*)overlay);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: Overlay imaqCreateOverlayFromROI(ROI roi)
- * JN: long imaqCreateOverlayFromROI(long roi)
- * C: Overlay* imaqCreateOverlayFromROI(const ROI* roi)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCreateOverlayFromROI(JNIEnv* env, jclass , jlong roi)
-{
-    Overlay* rv = imaqCreateOverlayFromROI((const ROI*)roi);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: Overlay imaqCreateOverlayFromMetafile(RawData metafile)
- * JN: long imaqCreateOverlayFromMetafile(long metafile)
- * C: Overlay* imaqCreateOverlayFromMetafile(const void* metafile)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqCreateOverlayFromMetafile(JNIEnv* env, jclass , jlong metafile)
-{
-    Overlay* rv = imaqCreateOverlayFromMetafile((const void*)metafile);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: void imaqSetCalibrationInfo(Image image, CalibrationUnit unit, float xDistance, float yDistance)
- * JN: void imaqSetCalibrationInfo(long image, int unit, float xDistance, float yDistance)
- * C: int imaqSetCalibrationInfo(Image* image, CalibrationUnit unit, float xDistance, float yDistance)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetCalibrationInfo(JNIEnv* env, jclass , jlong image, jint unit, jfloat xDistance, jfloat yDistance)
-{
-    int rv = imaqSetCalibrationInfo((Image*)image, (CalibrationUnit)unit, (float)xDistance, (float)yDistance);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqGetCalibrationInfo(Image image)
- * JN: void imaqGetCalibrationInfo(long image, long unit, long xDistance, long yDistance)
- * C: int imaqGetCalibrationInfo(const Image* image, CalibrationUnit* unit, float* xDistance, float* yDistance)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetCalibrationInfo(JNIEnv* env, jclass , jlong image, jlong unit, jlong xDistance, jlong yDistance)
-{
-    int rv = imaqGetCalibrationInfo((const Image*)image, (CalibrationUnit*)unit, (float*)xDistance, (float*)yDistance);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqConstructROI(Image image, ROI roi, Tool initialTool, ToolWindowOptions tools, ConstructROIOptions options)
- * JN: int imaqConstructROI(long image, long roi, int initialTool, long tools, long options, long okay)
- * C: int imaqConstructROI(const Image* image, ROI* roi, Tool initialTool, const ToolWindowOptions* tools, const ConstructROIOptions* options, int* okay)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqConstructROI(JNIEnv* env, jclass , jlong image, jlong roi, jint initialTool, jlong tools, jlong options, jlong okay)
-{
-    int rv = imaqConstructROI((const Image*)image, (ROI*)roi, (Tool)initialTool, (const ToolWindowOptions*)tools, (const ConstructROIOptions*)options, (int*)okay);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
 /* J: void imaqGetParticleClassifierOptions(ClassifierSession session)
  * JN: void imaqGetParticleClassifierOptions(long session, long preprocessingOptions, long options)
  * C: int imaqGetParticleClassifierOptions(const ClassifierSession* session, ParticleClassifierPreprocessingOptions* preprocessingOptions, ParticleClassifierOptions* options)
@@ -4608,62 +3557,26 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetParticleClassifierOp
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: void imaqZoomWindow(int windowNumber, int xZoom, int yZoom, Point center)
- * JN: void imaqZoomWindow(int windowNumber, int xZoom, int yZoom, long center)
- * C: int imaqZoomWindow(int windowNumber, int xZoom, int yZoom, Point center)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqZoomWindow(JNIEnv* env, jclass , jint windowNumber, jint xZoom, jint yZoom, jlong center)
-{
-    int rv = imaqZoomWindow((int)windowNumber, (int)xZoom, (int)yZoom, *((Point*)center));
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: void imaqGetWindowZoom(int windowNumber)
- * JN: void imaqGetWindowZoom(int windowNumber, long xZoom, long yZoom)
- * C: int imaqGetWindowZoom(int windowNumber, int* xZoom, int* yZoom)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqGetWindowZoom(JNIEnv* env, jclass , jint windowNumber, jlong xZoom, jlong yZoom)
-{
-    int rv = imaqGetWindowZoom((int)windowNumber, (int*)xZoom, (int*)yZoom);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqParticleFilter3(Image dest, Image source, ParticleFilterCriteria2 criteria, int criteriaCount, ParticleFilterOptions options, ROI roi)
- * JN: int imaqParticleFilter3(long dest, long source, long criteria, int criteriaCount, long options, long roi, long numParticles)
+/* J: void imaqParticleFilter3(Image dest, Image source, ParticleFilterCriteria2 criteria, int criteriaCount, ParticleFilterOptions options, ROI roi)
+ * JN: void imaqParticleFilter3(long dest, long source, long criteria, int criteriaCount, long options, long roi, long numParticles)
  * C: int imaqParticleFilter3(Image* dest, Image* source, const ParticleFilterCriteria2* criteria, int criteriaCount, const ParticleFilterOptions* options, const ROI* roi, int* numParticles)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqParticleFilter3(JNIEnv* env, jclass , jlong dest, jlong source, jlong criteria, jint criteriaCount, jlong options, jlong roi, jlong numParticles)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqParticleFilter3(JNIEnv* env, jclass , jlong dest, jlong source, jlong criteria, jint criteriaCount, jlong options, jlong roi, jlong numParticles)
 {
     int rv = imaqParticleFilter3((Image*)dest, (Image*)source, (const ParticleFilterCriteria2*)criteria, (int)criteriaCount, (const ParticleFilterOptions*)options, (const ROI*)roi, (int*)numParticles);
     if (rv == 0) throwJavaException(env);
-    return (jint)rv;
 }
 
-/* J: ReadTextReport2 imaqReadText2(Image image, CharSet set, ROI roi, ReadTextOptions readOptions, OCRProcessingOptions processingOptions, OCRSpacingOptions spacingOptions)
- * JN: long imaqReadText2(long image, long set, long roi, long readOptions, long processingOptions, long spacingOptions)
- * C: ReadTextReport2* imaqReadText2(const Image* image, const CharSet* set, const ROI* roi, const ReadTextOptions* readOptions, const OCRProcessingOptions* processingOptions, const OCRSpacingOptions* spacingOptions)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqReadText2(JNIEnv* env, jclass , jlong image, jlong set, jlong roi, jlong readOptions, jlong processingOptions, jlong spacingOptions)
-{
-    ReadTextReport2* rv = imaqReadText2((const Image*)image, (const CharSet*)set, (const ROI*)roi, (const ReadTextOptions*)readOptions, (const OCRProcessingOptions*)processingOptions, (const OCRSpacingOptions*)spacingOptions);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: LearnPatternAdvancedOptions imaqLearnPattern2(Image image, LearningMode learningMode)
- * JN: long imaqLearnPattern2(long image, int learningMode, long advancedOptions)
+/* J: void imaqLearnPattern2(Image image, LearningMode learningMode)
+ * JN: void imaqLearnPattern2(long image, int learningMode, long advancedOptions)
  * C: int imaqLearnPattern2(Image* image, LearningMode learningMode, LearnPatternAdvancedOptions* advancedOptions)
  */
 
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqLearnPattern2(JNIEnv* env, jclass , jlong image, jint learningMode, jlong advancedOptions)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnPattern2(JNIEnv* env, jclass , jlong image, jint learningMode, jlong advancedOptions)
 {
     int rv = imaqLearnPattern2((Image*)image, (LearningMode)learningMode, (LearnPatternAdvancedOptions*)advancedOptions);
     if (rv == 0) throwJavaException(env);
-    return (jlong)rv;
 }
 
 /* J: void imaqDivide(Image dest, Image sourceA, Image sourceB)
@@ -4713,17 +3626,6 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqSpoke(JNIEnv* env, jcl
     return (jlong)rv;
 }
 
-/* J: void imaqLearnPattern(Image image, LearningMode learningMode)
- * JN: void imaqLearnPattern(long image, int learningMode)
- * C: int imaqLearnPattern(Image* image, LearningMode learningMode)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqLearnPattern(JNIEnv* env, jclass , jlong image, jint learningMode)
-{
-    int rv = imaqLearnPattern((Image*)image, (LearningMode)learningMode);
-    if (rv == 0) throwJavaException(env);
-}
-
 /* J: MatchPattern2Result imaqMatchPattern2(Image image, Image pattern, MatchPatternOptions options, MatchPatternAdvancedOptions advancedOptions, Rect searchRect)
  * JN: long imaqMatchPattern2(long image, long pattern, long options, long advancedOptions, long searchRect, long numMatches)
  * C: PatternMatch* imaqMatchPattern2(const Image* image, const Image* pattern, const MatchPatternOptions* options, const MatchPatternAdvancedOptions* advancedOptions, Rect searchRect, int* numMatches)
@@ -4747,137 +3649,6 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqSetParticleClassifierOp
     if (rv == 0) throwJavaException(env);
 }
 
-/* J: void imaqCopyCalibrationInfo(Image dest, Image source)
- * JN: void imaqCopyCalibrationInfo(long dest, long source)
- * C: int imaqCopyCalibrationInfo(Image* dest, const Image* source)
- */
-
-JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1imaqCopyCalibrationInfo(JNIEnv* env, jclass , jlong dest, jlong source)
-{
-    int rv = imaqCopyCalibrationInfo((Image*)dest, (const Image*)source);
-    if (rv == 0) throwJavaException(env);
-}
-
-/* J: int imaqParticleFilter2(Image dest, Image source, ParticleFilterCriteria2[] criteria, int rejectMatches, int connectivity8)
- * JN: int imaqParticleFilter2(long dest, long source, long criteria, int criteriaCount, int rejectMatches, int connectivity8, long numParticles)
- * C: int imaqParticleFilter2(Image* dest, Image* source, const ParticleFilterCriteria2* criteria, int criteriaCount, int rejectMatches, int connectivity8, int* numParticles)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqParticleFilter2(JNIEnv* env, jclass , jlong dest, jlong source, jlong criteria, jint criteriaCount, jint rejectMatches, jint connectivity8, jlong numParticles)
-{
-    int rv = imaqParticleFilter2((Image*)dest, (Image*)source, (const ParticleFilterCriteria2*)criteria, (int)criteriaCount, (int)rejectMatches, (int)connectivity8, (int*)numParticles);
-    if (rv == 0) throwJavaException(env);
-    return (jint)rv;
-}
-
-/* J: EdgeTool2Result imaqEdgeTool2(Image image, Point points, int numPoints, EdgeProcess process, EdgeOptions options)
- * JN: long imaqEdgeTool2(long image, long points, int numPoints, int process, long options, long numEdges)
- * C: EdgeReport* imaqEdgeTool2(const Image* image, const Point* points, int numPoints, EdgeProcess process, const EdgeOptions* options, int* numEdges)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqEdgeTool2(JNIEnv* env, jclass , jlong image, jlong points, jint numPoints, jint process, jlong options, jlong numEdges)
-{
-    EdgeReport* rv = imaqEdgeTool2((const Image*)image, (const Point*)points, (int)numPoints, (EdgeProcess)process, (const EdgeOptions*)options, (int*)numEdges);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: int imaqAddRotatedRectContour(ROI roi, RotatedRect rect)
- * JN: int imaqAddRotatedRectContour(long roi, long rect)
- * C: ContourID imaqAddRotatedRectContour(ROI* roi, RotatedRect rect)
- */
-
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1imaqAddRotatedRectContour(JNIEnv* env, jclass , jlong roi, jlong rect)
-{
-    ContourID rv = imaqAddRotatedRectContour((ROI*)roi, *((RotatedRect*)rect));
-    
-    return (jint)rv;
-}
-
-/* J: ReadDataMatrixBarcodeResult imaqReadDataMatrixBarcode(Image image, ROI roi, DataMatrixOptions options)
- * JN: long imaqReadDataMatrixBarcode(long image, long roi, long options, long numBarcodes)
- * C: Barcode2DInfo* imaqReadDataMatrixBarcode(const Image* image, const ROI* roi, const DataMatrixOptions* options, unsigned int* numBarcodes)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqReadDataMatrixBarcode(JNIEnv* env, jclass , jlong image, jlong roi, jlong options, jlong numBarcodes)
-{
-    Barcode2DInfo* rv = imaqReadDataMatrixBarcode((const Image*)image, (const ROI*)roi, (const DataMatrixOptions*)options, (unsigned int*)numBarcodes);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: LinearAverages imaqLinearAverages(Image image, Rect rect)
- * JN: long imaqLinearAverages(long image, long rect)
- * C: LinearAverages* imaqLinearAverages(const Image* image, Rect rect)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqLinearAverages(JNIEnv* env, jclass , jlong image, jlong rect)
-{
-    LinearAverages* rv = imaqLinearAverages((const Image*)image, *((Rect*)rect));
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: MatchGeometricPatternResult imaqMatchGeometricPattern(Image image, Image pattern, CurveOptions curveOptions, MatchGeometricPatternOptions matchOptions, MatchGeometricPatternAdvancedOptions advancedMatchOptions, ROI roi)
- * JN: long imaqMatchGeometricPattern(long image, long pattern, long curveOptions, long matchOptions, long advancedMatchOptions, long roi, long numMatches)
- * C: GeometricPatternMatch* imaqMatchGeometricPattern(const Image* image, const Image* pattern, const CurveOptions* curveOptions, const MatchGeometricPatternOptions* matchOptions, const MatchGeometricPatternAdvancedOptions* advancedMatchOptions, const ROI* roi, int* numMatches)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqMatchGeometricPattern(JNIEnv* env, jclass , jlong image, jlong pattern, jlong curveOptions, jlong matchOptions, jlong advancedMatchOptions, jlong roi, jlong numMatches)
-{
-    GeometricPatternMatch* rv = imaqMatchGeometricPattern((const Image*)image, (const Image*)pattern, (const CurveOptions*)curveOptions, (const MatchGeometricPatternOptions*)matchOptions, (const MatchGeometricPatternAdvancedOptions*)advancedMatchOptions, (const ROI*)roi, (int*)numMatches);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: CharInfo imaqGetCharInfo(CharSet set, int index)
- * JN: long imaqGetCharInfo(long set, int index)
- * C: CharInfo* imaqGetCharInfo(const CharSet* set, int index)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqGetCharInfo(JNIEnv* env, jclass , jlong set, jint index)
-{
-    CharInfo* rv = imaqGetCharInfo((const CharSet*)set, (int)index);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: ReadTextReport imaqReadText(Image image, CharSet set, ROI roi, ReadTextOptions readOptions, OCRProcessingOptions processingOptions, OCRSpacingOptions spacingOptions)
- * JN: long imaqReadText(long image, long set, long roi, long readOptions, long processingOptions, long spacingOptions)
- * C: ReadTextReport* imaqReadText(const Image* image, const CharSet* set, const ROI* roi, const ReadTextOptions* readOptions, const OCRProcessingOptions* processingOptions, const OCRSpacingOptions* spacingOptions)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqReadText(JNIEnv* env, jclass , jlong image, jlong set, jlong roi, jlong readOptions, jlong processingOptions, jlong spacingOptions)
-{
-    ReadTextReport* rv = imaqReadText((const Image*)image, (const CharSet*)set, (const ROI*)roi, (const ReadTextOptions*)readOptions, (const OCRProcessingOptions*)processingOptions, (const OCRSpacingOptions*)spacingOptions);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: ThresholdData imaqAutoThreshold(Image dest, Image source, int numClasses, ThresholdMethod method)
- * JN: long imaqAutoThreshold(long dest, long source, int numClasses, int method)
- * C: ThresholdData* imaqAutoThreshold(Image* dest, Image* source, int numClasses, ThresholdMethod method)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqAutoThreshold(JNIEnv* env, jclass , jlong dest, jlong source, jint numClasses, jint method)
-{
-    ThresholdData* rv = imaqAutoThreshold((Image*)dest, (Image*)source, (int)numClasses, (ThresholdMethod)method);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
-/* J: ColorHistogramReport imaqColorHistogram(Image image, int numClasses, ColorMode mode, Image mask)
- * JN: long imaqColorHistogram(long image, int numClasses, int mode, long mask)
- * C: ColorHistogramReport* imaqColorHistogram(Image* image, int numClasses, ColorMode mode, const Image* mask)
- */
-
-JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqColorHistogram(JNIEnv* env, jclass , jlong image, jint numClasses, jint mode, jlong mask)
-{
-    ColorHistogramReport* rv = imaqColorHistogram((Image*)image, (int)numClasses, (ColorMode)mode, (const Image*)mask);
-    if (!rv) throwJavaException(env);
-    return (jlong)rv;
-}
-
 /* J: RakeReport imaqRake(Image image, ROI roi, RakeDirection direction, EdgeProcess process, RakeOptions options)
  * JN: long imaqRake(long image, long roi, int direction, int process, long options)
  * C: RakeReport* imaqRake(const Image* image, const ROI* roi, RakeDirection direction, EdgeProcess process, const RakeOptions* options)
@@ -4888,6 +3659,17 @@ JNIEXPORT jlong JNICALL Java_com_ni_vision_NIVision__1imaqRake(JNIEnv* env, jcla
     RakeReport* rv = imaqRake((const Image*)image, (const ROI*)roi, (RakeDirection)direction, (EdgeProcess)process, (const RakeOptions*)options);
     if (!rv) throwJavaException(env);
     return (jlong)rv;
+}
+
+/* J: void Priv_ReadJPEGString_C(Image image, byte[] string)
+ * JN: void Priv_ReadJPEGString_C(long image, long string, int stringLength)
+ * C: int Priv_ReadJPEGString_C(Image* image, const unsigned char* string, unsigned int stringLength)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1Priv_1ReadJPEGString_1C(JNIEnv* env, jclass , jlong image, jlong string, jint stringLength)
+{
+    int rv = Priv_ReadJPEGString_C((Image*)image, (const unsigned char*)string, (unsigned int)stringLength);
+    if (rv == 0) throwJavaException(env);
 }
 
 /*
@@ -5020,16 +3802,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxConfigureGrab(JNIEnv*
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
 }
 
-/* J: int IMAQdxGrab(int id, Image image, int waitForNextBuffer)
- * JN: int IMAQdxGrab(int id, long image, int waitForNextBuffer, long actualBufferNumber)
+/* J: void IMAQdxGrab(int id, Image image, int waitForNextBuffer)
+ * JN: void IMAQdxGrab(int id, long image, int waitForNextBuffer, long actualBufferNumber)
  * C: IMAQdxError IMAQdxGrab(IMAQdxSession id, Image* image, bool32 waitForNextBuffer, uInt32* actualBufferNumber)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxGrab(JNIEnv* env, jclass , jint id, jlong image, jint waitForNextBuffer, jlong actualBufferNumber)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGrab(JNIEnv* env, jclass , jint id, jlong image, jint waitForNextBuffer, jlong actualBufferNumber)
 {
     IMAQdxError rv = IMAQdxGrab((IMAQdxSession)id, (Image*)image, (bool32)waitForNextBuffer, (uInt32*)actualBufferNumber);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
 
 /* J: void IMAQdxDiscoverEthernetCameras(String address, int timeout)
@@ -5054,16 +3835,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxResetCamera(JNIEnv* e
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
 }
 
-/* J: int IMAQdxOpenCamera(String name, IMAQdxCameraControlMode mode)
- * JN: int IMAQdxOpenCamera(long name, int mode, long id)
+/* J: void IMAQdxOpenCamera(String name, IMAQdxCameraControlMode mode)
+ * JN: void IMAQdxOpenCamera(long name, int mode, long id)
  * C: IMAQdxError IMAQdxOpenCamera(const char* name, IMAQdxCameraControlMode mode, IMAQdxSession* id)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxOpenCamera(JNIEnv* env, jclass , jlong name, jint mode, jlong id)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxOpenCamera(JNIEnv* env, jclass , jlong name, jint mode, jlong id)
 {
     IMAQdxError rv = IMAQdxOpenCamera((const char*)name, (IMAQdxCameraControlMode)mode, (IMAQdxSession*)id);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
 
 /* J: void IMAQdxCloseCamera(int id)
@@ -5099,16 +3879,23 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxStartAcquisition(JNIE
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
 }
 
-/* J: int IMAQdxGetImage(int id, Image image, IMAQdxBufferNumberMode mode, int desiredBufferNumber)
- * JN: int IMAQdxGetImage(int id, long image, int mode, int desiredBufferNumber, long actualBufferNumber)
+/* J: void IMAQdxGetImage(int id, Image image, IMAQdxBufferNumberMode mode, int desiredBufferNumber)
+ * JN: void IMAQdxGetImage(int id, long image, int mode, int desiredBufferNumber, long actualBufferNumber)
  * C: IMAQdxError IMAQdxGetImage(IMAQdxSession id, Image* image, IMAQdxBufferNumberMode mode, uInt32 desiredBufferNumber, uInt32* actualBufferNumber)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetImage(JNIEnv* env, jclass , jint id, jlong image, jint mode, jint desiredBufferNumber, jlong actualBufferNumber)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetImage(JNIEnv* env, jclass , jint id, jlong image, jint mode, jint desiredBufferNumber, jlong actualBufferNumber)
 {
     IMAQdxError rv = IMAQdxGetImage((IMAQdxSession)id, (Image*)image, (IMAQdxBufferNumberMode)mode, (uInt32)desiredBufferNumber, (uInt32*)actualBufferNumber);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
+}
+
+JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetImageData(JNIEnv* env, jclass , jint id, jlong buffer, jint bufferSize, jint mode, jint desiredBufferNumber)
+{
+    uInt32 actualBufferNumber;
+    IMAQdxError rv = IMAQdxGetImageData((IMAQdxSession)id, (void*)buffer, (uInt32)bufferSize, (IMAQdxBufferNumberMode)mode, (uInt32)desiredBufferNumber, &actualBufferNumber);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+    return (jint)actualBufferNumber;
 }
 
 /* J: void IMAQdxStopAcquisition(int id)
@@ -5133,40 +3920,43 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxUnconfigureAcquisitio
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
 }
 
-/* J: IMAQdxAttributeType IMAQdxGetAttributeType(int id, String name)
- * JN: int IMAQdxGetAttributeType(int id, long name, long type)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxEnumerateVideoModes(JNIEnv* env, jclass , jint id, jlong videoModeArray, jlong count, jlong currentMode)
+{
+    IMAQdxError rv = IMAQdxEnumerateVideoModes((IMAQdxSession)id, (IMAQdxVideoMode*)videoModeArray, (uInt32*)count, (uInt32*)currentMode);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeType(int id, String name)
+ * JN: void IMAQdxGetAttributeType(int id, long name, long type)
  * C: IMAQdxError IMAQdxGetAttributeType(IMAQdxSession id, const char* name, IMAQdxAttributeType* type)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeType(JNIEnv* env, jclass , jint id, jlong name, jlong type)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeType(JNIEnv* env, jclass , jint id, jlong name, jlong type)
 {
     IMAQdxError rv = IMAQdxGetAttributeType((IMAQdxSession)id, (const char*)name, (IMAQdxAttributeType*)type);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
 
-/* J: int IMAQdxIsAttributeReadable(int id, String name)
- * JN: int IMAQdxIsAttributeReadable(int id, long name, long readable)
+/* J: void IMAQdxIsAttributeReadable(int id, String name)
+ * JN: void IMAQdxIsAttributeReadable(int id, long name, long readable)
  * C: IMAQdxError IMAQdxIsAttributeReadable(IMAQdxSession id, const char* name, bool32* readable)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxIsAttributeReadable(JNIEnv* env, jclass , jint id, jlong name, jlong readable)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxIsAttributeReadable(JNIEnv* env, jclass , jint id, jlong name, jlong readable)
 {
     IMAQdxError rv = IMAQdxIsAttributeReadable((IMAQdxSession)id, (const char*)name, (bool32*)readable);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
 
-/* J: int IMAQdxIsAttributeWritable(int id, String name)
- * JN: int IMAQdxIsAttributeWritable(int id, long name, long writable)
+/* J: void IMAQdxIsAttributeWritable(int id, String name)
+ * JN: void IMAQdxIsAttributeWritable(int id, long name, long writable)
  * C: IMAQdxError IMAQdxIsAttributeWritable(IMAQdxSession id, const char* name, bool32* writable)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxIsAttributeWritable(JNIEnv* env, jclass , jint id, jlong name, jlong writable)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxIsAttributeWritable(JNIEnv* env, jclass , jint id, jlong name, jlong writable)
 {
     IMAQdxError rv = IMAQdxIsAttributeWritable((IMAQdxSession)id, (const char*)name, (bool32*)writable);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
 
 /* J: void IMAQdxWriteRegister(int id, int offset, int value)
@@ -5180,16 +3970,15 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxWriteRegister(JNIEnv*
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
 }
 
-/* J: int IMAQdxReadRegister(int id, int offset)
- * JN: int IMAQdxReadRegister(int id, int offset, long value)
+/* J: void IMAQdxReadRegister(int id, int offset)
+ * JN: void IMAQdxReadRegister(int id, int offset, long value)
  * C: IMAQdxError IMAQdxReadRegister(IMAQdxSession id, uInt32 offset, uInt32* value)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxReadRegister(JNIEnv* env, jclass , jint id, jint offset, jlong value)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxReadRegister(JNIEnv* env, jclass , jint id, jint offset, jlong value)
 {
     IMAQdxError rv = IMAQdxReadRegister((IMAQdxSession)id, (uInt32)offset, (uInt32*)value);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
 
 /* J: void IMAQdxWriteAttributes(int id, String filename)
@@ -5225,15 +4014,1003 @@ JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxResetEthernetCameraAd
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
 }
 
-/* J: IMAQdxAttributeVisibility IMAQdxGetAttributeVisibility(int id, String name)
- * JN: int IMAQdxGetAttributeVisibility(int id, long name, long visibility)
+/* J: void IMAQdxGetAttributeVisibility(int id, String name)
+ * JN: void IMAQdxGetAttributeVisibility(int id, long name, long visibility)
  * C: IMAQdxError IMAQdxGetAttributeVisibility(IMAQdxSession id, const char* name, IMAQdxAttributeVisibility* visibility)
  */
 
-JNIEXPORT jint JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeVisibility(JNIEnv* env, jclass , jint id, jlong name, jlong visibility)
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeVisibility(JNIEnv* env, jclass , jint id, jlong name, jlong visibility)
 {
     IMAQdxError rv = IMAQdxGetAttributeVisibility((IMAQdxSession)id, (const char*)name, (IMAQdxAttributeVisibility*)visibility);
     if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
-    return (jint)rv;
 }
+
+/* J: void IMAQdxGetAttributeU32(int id, String name)
+ * JN: void IMAQdxGetAttributeU32(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeU32(IMAQdxSession id, const char* name, uInt32* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeU32(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeU32((IMAQdxSession)id, (const char*)name, (uInt32*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeI64(int id, String name)
+ * JN: void IMAQdxGetAttributeI64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeI64(IMAQdxSession id, const char* name, Int64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeI64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeI64((IMAQdxSession)id, (const char*)name, (Int64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeF64(int id, String name)
+ * JN: void IMAQdxGetAttributeF64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeF64(IMAQdxSession id, const char* name, float64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeF64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeF64((IMAQdxSession)id, (const char*)name, (float64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeString(int id, String name)
+ * JN: void IMAQdxGetAttributeString(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeString(IMAQdxSession id, const char* name, char value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeString(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeString((IMAQdxSession)id, (const char*)name, (char*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeEnum(int id, String name)
+ * JN: void IMAQdxGetAttributeEnum(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeEnum(IMAQdxSession id, const char* name, IMAQdxEnumItem* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeEnum(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeEnum((IMAQdxSession)id, (const char*)name, (IMAQdxEnumItem*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeBool(int id, String name)
+ * JN: void IMAQdxGetAttributeBool(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeBool(IMAQdxSession id, const char* name, bool32* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeBool(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeBool((IMAQdxSession)id, (const char*)name, (bool32*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeMinimumU32(int id, String name)
+ * JN: void IMAQdxGetAttributeMinimumU32(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeMinimumU32(IMAQdxSession id, const char* name, uInt32* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeMinimumU32(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeMinimumU32((IMAQdxSession)id, (const char*)name, (uInt32*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeMinimumI64(int id, String name)
+ * JN: void IMAQdxGetAttributeMinimumI64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeMinimumI64(IMAQdxSession id, const char* name, Int64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeMinimumI64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeMinimumI64((IMAQdxSession)id, (const char*)name, (Int64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeMinimumF64(int id, String name)
+ * JN: void IMAQdxGetAttributeMinimumF64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeMinimumF64(IMAQdxSession id, const char* name, float64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeMinimumF64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeMinimumF64((IMAQdxSession)id, (const char*)name, (float64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeMaximumU32(int id, String name)
+ * JN: void IMAQdxGetAttributeMaximumU32(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeMaximumU32(IMAQdxSession id, const char* name, uInt32* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeMaximumU32(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeMaximumU32((IMAQdxSession)id, (const char*)name, (uInt32*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeMaximumI64(int id, String name)
+ * JN: void IMAQdxGetAttributeMaximumI64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeMaximumI64(IMAQdxSession id, const char* name, Int64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeMaximumI64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeMaximumI64((IMAQdxSession)id, (const char*)name, (Int64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeMaximumF64(int id, String name)
+ * JN: void IMAQdxGetAttributeMaximumF64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeMaximumF64(IMAQdxSession id, const char* name, float64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeMaximumF64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeMaximumF64((IMAQdxSession)id, (const char*)name, (float64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeIncrementU32(int id, String name)
+ * JN: void IMAQdxGetAttributeIncrementU32(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeIncrementU32(IMAQdxSession id, const char* name, uInt32* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeIncrementU32(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeIncrementU32((IMAQdxSession)id, (const char*)name, (uInt32*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeIncrementI64(int id, String name)
+ * JN: void IMAQdxGetAttributeIncrementI64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeIncrementI64(IMAQdxSession id, const char* name, Int64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeIncrementI64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeIncrementI64((IMAQdxSession)id, (const char*)name, (Int64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxGetAttributeIncrementF64(int id, String name)
+ * JN: void IMAQdxGetAttributeIncrementF64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxGetAttributeIncrementF64(IMAQdxSession id, const char* name, float64* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxGetAttributeIncrementF64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxGetAttributeIncrementF64((IMAQdxSession)id, (const char*)name, (float64*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxSetAttributeU32(int id, String name, int value)
+ * JN: void IMAQdxSetAttributeU32(int id, long name, int value)
+ * C: IMAQdxError IMAQdxSetAttributeU32(IMAQdxSession id, const char* name, uInt32 value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxSetAttributeU32(JNIEnv* env, jclass , jint id, jlong name, jint value)
+{
+    IMAQdxError rv = IMAQdxSetAttributeU32((IMAQdxSession)id, (const char*)name, (uInt32)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxSetAttributeI64(int id, String name, long value)
+ * JN: void IMAQdxSetAttributeI64(int id, long name, long value)
+ * C: IMAQdxError IMAQdxSetAttributeI64(IMAQdxSession id, const char* name, Int64 value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxSetAttributeI64(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxSetAttributeI64((IMAQdxSession)id, (const char*)name, (Int64)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxSetAttributeF64(int id, String name, double value)
+ * JN: void IMAQdxSetAttributeF64(int id, long name, double value)
+ * C: IMAQdxError IMAQdxSetAttributeF64(IMAQdxSession id, const char* name, float64 value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxSetAttributeF64(JNIEnv* env, jclass , jint id, jlong name, jdouble value)
+{
+    IMAQdxError rv = IMAQdxSetAttributeF64((IMAQdxSession)id, (const char*)name, (float64)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxSetAttributeString(int id, String name, String value)
+ * JN: void IMAQdxSetAttributeString(int id, long name, long value)
+ * C: IMAQdxError IMAQdxSetAttributeString(IMAQdxSession id, const char* name, const char* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxSetAttributeString(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxSetAttributeString((IMAQdxSession)id, (const char*)name, (const char*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxSetAttributeEnum(int id, String name, IMAQdxEnumItem value)
+ * JN: void IMAQdxSetAttributeEnum(int id, long name, long value)
+ * C: IMAQdxError IMAQdxSetAttributeEnum(IMAQdxSession id, const char* name, const IMAQdxEnumItem* value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxSetAttributeEnum(JNIEnv* env, jclass , jint id, jlong name, jlong value)
+{
+    IMAQdxError rv = IMAQdxSetAttributeEnum((IMAQdxSession)id, (const char*)name, (const IMAQdxEnumItem*)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+
+/* J: void IMAQdxSetAttributeBool(int id, String name, int value)
+ * JN: void IMAQdxSetAttributeBool(int id, long name, int value)
+ * C: IMAQdxError IMAQdxSetAttributeBool(IMAQdxSession id, const char* name, bool32 value)
+ */
+
+JNIEXPORT void JNICALL Java_com_ni_vision_NIVision__1IMAQdxSetAttributeBool(JNIEnv* env, jclass , jint id, jlong name, jint value)
+{
+    IMAQdxError rv = IMAQdxSetAttributeBool((IMAQdxSession)id, (const char*)name, (bool32)value);
+    if (rv != IMAQdxErrorSuccess) dxthrowJavaException(env, rv);
+}
+}
+
+static const char* getErrorText(int err) {
+    switch (err) {
+        case ERR_3DVISION_INVALID_SESSION_TYPE: return "This 3D vision function cannot be called on this type of 3d vision session.";
+        case ERR_ARRAY_SIZE_MISMATCH: return "The array sizes are not compatible.";
+        case ERR_AVI_DATA_EXCEEDS_BUFFER_SIZE: return "The data for this frame exceeds the data buffer size specified when creating the AVI file.";
+        case ERR_AVI_READ_SESSION_REQUIRED: return "The AVI session is a write session, but this operation requires a read session.";
+        case ERR_AVI_SESSION_ALREADY_OPEN: return "This AVI session is already open. You must close it before calling the Create or Open functions.";
+        case ERR_AVI_TIMEOUT: return "DirectX has timed out reading or writing the AVI file.  When closing an AVI file, try adding an additional delay.  When reading an AVI file, try reducing CPU and disk load.";
+        case ERR_AVI_UNOPENED_SESSION: return "The AVI session has not been opened.";
+        case ERR_AVI_VERSION: return "The AVI file was created in a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this AVI file.";
+        case ERR_AVI_WRITE_SESSION_REQUIRED: return "The AVI session is a read session, but this operation requires a write session.";
+        case ERR_BAD_FILTER_WIDTH: return "The filter width must be odd for the Canny operator.";
+        case ERR_BAD_INDEX: return "Invalid handle table index.";
+        case ERR_BAD_MEASURE: return "Invalid measure number.";
+        case ERR_BAD_PASSWORD: return "Incorrect password.";
+        case ERR_BAD_ROI: return "Invalid ROI.";
+        case ERR_BAD_ROI_BOX: return "Invalid ROI global rectangle.";
+        case ERR_BAD_SAMPLE_INDEX: return "The Sample Index fell outside the range of Samples.";
+        case ERR_BARCODE: return "The barcode does not match the type you specified.";
+        case ERR_BARCODE_CHECKSUM: return "The decoded barcode information did not pass the checksum test.";
+        case ERR_BARCODE_CODABAR: return "The barcode is not a valid Codabar barcode.";
+        case ERR_BARCODE_CODE128: return "The barcode is not a valid Code128 barcode.";
+        case ERR_BARCODE_CODE128_FNC: return "The FNC value in the Code128 barcode is not located before the first data value.";
+        case ERR_BARCODE_CODE128_SET: return "The starting code set in the Code128 barcode is not valid.";
+        case ERR_BARCODE_CODE39: return "The barcode is not a valid Code 3 of 9 barcode.";
+        case ERR_BARCODE_CODE93: return "The barcode is not a valid Code93 barcode.";
+        case ERR_BARCODE_CODE93_SHIFT: return "The Code93 barcode contains invalid shift encoding.";
+        case ERR_BARCODE_EAN13: return "The barcode is not a valid EAN13 barcode.";
+        case ERR_BARCODE_EAN8: return "The barcode is not a valid EAN8 barcode.";
+        case ERR_BARCODE_I25: return "The barcode is not a valid Interleaved 2 of 5 barcode.";
+        case ERR_BARCODE_INVALID: return "The image does not represent a valid linear barcode.";
+        case ERR_BARCODE_MSI: return "The barcode is not a valid MSI barcode.";
+        case ERR_BARCODE_PHARMACODE: return "The barcode is not a valid Pharmacode symbol";
+        case ERR_BARCODE_RSSLIMITED: return "The barcode is not a valid RSS Limited symbol";
+        case ERR_BARCODE_TYPE: return "The barcode type is invalid.";
+        case ERR_BARCODE_UPCA: return "The barcode is not a valid UPCA barcode.";
+        case ERR_BOARD_NOT_FOUND: return "Board not found.";
+        case ERR_BOARD_NOT_OPEN: return "Board not opened.";
+        case ERR_BOTH_MARKER_INPUTS_SUPPLIED: return "Both Marker Image and Points are supplied.";
+        case ERR_CALIBRATION_DUPLICATE_REFERENCE_POINT: return "The reference points passed are inconsistent.  At least two similar pixel coordinates correspond to different real-world coordinates.";
+        case ERR_CALIBRATION_ERRORMAP: return "The calibration error map cannot be computed.";
+        case ERR_CALIBRATION_FAILED_TO_FIND_GRID: return "Unable to automatically detect grid because the image is too distorted.";
+        case ERR_CALIBRATION_IMAGE_CORRECTED: return "The operation is invalid in a corrected image.";
+        case ERR_CALIBRATION_IMAGE_UNCALIBRATED: return "The source/input image has not been calibrated.";
+        case ERR_CALIBRATION_INFO_1: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_2: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_3: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_4: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_5: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_6: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_MICRO_PLANE: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_PERSPECTIVE_PROJECTION: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_SIMPLE_TRANSFORM: return "Invalid calibration template image.";
+        case ERR_CALIBRATION_INFO_VERSION: return "Invalid calibration information version.";
+        case ERR_CALIBRATION_INSF_POINTS: return "Insufficient number of calibration feature points.";
+        case ERR_CALIBRATION_INVALID_ROI: return "The ROI contains an invalid contour type or is not contained in the ROI learned for calibration.";
+        case ERR_CALIBRATION_INVALID_SCALING_FACTOR: return "Invalid calibration scaling factor.";
+        case ERR_CAMERA_MODEL_NOT_AVAILABLE: return "Camera Model is not learned";
+        case ERR_CANNOT_COMPACT_UNTRAINED: return "You may only save a session in compact form if it is trained.";
+        case ERR_CANT_DRAW_INTO_VIEWER: return "Unable to draw to viewer. You must have the latest version of the control.";
+        case ERR_CANT_RESIZE_EXTERNAL: return "Cannot resize an image in an acquisition buffer.";
+        case ERR_CLASSIFIER_CLASSIFY_IMAGE_WITH_CUSTOM_SESSION: return "Custom classifier sessions only classify feature vectors. They do not support classifying images.";
+        case ERR_CLASSIFIER_INVALID_ENGINE_TYPE: return "The engine for this classifier session does not support this operation.";
+        case ERR_CLASSIFIER_INVALID_SESSION_TYPE: return "This classifier function cannot be called on this type of classifier session.";
+        case ERR_CLASSIFIER_SESSION_NOT_TRAINED: return "This classifier session is not trained. You may only call this function on a trained classifier session.";
+        case ERR_CLASS_NAME_NOT_FOUND: return "Required Class name is not found in trained labels/Class names";
+        case ERR_COLORMODE_REQUIRES_CHANGECOLORSPACE2: return "The specified color mode requires the use of imaqChangeColorSpace2.";
+        case ERR_COLOR_IMAGE_REQUIRED: return "The input image must be a color image.";
+        case ERR_COLOR_LEARN_SETUP_DATA: return "Invalid color learn setup data.";
+        case ERR_COLOR_LEARN_SETUP_DATA_SHAPE: return "Invalid color learn setup data.";
+        case ERR_COLOR_MATCH_SETUP_DATA: return "Invalid color match setup data.";
+        case ERR_COLOR_MATCH_SETUP_DATA_SHAPE: return "Invalid color match setup data.";
+        case ERR_COLOR_ROTATION_REQUIRES_SHAPE_FEATURE: return "Rotation-invariant color pattern matching requires a feature mode including shape.";
+        case ERR_COLOR_SPECTRUM_MASK: return "The color mask removes too much color information.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_1: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_2: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_3: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_4: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_5: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_6: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_NOROTATION: return "The color template image does not contain data required for rotation-invariant color matching.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_NOSHAPE: return "The color template image does not contain data required for color matching in shape feature mode.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_NOSHIFT: return "The color template image does not contain data required for shift-invariant color matching.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_NOSPECTRUM: return "The color template image does not contain data required for color matching in color feature mode.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_ROTATION: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_ROTATION_1: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_ROTATION_2: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_ROTATION_3: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_ROTATION_4: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_ROTATION_5: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_SHIFT: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_SHIFT_1: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_DESCRIPTOR_SHIFT_2: return "Invalid color template image.";
+        case ERR_COLOR_TEMPLATE_IMAGE_HUE_CONTRAST_TOO_LOW: return "The contrast in the hue plane of the image is too low for learning shape features.";
+        case ERR_COLOR_TEMPLATE_IMAGE_LUMINANCE_CONTRAST_TOO_LOW: return "The contrast in the luminance plane of the image is too low to learn shape features.";
+        case ERR_COLOR_TEMPLATE_IMAGE_TOO_LARGE: return "The color template image is too large.";
+        case ERR_COLOR_TEMPLATE_IMAGE_TOO_SMALL: return "The color template image is too small.";
+        case ERR_COMPLEXPLANE_NOT_REAL_OR_IMAGINARY: return "You can perform this operation on a real or an imaginary ComplexPlane only.";
+        case ERR_COMPLEX_IMAGE_REQUIRED: return "A complex image is required.";
+        case ERR_COMPLEX_PLANE: return "Invalid complex plane.";
+        case ERR_COMPLEX_ROOT: return "The roots of the equation are complex.";
+        case ERR_COM_INITIALIZE: return "Error initializing COM.";
+        case ERR_CONTAINER_CAPACITY_EXCEEDED_INT_MAX: return "The operation would have exceeded the capacity of an internal container, which is limited to 2147483648 unique elements.";
+        case ERR_CONTAINER_CAPACITY_EXCEEDED_UINT_MAX: return "The operation would have exceeded the capacity of an internal container, which is limited to 4294967296 unique elements.";
+        case ERR_CONTOURID_NOT_FOUND: return "The supplied ContourID did not correlate to a contour inside the ROI.";
+        case ERR_CONTOUR_COMPARE_KERNEL: return "Invalid Smoothing Kernel width for contour comparison. Must be zero or an odd positive integer.";
+        case ERR_CONTOUR_COMPARE_SINGLE_IMAGE: return "If no template image is provided, the target image must contain both a contour with extracted points and a fitted equation.";
+        case ERR_CONTOUR_CONNECT_DUPLICATE: return "Only one range is allowed per curve connection constraint type.";
+        case ERR_CONTOUR_CONNECT_TYPE: return "Invalid contour connection constraint type.";
+        case ERR_CONTOUR_CURVATURE_KERNEL: return "Invalid kernel width for curvature calculation. Must be an odd value greater than 1.";
+        case ERR_CONTOUR_EXTRACT_DIRECTION: return "Invalid Search Direction for contour extraction.";
+        case ERR_CONTOUR_EXTRACT_ROI: return "Invalid ROI for contour extraction. The ROI must contain an annulus, rectangle or rotated rectangle.";
+        case ERR_CONTOUR_EXTRACT_SELECTION: return "Invalid Contour Selection method for contour extraction.";
+        case ERR_CONTOUR_GPM_FAIL: return "Matching failed to align the template and target contours.";
+        case ERR_CONTOUR_INDEX_OUT_OF_RANGE: return "The contour index you supplied is larger than the number of contours in the ROI.";
+        case ERR_CONTOUR_INVALID: return "Invalid contour image.";
+        case ERR_CONTOUR_INVALID_KERNEL_FOR_SMOOTHING: return "Invalid kernel for contour smoothing. Zero indicates no smoothing, otherwise value must be odd.";
+        case ERR_CONTOUR_INVALID_REFINEMENTS: return "Invalid number specified for maximum contour refinements.";
+        case ERR_CONTOUR_LINE_INVALID: return "The contour line fit is invalid. Line segment start and stop must differ.";
+        case ERR_CONTOUR_MATCH_STR_NOT_APPLICABLE: return "In order to use contour matching, you must provide a template image that has been trained with IMAQ Learn Contour Pattern";
+        case ERR_CONTOUR_NO_CURVES: return "No curves were found in the image.";
+        case ERR_CONTOUR_OPENING_NEWER_VERSION: return "The contour you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_CONTOUR_TEMPLATE_IMAGE_INVALID: return "The template image must be trained with IMAQ Learn Contour Pattern or be the same size as the target image.";
+        case ERR_COORDSYS_NOT_FOUND: return "The coordinate system could not be found on this image.";
+        case ERR_COORD_SYS_FIRST_AXIS: return "Unable to fit a line for the primary axis.";
+        case ERR_COORD_SYS_SECOND_AXIS: return "Unable to fit a line for the secondary axis.";
+        case ERR_COST_LABEL_NOT_FOUND: return "Label name is not found in added samples";
+        case ERR_CREATE_WINDOW: return "Unable to create window.";
+        case ERR_CURVE_EXTRACTION_MODE_MUST_BE_SAME: return "You must specify the same curve extraction mode for all the templates you want to match.";
+        case ERR_CUSTOMDATA_INVALID_KEY: return "They custom data key you supplied is invalid. The only valid character values are decimal 32-126 and 161-255. There must also be no repeated, leading, or trailing spaces.";
+        case ERR_CUSTOMDATA_INVALID_SIZE: return "The size you specified is out of the valid range.";
+        case ERR_CUSTOMDATA_KEY_NOT_FOUND: return "The key you specified cannot be found in the image.";
+        case ERR_DATA_CORRUPTED: return "The data is corrupted and cannot be read.";
+        case ERR_DATA_VERSION: return "The data was stored with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this data.";
+        case ERR_DEPRECATED_FUNCTION: return "This backwards-compatibility function can not be used with this session. Use newer, supported functions instead.";
+        case ERR_DESCRIPTION_TOO_LONG: return "The description must be <= 255 characters.";
+        case ERR_DIRECTX: return "An internal DirectX error has occurred.  Try upgrading to the latest version of DirectX.";
+        case ERR_DIRECTX_CERTIFICATION_FAILURE: return "A software key is restricting the use of this compression filter.";
+        case ERR_DIRECTX_DLL_NOT_FOUND: return "Quartz.dll not found.  Install DirectX 8.1 or later.";
+        case ERR_DIRECTX_ENUMERATE_FILTERS: return "DirectX is unable to enumerate the compression filters. This is caused by a third-party compression filter that is either improperly installed or is preventing itself from being enumerated. Remove any recently installed compression filters and try again.";
+        case ERR_DIRECTX_INCOMPATIBLE_COMPRESSION_FILTER: return "Incompatible compression filter.";
+        case ERR_DIRECTX_INVALID_FILTER_QUALITY: return "The filter quality you provided is invalid. Valid quality values range from -1 to 1000.";
+        case ERR_DIRECTX_NOT_FOUND: return "DirectX is required for this feature.  Please install the latest version..";
+        case ERR_DIRECTX_NO_FILTER: return "An appropriate DirectX filter to process this file could not be found.  Install the filter that was used to create this AVI. Upgrading to the latest version of DirectX may correct this error.  NI Vision requires DirectX 8.1 or higher.";
+        case ERR_DIRECTX_UNKNOWN_COMPRESSION_FILTER: return "Unknown compression filter.";
+        case ERR_DISPATCH_STATUS_CONFLICT: return "You are attempting to set the same algorithm to dispatch and to not dispatch. Remove one of the conflicting settings.";
+        case ERR_DIV_BY_ZERO: return "Cannot divide by zero.";
+        case ERR_DLL_FUNCTION_NOT_FOUND: return "DLL function not found.";
+        case ERR_DLL_NOT_FOUND: return "DLL not found.";
+        case ERR_DRAWTEXT_COLOR_MUST_BE_GRAYSCALE: return "Set the foreground and background text colors to grayscale to draw on a U8 image.";
+        case ERR_DRIVER: return "Cannot access NI-IMAQ driver.";
+        case ERR_DUPLICATE_LABEL: return "Duplicate labels are not allowed.";
+        case ERR_DUPLICATE_TRANSFORM_TYPE: return "Found a duplicate transform type in the properties array. Each properties array may only contain one behavior for each transform type.";
+        case ERR_EDGE_FILTER_SIZE_MUST_BE_SAME: return "You must specify the same edge filter size for all the templates you want to match.";
+        case ERR_ENABLE_CALIBRATION_SUPPORT_MUST_BE_SAME: return "You must specify the same value for the enable calibration support advanced match option for all templates you want to match.";
+        case ERR_EVEN_WINDOW_SIZE: return "The window size must be odd for the Canny operator.";
+        case ERR_EXCEEDED_SVM_MAX_ITERATION: return "SVM training exceeded maximim Iteration limit";
+        case ERR_EXTERNAL_ALIGNMENT: return "The external buffer must be aligned on a 4-byte boundary. The line width and border pixels must be 4-byte aligned, as well.";
+        case ERR_EXTERNAL_NOT_SUPPORTED: return "This operation is not supported for images in an acquisition buffer.";
+        case ERR_EXTRAINFO_VERSION: return "The image was created in a newer version of NI Vision. Upgrade to the latest version of NI Vision to use this image.";
+        case ERR_FILE_ARGERR: return "Invalid parameter.";
+        case ERR_FILE_COLOR_TABLE: return "Invalid color table.";
+        case ERR_FILE_EOF: return "Premature end of file.";
+        case ERR_FILE_FILENAME_NULL: return "You must pass a valid file name. Do not pass in NULL.";
+        case ERR_FILE_FILE_HEADER: return "Invalid file header.";
+        case ERR_FILE_FILE_TYPE: return "Invalid file type.";
+        case ERR_FILE_FORMAT: return "Invalid file format.";
+        case ERR_FILE_GET_INFO: return "Could not read Vision info from file.";
+        case ERR_FILE_INVALID_DATA_TYPE: return "NI Vision does not support the file data type you specified.";
+        case ERR_FILE_INVALID_TYPE: return "NI Vision does not support the file type you specified.";
+        case ERR_FILE_IO_ERR: return "File I/O error.";
+        case ERR_FILE_NOT_FOUND: return "File not found.";
+        case ERR_FILE_NO_SPACE: return "Disk full.";
+        case ERR_FILE_OPEN: return "File is already open for writing.";
+        case ERR_FILE_OPERATION: return "Invalid file operation.";
+        case ERR_FILE_PERMISSION: return "File access denied.";
+        case ERR_FILE_READ: return "Unable to read data.";
+        case ERR_FILE_TOO_MANY_OPEN: return "Too many files open.";
+        case ERR_FILE_WRITE: return "Unable to write data.";
+        case ERR_FIND_COORDSYS_MORE_THAN_ONE_EDGE: return "When searching for a coordinate system, the number of lines to fit must be 1.";
+        case ERR_FONT_FILE_FORMAT: return "Invalid font file format.";
+        case ERR_FONT_FILE_NOT_FOUND: return "Font file not found.";
+        case ERR_GHT_INVALID_MAXIMUM_LEARN_ANGLE_VALUE: return "The maximum rotation angle value specifed during learning of the template is not supported.";
+        case ERR_GHT_INVALID_MAXIMUM_LEARN_SCALE_FACTOR: return "The maximum scale factor specifed during learning of the template is not supported.";
+        case ERR_GHT_INVALID_MINIMUM_LEARN_ANGLE_VALUE: return "The minimum rotation angle value specifed during learning of the template is not supported.";
+        case ERR_GHT_INVALID_MINIMUM_LEARN_SCALE_FACTOR: return "The minimum scale factor specifed during learning of the template is not supported.";
+        case ERR_GHT_INVALID_USE_ALL_CURVES_VALUE: return "The use all curves advanced option specified during learn is not supported";
+        case ERR_GIP_RANGE: return "An internal error occurred while attempting to access an invalid coordinate on an image.";
+        case ERR_GRADING_INFORMATION_NOT_FOUND: return "The source image does not contain grading information. You must prepare the source image for grading when reading the Data Matrix, and you cannot change the contents of the source image between reading and grading the Data Matrix.";
+        case ERR_HARDWARE_DOESNT_SUPPORT_NONTEARING: return "Your hardware is not supported by DirectX and cannot be put into NonTearing mode.";
+        case ERR_HEAP_TRASHED: return "An internal memory error occurred.";
+        case ERR_IGNORE_COLOR_SPECTRUM_SET: return "The ignore color spectra array is invalid.";
+        case ERR_IMAGES_NOT_DIFF: return "The source image and destination image must be different.";
+        case ERR_IMAGE_CONTAINS_NAN_VALUES: return "Float image contains NaN values";
+        case ERR_IMAGE_SIZE_MISMATCH: return "The two input image sizes are different";
+        case ERR_IMAGE_SMALLER_THAN_BORDER: return "Your image must be larger than its border size for this operation.";
+        case ERR_IMAGE_TOO_SMALL: return "The image is not large enough for the operation.";
+        case ERR_IMAQ_QR_DIMENSION_INVALID: return "Invalid Dimensions.";
+        case ERR_INCOMPATIBLE_CLASSIFIER_TYPES: return "The session you read from file must be the same type as the session you passed in.";
+        case ERR_INCOMPATIBLE_MARKER_IMAGE_SIZE: return "Source Image and Marker Image should be of same size.";
+        case ERR_INCOMP_MATRIX_SIZE: return "The number of pixel and real-world coordinates must be equal.";
+        case ERR_INCOMP_SIZE: return "Incompatible image size.";
+        case ERR_INCOMP_TYPE: return "Incompatible image type.";
+        case ERR_INEFFICIENT_POINTS: return "You supplied an inefficient set of points to match the minimum score.";
+        case ERR_INFO_NOT_FOUND: return "You must provide information about the subimage within the browser.";
+        case ERR_INIT: return "Initialization error.";
+        case ERR_INSF_POINTS: return "You supplied an insufficient number of points to perform this operation.";
+        case ERR_INSUFFICIENT_BUFFER_SIZE: return "The buffer that was passed in is not big enough to hold all of the data.";
+        case ERR_INTERNAL: return "Internal error.";
+        case ERR_INVALID_2D_BARCODE_CELL_SHAPE: return "Invalid 2-D barcode cell shape.";
+        case ERR_INVALID_2D_BARCODE_CONTRAST: return "Invalid 2-D barcode contrast.";
+        case ERR_INVALID_2D_BARCODE_CONTRAST_FOR_ROI: return "When using a region of interest that is not a rectangle, you must specify the contrast mode of the barcode as either black on white or white on black.";
+        case ERR_INVALID_2D_BARCODE_SEARCH_MODE: return "NI Vision does not support the search mode you provided.";
+        case ERR_INVALID_2D_BARCODE_SHAPE: return "Invalid 2-D barcode shape.";
+        case ERR_INVALID_2D_BARCODE_SUBTYPE: return "Invalid 2-D barcode Data Matrix subtype.";
+        case ERR_INVALID_2D_BARCODE_TYPE: return "Invalid 2-D barcode type.";
+        case ERR_INVALID_3DDIRECTION: return "NI Vision does not support the 3DDirection value you supplied.";
+        case ERR_INVALID_3DPLANE: return "NI Vision does not support the 3DPlane value you supplied.";
+        case ERR_INVALID_3DVISION_SESSION: return "Not a valid 3D Vision session.";
+        case ERR_INVALID_ACTION: return "The function does not support the requested action.";
+        case ERR_INVALID_ALIGNMENT: return "The supplied scale is invalid for your template.";
+        case ERR_INVALID_ANGLE_RANGE_FOR_STRAIGHT_EDGE: return "Angle range value should be equal to or greater than zero.";
+        case ERR_INVALID_ANGLE_TOL_FOR_STRAIGHT_EDGE: return "The angle tolerance should be equal to or greater than 0.001.";
+        case ERR_INVALID_ASPECT_RATIO: return "Invalid aspect ratio. Valid aspect ratios must be greater than or equal to zero.";
+        case ERR_INVALID_AVI_SESSION: return "Invalid AVI session.";
+        case ERR_INVALID_AXIS_ORIENTATION: return "NI Vision does not support the axis orientation you supplied.";
+        case ERR_INVALID_BARCODETYPE: return "NI Vision does not support the BarcodeType value you supplied.";
+        case ERR_INVALID_BIT_DEPTH: return "NI Vision does not support the bit depth you supplied for the image you supplied.";
+        case ERR_INVALID_BORDER: return "Invalid image border.";
+        case ERR_INVALID_BORDERMETHOD: return "NI Vision does not support the BorderMethod value you supplied.";
+        case ERR_INVALID_BORDER_INTEGRITY: return "Invalid border integrity. Valid values range from 0 to 100.";
+        case ERR_INVALID_BORDER_SIZE: return "Invalid border size. Acceptable values range from 0 to 50.";
+        case ERR_INVALID_BROWSER_IMAGE: return "Invalid browser image.";
+        case ERR_INVALID_BUTTON_LABEL: return "Invalid button label.";
+        case ERR_INVALID_CALIBRATION_METHOD: return "Invalid calibration method requested";
+        case ERR_INVALID_CALIBRATION_MODE: return "NI Vision does not support the calibration mode you supplied.";
+        case ERR_INVALID_CALIBRATION_ROI_MODE: return "NI Vision does not support the calibration ROI mode you supplied.";
+        case ERR_INVALID_CALIBRATION_UNIT: return "NI Vision does not support the calibration unit you supplied.";
+        case ERR_INVALID_CELL_FILL_TYPE: return "Invalid cell fill type.";
+        case ERR_INVALID_CELL_FILTER_MODE: return "Invalid cell filter mode.";
+        case ERR_INVALID_CELL_SAMPLE_SIZE: return "Invalid cell sample size.";
+        case ERR_INVALID_CLASSIFIER_SESSION: return "Not a valid classifier session.";
+        case ERR_INVALID_CLASSIFIER_TYPE: return "You requested an invalid classifier type.";
+        case ERR_INVALID_COLORSENSITIVITY: return "NI Vision does not support the ColorSensitivity value you supplied.";
+        case ERR_INVALID_COLOR_IGNORE_MODE: return "Invalid color ignore mode.";
+        case ERR_INVALID_COLOR_MODE: return "NI Vision does not support the color mode you specified.";
+        case ERR_INVALID_COLOR_RESOLUTION: return "Invalid Color Resolution for the Color Classifier";
+        case ERR_INVALID_COLOR_SPECTRUM: return "The color spectrum array you provided has an invalid number of elements or contains an element set to not-a-number (NaN).";
+        case ERR_INVALID_COLOR_WEIGHT: return "Invalid color weight. Acceptable values range from 0 to 1000.";
+        case ERR_INVALID_COLUMN_STEP: return "Invalid column step. Valid range is 1 to 255.";
+        case ERR_INVALID_COMPAREFUNCTION: return "NI Vision does not support the CompareFunction value you supplied.";
+        case ERR_INVALID_COMPLEXPLANE: return "NI Vision does not support the ComplexPlane value you supplied.";
+        case ERR_INVALID_COMPRESSION_RATIO: return "The compression ratio must be greater than or equal to 1.";
+        case ERR_INVALID_COMPRESSION_TYPE: return "Invalid compression type.";
+        case ERR_INVALID_CONCENTRIC_RAKE_DIRECTION: return "Invalid concentric rake direction.";
+        case ERR_INVALID_CONTRAST: return "Invalid contrast value. Valid contrast values range from 0 to 255.";
+        case ERR_INVALID_CONTRAST_REVERSAL_MODE: return "The contrast reversal mode specified during matching is invalid.";
+        case ERR_INVALID_CONTRAST_THRESHOLD: return "Invalid contrast threshold. The threshold value must be greater than 0.";
+        case ERR_INVALID_CONVERSIONSTYLE: return "NI Vision does not support the Conversion Method value you supplied.";
+        case ERR_INVALID_COOCCURRENCE_LEVEL: return "The coOccurrence Level must lie between 1 and the maximum pixel value of an image (255 for U8 image)";
+        case ERR_INVALID_CURVE_EXTRACTION_MODE: return "Invalid curve extraction mode.";
+        case ERR_INVALID_CUSTOM_SAMPLE: return "The size of the feature vector in the custom sample must match the size of those you have already added.";
+        case ERR_INVALID_DEMODULATION_MODE: return "Invalid demodulation mode.";
+        case ERR_INVALID_DETECTION_MODE: return "Invalid detection mode.";
+        case ERR_INVALID_DISTANCE: return "Invalid Color Segmentation Distance";
+        case ERR_INVALID_DISTANCE_LEVEL: return "Invalid Color Segmentation distance level";
+        case ERR_INVALID_DISTANCE_METRIC: return "You requested an invalid distance metric.";
+        case ERR_INVALID_DISTORTION_MODEL: return "Invalid distortion model type";
+        case ERR_INVALID_DRAWMODE: return "NI Vision does not support the DrawMode value you supplied.";
+        case ERR_INVALID_DRAWMODE_FOR_LINE: return "imaqDrawLineOnImage does not support the DrawMode value you supplied.";
+        case ERR_INVALID_ECC_TYPE: return "Invalid ECC type.";
+        case ERR_INVALID_EDGE_DIR: return "You supplied an invalid edge direction in the Canny operator.";
+        case ERR_INVALID_EDGE_FILTER_SIZE: return "Invalid edge filter size.";
+        case ERR_INVALID_EDGE_POLARITY_SEARCH_MODE: return "Invalid edge polarity search mode.";
+        case ERR_INVALID_EDGE_PROCESS: return "Invalid edge process.";
+        case ERR_INVALID_EDGE_THICKNESS: return "Edge Thickness to Ignore must be greater than zero.";
+        case ERR_INVALID_EDGE_THRESHOLD: return "Invalid edge threshold. Valid values range from 1 to 360.";
+        case ERR_INVALID_ENERGY: return "Minimum Energy should lie between 0 and 100";
+        case ERR_INVALID_FEATURE_MODE: return "Invalid feature mode.";
+        case ERR_INVALID_FILL_STYLE: return "The fill style for the window background is invalid.";
+        case ERR_INVALID_FINAL_STEP_SIZE: return "The final step size must be lesser than the initial step size";
+        case ERR_INVALID_FLIPAXIS: return "NI Vision does not support the axis of symmetry you supplied.";
+        case ERR_INVALID_FONTCOLOR: return "NI Vision does not support the FontColor value you supplied.";
+        case ERR_INVALID_FRAMES_PER_SECOND: return "The frames per second in an AVI must be greater than zero.";
+        case ERR_INVALID_FRAME_NUMBER: return "Invalid frame number.";
+        case ERR_INVALID_FUNCTION: return "Unsupported function.";
+        case ERR_INVALID_GAUSS_FILTER_TYPE: return "The specified Gaussian filter type is not supported.";
+        case ERR_INVALID_GAUSS_SIGMA_VALUE: return "The sigma value specified for the Gaussian filter is too small.";
+        case ERR_INVALID_GEOMETRIC_FEATURE_TYPE: return "The geometric feature type specified is invalid.";
+        case ERR_INVALID_GEOMETRIC_MATCHING_TEMPLATE: return "Invalid geometric matching template image.";
+        case ERR_INVALID_GRADING_MODE: return "Invalid grading mode.";
+        case ERR_INVALID_HATCH_STYLE: return "The hatch style for the window background is invalid.";
+        case ERR_INVALID_HORN_SCHUNCK_LAMBDA: return "Invalid smoothing parameter in Horn Schunck operation.";
+        case ERR_INVALID_HORN_SCHUNCK_TYPE: return "Invalid stopping criteria type for Horn Schunck optical flow.";
+        case ERR_INVALID_ICONS_PER_LINE: return "NI Vision does not support less than one icon per line.";
+        case ERR_INVALID_IDENTIFICATION_SCORE: return "Invalid Identification score. Must be between 0-1000.";
+        case ERR_INVALID_IMAGE_TYPE: return "Invalid image type.";
+        case ERR_INVALID_INITIAL_MATCH_LIST_LENGTH: return "Invalid initial match list length. Values must be integers greater than 5.";
+        case ERR_INVALID_INSPECTION_TEMPLATE: return "Invalid golden template.";
+        case ERR_INVALID_INTERPOLATIONMETHOD: return "NI Vision does not support the InterpolationMethod value you supplied.";
+        case ERR_INVALID_INTERPOLATIONMETHOD_FOR_ROTATE: return "imaqRotate does not support the InterpolationMethod value you supplied.";
+        case ERR_INVALID_INTERPOLATIONMETHOD_FOR_UNWRAP: return "UnwrapImage does not support the interpolation method value you supplied.  Valid interpolation methods are zero order and bilinear.";
+        case ERR_INVALID_INTERPOLATIONMETHOD_INTERPOLATEPOINTS: return "imaqInterpolatePoints does not support the InterpolationMethod value you supplied.";
+        case ERR_INVALID_KERNEL_CODE: return "Invalid kernel code.";
+        case ERR_INVALID_KERNEL_SIZE: return "The Kernel size must be smaller than the image size.";
+        case ERR_INVALID_KERNEL_SIZE_FOR_EDGE_DETECTION: return "Invalid kernel size for edge detection. The minimum kernel size is 3, the maximum kernel size is 1073741823 and the kernel size must be odd.";
+        case ERR_INVALID_KNN_METHOD: return "You requested an invalid Nearest Neighbor classifier method.";
+        case ERR_INVALID_LEARN_GEOMETRIC_PATTERN_SETUP_DATA: return "Invalid learn geometric pattern setup data.";
+        case ERR_INVALID_LEARN_MODE: return "Invalid learn mode.";
+        case ERR_INVALID_LENGTH: return "The length of the edge detection line must be greater than zero.";
+        case ERR_INVALID_LIMITS: return "The limits you supplied are not valid.";
+        case ERR_INVALID_LINE: return "The line you provided contains two identical points, or one of the coordinate locations for the line is not a number (NaN).";
+        case ERR_INVALID_LINEAR_AVERAGE_MODE: return "Invalid linear average mode.";
+        case ERR_INVALID_LINEGAUGEMETHOD: return "Invalid line gauge method.";
+        case ERR_INVALID_LKP_KERNEL: return "The kernel must be symmetric  with non-zero coefficients and of odd size";
+        case ERR_INVALID_LUCAS_KANADE_WINDOW_SIZE: return "Both dimensions of the window size should be odd, greater than 2 and less than 16.";
+        case ERR_INVALID_MATCHFACTOR: return "The function does not support the matchFactor that you specified.";
+        case ERR_INVALID_MATCH_CONSTRAINT_TYPE: return "You specified an invalid value for the match constraint value of the  range settings.";
+        case ERR_INVALID_MATCH_GEOMETRIC_PATTERN_SETUP_DATA: return "Invalid match geometric pattern setup data.";
+        case ERR_INVALID_MATCH_MODE: return "Invalid match mode.";
+        case ERR_INVALID_MATHTRANSFORMMETHOD: return "NI Vision does not support the MathTransformMethod value you supplied.";
+        case ERR_INVALID_MATRIX_MIRROR_MODE: return "Invalid matrix mirror mode.";
+        case ERR_INVALID_MATRIX_POLARITY: return "Invalid matrix polarity.";
+        case ERR_INVALID_MATRIX_SIZE_RANGE: return "The maximum Data Matrix barcode size must be equal to or greater than the minimum Data Matrix barcode size.";
+        case ERR_INVALID_MATRIX_TYPE: return "The type of matrix supplied to the function is not supported.";
+        case ERR_INVALID_MAXIMUM_END_POINT_GAP: return "Invalid maximum end point gap. Valid values range from 0 to 32767.";
+        case ERR_INVALID_MAXIMUM_FEATURES_LEARNED: return "Invalid maximum number of features learn. Values must be integers greater than zero.";
+        case ERR_INVALID_MAXIMUM_FEATURES_PER_MATCH: return "Invalid maximum number of features used per match. Values must be integers greater than or equal to zero.";
+        case ERR_INVALID_MAXIMUM_PIXEL_DISTANCE_FROM_LINE: return "Invalid maximum pixel distance from line. Values must be positive real numbers.";
+        case ERR_INVALID_MAXPOINTS: return "The function does not support the maximum number of points that you specified.";
+        case ERR_INVALID_MAX_ITERATIONS: return "Invalid maximum number of iterations. Maximum number of iterations must be greater than zero.";
+        case ERR_INVALID_MAX_MATCH_OVERLAP: return "Invalid max match overlap.  Values must be between -1 and 100.";
+        case ERR_INVALID_MAX_WAVELET_TRANSFORM_LEVEL: return "Invalid maximum wavelet transform level.  Valid values range from 0 to 255.";
+        case ERR_INVALID_MEASURE_PARTICLES_CALIBRATION_MODE: return "Invalid measure particles calibration mode.";
+        case ERR_INVALID_METAFILE_HANDLE: return "Invalid metafile handle.";
+        case ERR_INVALID_METERARCMODE: return "NI Vision does not support the MeterArcMode value you supplied.";
+        case ERR_INVALID_MINIMUM_CURVE_LENGTH: return "Invalid minimum length. Valid values must be greater than or equal to zero.";
+        case ERR_INVALID_MINIMUM_FEATURES_TO_MATCH: return "Invalid minimum number of features used for matching. Values must be integers greater than zero.";
+        case ERR_INVALID_MINIMUM_FEATURE_ASPECT_RATIO: return "Invalid aspect ratio for rectangular features. Values must be positive real numbers in the range 0.01 to 1.0.";
+        case ERR_INVALID_MINIMUM_FEATURE_LENGTH: return "Invalid minimum length for linear features. Values must be integers greater than 0.";
+        case ERR_INVALID_MINIMUM_FEATURE_RADIUS: return "Invalid minimum radius for circular features. Values must be integers greater than 0.";
+        case ERR_INVALID_MINIMUM_FEATURE_STRENGTH: return "Invalid minimum strength for features. Values must be positive real numbers.";
+        case ERR_INVALID_MINIMUM_RECTANGLE_DIMENSION: return "Invalid minimum rectangle dimension. Values must be integers greater than 0.";
+        case ERR_INVALID_MIN_COVERAGE_FOR_STRAIGHT_EDGE: return "Minimum coverage value should be greater than zero.";
+        case ERR_INVALID_MIN_MATCH_SCORE: return "Invalid minimum match score. Acceptable values range from 0 to 1000.";
+        case ERR_INVALID_MIN_MATCH_SEPARATION_ANGLE: return "Invalid minimum match separation angle.  Values must be between -1 and 360.";
+        case ERR_INVALID_MIN_MATCH_SEPARATION_DISTANCE: return "Invalid minimum match separation distance.  Values must be greater than or equal to -1.";
+        case ERR_INVALID_MIN_MATCH_SEPARATION_SCALE: return "Invalid minimum match separation scale.  Values must be greater than or equal to -1.";
+        case ERR_INVALID_MORPHOLOGICAL_OPERATION: return "Invalid Morphological Operation.";
+        case ERR_INVALID_MORPHOLOGYMETHOD: return "NI Vision does not support the MorphologyMethod value you supplied.";
+        case ERR_INVALID_MULTIPLE_GEOMETRIC_TEMPLATE: return "Invalid multiple geometric template.";
+        case ERR_INVALID_NIBLACK_DEVIATION_FACTOR: return "The deviation factor for Niblack local threshold must be between 0 and 1.";
+        case ERR_INVALID_NORMALIZATION_METHOD: return "You must provide a valid normalization method.";
+        case ERR_INVALID_NUMBER_OF_FEATURES_RANGE: return "The minimum number of features must be less than or equal to the maximum number of features.";
+        case ERR_INVALID_NUMBER_OF_LABELS: return "You supplied an invalid number of labels.";
+        case ERR_INVALID_NUMBER_OF_MATCH_OPTIONS: return "You supplied an invalid number of match options.";
+        case ERR_INVALID_NUM_MATCHES_REQUESTED: return "Invalid number of matches requested. You must request a minimum of one match.";
+        case ERR_INVALID_NUM_OF_CLASSES: return "Invalid number of classes for auto threshold. Acceptable values range from 2 to 256.";
+        case ERR_INVALID_OCCLUSION_RANGE: return "Invalid occlusion range. Valid values for the bounds range from 0 to 100 and the upper bound must be greater than or equal to the lower bound.";
+        case ERR_INVALID_OFFSET: return "The offset you specified must be size 2.";
+        case ERR_INVALID_OPERATION_ON_COMPACT_CALIBRATION_ATTEMPTED: return "This calibration is compact. Re-Learning calibration and retrieving thumbnails are not possible with this calibration";
+        case ERR_INVALID_OPERATION_ON_COMPACT_SESSION_ATTEMPTED: return "This classifier session is compact. Only the Classify and Dispose functions may be called on a compact classifier session.";
+        case ERR_INVALID_OPTICAL_FLOW_TERMINATION_CRITERIA_TYPE: return "An invalid termination criteria was specified for the optical flow computation.";
+        case ERR_INVALID_OUTLINEMETHOD: return "NI Vision does not support the OutlineMethod value you supplied.";
+        case ERR_INVALID_PALETTE_TYPE: return "NI Vision does not support the PaletteType value you supplied.";
+        case ERR_INVALID_PARTICLEINFOMODE: return "NI Vision does not support the ParticleInfoMode value you supplied.";
+        case ERR_INVALID_PARTICLE_AREA: return "Invalid Color Segmenation Particle Area";
+        case ERR_INVALID_PARTICLE_CLASSIFIER_THRESHOLD_TYPE: return "Invalid particle classifier threshold type.";
+        case ERR_INVALID_PARTICLE_INFO: return "The image has invalid particle information.  Call imaqCountParticles on the image to create particle information.";
+        case ERR_INVALID_PARTICLE_NUMBER: return "Invalid particle number.";
+        case ERR_INVALID_PARTICLE_OPTIONS: return "The sum of Scale Dependence and Symmetry Dependence must be less than 1000.";
+        case ERR_INVALID_PARTICLE_PARAMETER_VALUE: return "You entered an invalid selection in the particle parameter.";
+        case ERR_INVALID_PARTICLE_TYPE: return "You requested an invalid particle type.";
+        case ERR_INVALID_POINTSYMBOL: return "Invalid point symbol.";
+        case ERR_INVALID_POLYNOMIAL_MODEL_K_COUNT: return "Invalid number of K values";
+        case ERR_INVALID_PROCESS_TYPE_FOR_EDGE_DETECTION: return "Invalid process type for edge detection.";
+        case ERR_INVALID_PYRAMID_LEVEL: return "The pyramid level specified cannot be negative";
+        case ERR_INVALID_QUALITY: return "The quality you provided is invalid. Valid quality values range from -1 to 1000.";
+        case ERR_INVALID_QUANTIZATION_STEP_SIZE: return "The quantization step size must be greater than or equal to 0.";
+        case ERR_INVALID_RAKE_DIRECTION: return "Invalid rake direction.";
+        case ERR_INVALID_RANGE: return "The range you supplied is invalid.";
+        case ERR_INVALID_RECT: return "NI Vision does not support rectangles with negative widths or negative heights.";
+        case ERR_INVALID_REFERENCEMODE: return "NI Vision does not support the ReferenceMode value you supplied.";
+        case ERR_INVALID_REGISTRATION_METHOD: return "You provided an invalid registration method.";
+        case ERR_INVALID_ROTATION_MODE: return "Invalid rotation mode.";
+        case ERR_INVALID_ROTATION_RANGE: return "Invalid roation angle range. The upper bound must be greater than or equal to the lower bound.";
+        case ERR_INVALID_ROUNDING_MODE: return "NI Vision does not support the RoundingMode value you supplied.";
+        case ERR_INVALID_ROW_STEP: return "Invalid row step. Valid range is 1 to 255.";
+        case ERR_INVALID_SCALE: return "Scale must be greater than zero.";
+        case ERR_INVALID_SCALE_RANGE: return "Invalid scale range. Values for the lower bound must be a positive real numbers and the upper bound must be greater than or equal to the lower bound.";
+        case ERR_INVALID_SCALINGMODE: return "NI Vision does not support the ScalingMode value you supplied.";
+        case ERR_INVALID_SCALING_METHOD: return "NI Vision does not support the scaling method you provided.";
+        case ERR_INVALID_SCAN_DIRECTION: return "Invalid scan direction.";
+        case ERR_INVALID_SEARCH_MODE_FOR_STRAIGHT_EDGE: return "Invalid search mode for detecting straight edges";
+        case ERR_INVALID_SEARCH_STRATEGY: return "Invalid search strategy.";
+        case ERR_INVALID_SEARCH_VECTOR_WIDTH: return "Invalid search vector width. The width must be an odd number greater than zero.";
+        case ERR_INVALID_SHAPEMODE: return "NI Vision does not support the ShapeMode value you supplied.";
+        case ERR_INVALID_SHAPE_DESCRIPTOR: return "The passed shape descriptor is invalid.";
+        case ERR_INVALID_SIZETYPE: return "NI Vision does not support the SizeType value you supplied.";
+        case ERR_INVALID_SKELETONMETHOD: return "NI Vision does not support the SkeletonMethod value you supplied.";
+        case ERR_INVALID_SKELETONMODE: return "The Skeleton mode you specified is invalid.";
+        case ERR_INVALID_SPOKE_DIRECTION: return "Invalid spoke direction.";
+        case ERR_INVALID_STEEPNESS: return "Invalid steepness.";
+        case ERR_INVALID_STEP_SIZE: return "Step size must be greater than zero and less than Image size";
+        case ERR_INVALID_STEREO_BLOCKMATCHING_FILTERTYPE: return "You have specified an invalid filter type for block matching.";
+        case ERR_INVALID_STEREO_BLOCKMATCHING_NUMDISPARITIES: return "The specifed value for number of disparities is invalid.";
+        case ERR_INVALID_STEREO_BLOCKMATCHING_PREFILTER_CAP: return "The specified value for the filter cap for block matching is invalid.";
+        case ERR_INVALID_STEREO_BLOCKMATCHING_PREFILTER_SIZE: return "The specified prefilter size for block matching is invalid.";
+        case ERR_INVALID_STEREO_BLOCKMATCHING_PREFILTER_TYPE: return "The specified prefilter type for block matching is invalid.";
+        case ERR_INVALID_STEREO_BLOCKMATCHING_WINDOW_SIZE: return "The specified window size for block matching is invalid.";
+        case ERR_INVALID_STEREO_CAMERA_POSITION: return "You have requested results at an invalid camera position in the stereo setup.";
+        case ERR_INVALID_SUBPIXEL_DIVISIONS: return "Invalid subpixel divisions.";
+        case ERR_INVALID_SUBPIXEL_ITERATIONS: return "Invalid number of subpixel iterations. Values must be integers greater 10.";
+        case ERR_INVALID_SUBPIXEL_TOLERANCE: return "Invalid subpixel tolerance. Values must be positive real numbers.";
+        case ERR_INVALID_SUBPIX_TYPE: return "NI Vision does not support the interpolation type you supplied.";
+        case ERR_INVALID_SUBSAMPLING_RATIO: return "Invalid subsampling ratio.";
+        case ERR_INVALID_SVM_KERNEL: return "Invalid SVM kernel type";
+        case ERR_INVALID_SVM_PARAMETER: return "Invalid SVM Parameter";
+        case ERR_INVALID_SVM_TYPE: return "Invalid SVM model type";
+        case ERR_INVALID_TETRAGON: return "The input tetragon must have four points. The points are specified clockwise starting with the top left point.";
+        case ERR_INVALID_TEXTALIGNMENT: return "NI Vision does not support the TextAlignment value you supplied.";
+        case ERR_INVALID_TEXTORIENTATION: return "NI Vision does not support the text orientation value you supplied.";
+        case ERR_INVALID_TEXTURE_FEATURE: return "Requested for invalid texture feature";
+        case ERR_INVALID_TEXTURE_LABEL: return "The classification label must be texture or defect for texture defect classifier";
+        case ERR_INVALID_THRESHOLDMETHOD: return "NI Vision does not support the threshold method value you supplied.";
+        case ERR_INVALID_THRESHOLD_PERCENTAGE: return "Invalid threshold percentage. Valid values range from 0 to 100.";
+        case ERR_INVALID_THUMBNAIL_INDEX: return "Supplied thumbnail index is invalid";
+        case ERR_INVALID_TOLERANCE: return "The tolerance parameter must be greater than or equal to 0.";
+        case ERR_INVALID_TOOL: return "NI Vision does not support the Tool value you supplied.";
+        case ERR_INVALID_TYPE_OF_FLATTEN: return "Invalid type of flatten.";
+        case ERR_INVALID_USE_OF_COMPACT_SESSION_FILE: return "You can not use a compact classification file with read options other than Read All.";
+        case ERR_INVALID_VERTICAL_TEXT_ALIGNMENT: return "NI Vision does not support the VerticalTextAlignment value you supplied.";
+        case ERR_INVALID_VIDEO_BLIT: return "RT Video Out does not support displaying the supplied image type at the selected color depth.";
+        case ERR_INVALID_VIDEO_MODE: return "Invalid video mode.";
+        case ERR_INVALID_VISION_INFO: return "NI Vision does not support the vision information type you supplied.";
+        case ERR_INVALID_WAVELET_SUBBAND: return "Request for invalid wavelet subBand";
+        case ERR_INVALID_WAVELET_TRANSFORM_MODE: return "Invalid wavelet transform mode.";
+        case ERR_INVALID_WAVELET_TYPE: return "The wavelet type is invalid";
+        case ERR_INVALID_WIDTH: return "Invalid pixel width.";
+        case ERR_INVALID_WINDOW_SIZE: return "The size of each dimension of the window must be greater than 2 and less than or equal to the size of the image in the corresponding dimension.";
+        case ERR_INVALID_WINDOW_THREAD_POLICY: return "NI Vision does not support the WindowThreadPolicy value you supplied.";
+        case ERR_IO_ERROR: return "I/O error.";
+        case ERR_JPEG2000_LOSSLESS_WITH_FLOATING_POINT: return "Lossless compression cannot be used with the floating point wavelet transform mode. Either set the wavelet transform mode to integer, or use lossy compression.";
+        case ERR_JPEG2000_UNSUPPORTED_MULTIPLE_LAYERS: return "NI Vision does not support reading JPEG2000 files with more than one layer.";
+        case ERR_K_TOO_HIGH: return "The k parameter must be <= the number of samples in each class.";
+        case ERR_K_TOO_LOW: return "The k parameter must be greater than two.";
+        case ERR_LABEL_NOT_FOUND: return "Cannot find a label that matches the one you specified.";
+        case ERR_LABEL_TOO_LONG: return "Labels must be <= 255 characters.";
+        case ERR_LAB_VERSION: return "The version of LabVIEW or BridgeVIEW you are running does not support this operation.";
+        case ERR_LCD_BAD_MATCH: return "The LCD does not form a known digit.";
+        case ERR_LCD_CALIBRATE: return "The input image does not seem to be a valid LCD or LED calibration image.";
+        case ERR_LCD_NOT_NUMERIC: return "LCD image is not a number.";
+        case ERR_LCD_NO_SEGMENTS: return "No lit segment.";
+        case ERR_LEARN_SETUP_DATA: return "Invalid learn setup data.";
+        case ERR_LINEAR_COEFF: return "The linear equations are not independent.";
+        case ERR_LINES_PARALLEL: return "You specified parallel lines for the meter ROI.";
+        case ERR_LKP_NULL_PYRAMID: return "The pyramid levels where not properly allocated.";
+        case ERR_MARKER_INFORMATION_NOT_SUPPLIED: return "Marker image and points are not supplied";
+        case ERR_MASK_NOT_TEMPLATE_SIZE: return "The mask must be the same size as the template.";
+        case ERR_MASK_OUTSIDE_IMAGE: return "When the mask's offset was applied, the mask was entirely outside of the image.";
+        case ERR_MATCHFACTOR_OBSOLETE: return "matchFactor has been obsoleted. Instead, set the initialMatchListLength and matchListReductionFactor in the MatchPatternAdvancedOptions structure.";
+        case ERR_MATCH_SETUP_DATA: return "Invalid match setup data.";
+        case ERR_MATRIX_SIZE: return "Invalid matrix size in the structuring element.";
+        case ERR_MEMORY_ERROR: return "Memory error.";
+        case ERR_MULTICORE_INVALID_ARGUMENT: return "You have given Multicore Options an invalid argument.";
+        case ERR_MULTICORE_OPERATION: return "The operation you have given Multicore Options is invalid. Please see the available enumeration values for Multicore Operation.";
+        case ERR_NEED_FULL_VERSION: return "The function requires an NI Vision 5.0 Advanced license.";
+        case ERR_NIOCR_BOOLEAN_VALUE_FOR_INTEGER_ATTRIBUTE: return "Boolean values are not valid for this attribute. Enter an integer value.";
+        case ERR_NIOCR_BOOLEAN_VALUE_FOR_STRING_ATTRIBUTE: return "String values are not valid for this attribute. Enter a Boolean value.";
+        case ERR_NIOCR_CHARACTER_SET_DESCRIPTION_TOO_LONG: return "The character set description must be <=255 characters.";
+        case ERR_NIOCR_CHARACTER_VALUE_CANNOT_BE_EMPTYSTRING: return "The character value must not be an empty string.";
+        case ERR_NIOCR_CHARACTER_VALUE_TOO_LONG: return "Character values must be <=255 characters.";
+        case ERR_NIOCR_GET_ONLY_ATTRIBUTE: return "This attribute is read-only.";
+        case ERR_NIOCR_INTEGER_VALUE_FOR_BOOLEAN_ATTRIBUTE: return "This attribute requires a Boolean value.";
+        case ERR_NIOCR_INTEGER_VALUE_FOR_STRING_ATTRIBUTE: return "You must specify characters for a string. A string cannot contain integers.";
+        case ERR_NIOCR_INVALID_ACCEPTANCE_LEVEL: return "The acceptance level is outside the valid range of  0 to 1000.";
+        case ERR_NIOCR_INVALID_ASPECT_RATIO: return "Invalid aspect ratio value. The aspect ratio must be zero or >= 100.";
+        case ERR_NIOCR_INVALID_ATTRIBUTE: return "Invalid attribute.";
+        case ERR_NIOCR_INVALID_BOUNDING_RECT_HEIGHT_RANGE: return "The minimum character bounding rectangle height must be less than the maximum character bounding rectangle height.";
+        case ERR_NIOCR_INVALID_BOUNDING_RECT_WIDTH_RANGE: return "The minimum character bounding rectangle width must be less than the maximum character bounding rectangle width.";
+        case ERR_NIOCR_INVALID_CHARACTER_INDEX: return "Invalid character index.";
+        case ERR_NIOCR_INVALID_CHARACTER_SET_FILE: return "Invalid or corrupt character set file.";
+        case ERR_NIOCR_INVALID_CHARACTER_SET_FILE_VERSION: return "The character set file was created by a newer version of NI Vision. Upgrade to the latest version of NI Vision to read the character set file.";
+        case ERR_NIOCR_INVALID_CHARACTER_SIZE: return "Invalid character size. Character size must be >= 1.";
+        case ERR_NIOCR_INVALID_CHARACTER_SIZE_RANGE: return "The minimum character size must be less than the maximum character size.";
+        case ERR_NIOCR_INVALID_CHARACTER_VALUE: return "A character cannot have an ASCII value of 255.";
+        case ERR_NIOCR_INVALID_HIGH_THRESHOLD_VALUE: return "Invalid high threshold value. Valid threshold values range from 0 to 255.";
+        case ERR_NIOCR_INVALID_LOWER_THRESHOLD_LIMIT: return "Invalid lower threshold limit. Valid lower threshold limits range from 0 to 255.";
+        case ERR_NIOCR_INVALID_LOW_THRESHOLD_VALUE: return "Invalid low threshold value. Valid threshold values range from 0 to 255.";
+        case ERR_NIOCR_INVALID_MAX_HORIZ_ELEMENT_SPACING: return "Invalid maximum horizontal element spacing value. Maximum horizontal element spacing must be >= 0.";
+        case ERR_NIOCR_INVALID_MAX_VERT_ELEMENT_SPACING: return "Invalid maximum vertical element spacing value. Maximum vertical element spacing must be >= 0.";
+        case ERR_NIOCR_INVALID_MIN_BOUNDING_RECT_HEIGHT: return "Invalid minimum bounding rectangle height. The minimum bounding rectangle height must be >= 1.";
+        case ERR_NIOCR_INVALID_MIN_BOUNDING_RECT_WIDTH: return "Invalid minimum bounding rectangle width. Minimum bounding rectangle width must be >= 1.";
+        case ERR_NIOCR_INVALID_MIN_CHAR_SPACING: return "Invalid minimum character spacing value. Character spacing must be >= 1 pixel.";
+        case ERR_NIOCR_INVALID_NUMBER_OF_BLOCKS: return "Invalid number of blocks. Number of blocks must be >= 4 and <= 50.";
+        case ERR_NIOCR_INVALID_NUMBER_OF_CHARACTERS: return "The number of characters in the character value must match the number of objects in the image.";
+        case ERR_NIOCR_INVALID_NUMBER_OF_EROSIONS: return "Invalid number of erosions. The number of erosions must be >= 0.";
+        case ERR_NIOCR_INVALID_NUMBER_OF_OBJECTS_TO_VERIFY: return "The number of objects found does not match the number of expected characters or patterns to verify.";
+        case ERR_NIOCR_INVALID_NUMBER_OF_VALID_CHARACTER_POSITIONS: return "Invalid number of character positions. Valid values range from 0 to 255.";
+        case ERR_NIOCR_INVALID_OBJECT_INDEX: return "Invalid object index.";
+        case ERR_NIOCR_INVALID_PREDEFINED_CHARACTER: return "Invalid predefined character value.";
+        case ERR_NIOCR_INVALID_READ_OPTION: return "Invalid read option.";
+        case ERR_NIOCR_INVALID_READ_RESOLUTION: return "Invalid read resolution.";
+        case ERR_NIOCR_INVALID_READ_STRATEGY: return "Invalid read strategy.";
+        case ERR_NIOCR_INVALID_SPACING_RANGE: return "The maximum horizontal element spacing value must not exceed the minimum character spacing value.";
+        case ERR_NIOCR_INVALID_SUBSTITUTION_CHARACTER: return "Invalid substitution character. Valid substitution characters are ASCII values that range from 1 to 254.";
+        case ERR_NIOCR_INVALID_THRESHOLD_LIMITS: return "The lower threshold limit must be less than the upper threshold limit.";
+        case ERR_NIOCR_INVALID_THRESHOLD_MODE: return "Invalid threshold mode value.";
+        case ERR_NIOCR_INVALID_THRESHOLD_RANGE: return "The low threshold must be less than the high threshold.";
+        case ERR_NIOCR_INVALID_UPPER_THRESHOLD_LIMIT: return "Invalid upper threshold limit. Valid upper threshold limits range from 0 to 255.";
+        case ERR_NIOCR_MUST_BE_SINGLE_CHARACTER: return "Requires a single-character string.";
+        case ERR_NIOCR_NOT_A_VALID_CHARACTER_SET: return "Not a valid character set.";
+        case ERR_NIOCR_NOT_A_VALID_SESSION: return "Not a valid OCR session.";
+        case ERR_NIOCR_RENAME_REFCHAR: return "A trained OCR character cannot be renamed while it is a reference character.";
+        case ERR_NIOCR_STRING_VALUE_FOR_BOOLEAN_ATTRIBUTE: return "String values are invalid for this attribute. Enter a boolean value.";
+        case ERR_NIOCR_STRING_VALUE_FOR_INTEGER_ATTRIBUTE: return "This attribute requires integer values.";
+        case ERR_NIOCR_UNLICENSED: return "This copy of NI OCR is unlicensed.";
+        case ERR_NOT_AN_OBJECT: return "Not an object.";
+        case ERR_NOT_ENOUGH_REGIONS: return "You specified a viewer that does not contain enough regions.";
+        case ERR_NOT_ENOUGH_TEMPLATE_FEATURES: return "The template does not contain enough features for geometric matching.";
+        case ERR_NOT_ENOUGH_TEMPLATE_FEATURES_1: return "The template does not contain enough features for geometric matching.";
+        case ERR_NOT_IMAGE: return "Not an image.";
+        case ERR_NOT_RECT_OR_ROTATED_RECT: return "The ROI must only have either a single Rectangle contour or a single Rotated Rectangle contour.";
+        case ERR_NO_CLAMP_FOUND: return "No valid clamp was found with the current configuration";
+        case ERR_NO_CLAMP_WITHIN_ANGLE_RANGE: return "Supplied angle range for clamp is insufficient";
+        case ERR_NO_DEST_IMAGE: return "You must provide a destination image.";
+        case ERR_NO_LABEL: return "You must pass in a label.";
+        case ERR_NO_PARTICLE: return "The image yielded no particles.";
+        case ERR_NO_SAMPLES: return "This operation cannot be performed because you have not added any samples.";
+        case ERR_NO_SUPPORT_VECTOR_FOUND: return "No Support Vector is found at SVM training";
+        case ERR_NO_TEMPLATE_TO_LEARN: return "Need at least one template to learn.";
+        case ERR_NO_VIDEO_DRIVER: return "No video driver is installed.";
+        case ERR_NULL_POINTER: return "Null pointer.";
+        case ERR_NUMBER_CLASS: return "Invalid number of classes.";
+        case ERR_NUMBER_LABEL_LIMIT_EXCEEDED: return "Number of Labels exceeded limit of label Image type";
+        case ERR_NUMBER_OF_PALETTE_COLORS: return "The color palette must have exactly 0 or 256 entries.";
+        case ERR_OCR_ADD_WORD_FAILED: return "The supplied word could not be added to the user dictionary.";
+        case ERR_OCR_BAD_TEXT_TEMPLATE: return "The supplied text template contains nonstandard characters that cannot be generated by OCR.";
+        case ERR_OCR_BAD_USER_DICTIONARY: return "The provided filename is not valid user dictionary filename.";
+        case ERR_OCR_BIN_DIR_NOT_FOUND: return "The system could not locate the OCR binary directory required for OCR initialization.";
+        case ERR_OCR_CANNOT_MATCH_TEXT_TEMPLATE: return "At least one character in the text template was of a lexical class that did not match the supplied character reports.";
+        case ERR_OCR_CHAR_REPORT_CORRUPTED: return "One of the character reports is no longer usable by the system.";
+        case ERR_OCR_CORRECTION_FAILED: return "The OCR engine failed during the correction stage.";
+        case ERR_OCR_INI_FILE_NOT_FOUND: return "The system could not locate the initialization file required for OCR initialization.";
+        case ERR_OCR_INVALID_AUTOCORRECTIONMODE: return "NI Vision does not support the AutoCorrectionMode value you supplied.";
+        case ERR_OCR_INVALID_AUTOORIENTMODE: return "NI Vision does not support the AutoOrientMode value you supplied.";
+        case ERR_OCR_INVALID_CHARACTERPREFERENCE: return "NI Vision does not support the CharacterPreference value you supplied.";
+        case ERR_OCR_INVALID_CHARACTERSET: return "NI Vision does not support the CharacterSet value you supplied.";
+        case ERR_OCR_INVALID_CHARACTERTYPE: return "NI Vision does not support the CharacterType value you supplied.";
+        case ERR_OCR_INVALID_CONTRASTMODE: return "NI Vision does not support the ContrastMode value you supplied.";
+        case ERR_OCR_INVALID_CORRECTIONLEVEL: return "NI Vision does not support the CorrectionLevel value you supplied.";
+        case ERR_OCR_INVALID_CORRECTIONMODE: return "NI Vision does not support the CorrectionMethod value you supplied.";
+        case ERR_OCR_INVALID_LANGUAGE: return "NI Vision does not support the Language value you supplied.";
+        case ERR_OCR_INVALID_MAXPOINTSIZE: return "NI Vision does not support the maximum point size you supplied.  Valid values range from 4 to 72.";
+        case ERR_OCR_INVALID_OUTPUTDELIMITER: return "NI Vision does not support the OutputDelimiter value you supplied.";
+        case ERR_OCR_INVALID_PARAMETER: return "One of the parameters supplied to the OCR function that generated this error is invalid.";
+        case ERR_OCR_INVALID_RECOGNITIONMODE: return "NI Vision does not support the RecognitionMode value you supplied.";
+        case ERR_OCR_INVALID_TOLERANCE: return "NI Vision does not support the tolerance value you supplied.  Valid values are non-negative.";
+        case ERR_OCR_LIB_INIT: return "The OCR library cannot be initialized correctly.";
+        case ERR_OCR_LOAD_LIBRARY: return "There was a failure when loading one of the internal OCR engine or LabView libraries.";
+        case ERR_OCR_NO_TEXT_FOUND: return "The OCR engine could not find any text in the supplied region.";
+        case ERR_OCR_ORIENT_DETECT_FAILED: return "The OCR attempted to detected the text orientation and failed.";
+        case ERR_OCR_PREPROCESSING_FAILED: return "The OCR engine failed during the preprocessing stage.";
+        case ERR_OCR_RECOGNITION_FAILED: return "The OCR engine failed during the recognition stage.";
+        case ERR_OCR_REGION_TOO_SMALL: return "The OCR region provided was too small to have contained any characters.";
+        case ERR_OCR_SKEW_DETECT_FAILED: return "The OCR attempted to detected the text skew and failed.";
+        case ERR_OCR_TEMPLATE_WRONG_SIZE: return "The size of the template string must match the size of the string you are trying to correct.";
+        case ERR_OCR_WTS_DIR_NOT_FOUND: return "The system could not locate the OCR weights directory required for OCR initialization.";
+        case ERR_OPENING_NEWER_3DVISION_SESSION: return "The 3D vision session you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OPENING_NEWER_AIM_GRADING_DATA: return "The AIM grading data attached to the image you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OPENING_NEWER_CLASSIFIER_SESSION: return "The classifier session you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OPENING_NEWER_GEOMETRIC_MATCHING_TEMPLATE: return "The geometric matching template you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OPENING_NEWER_INSPECTION_TEMPLATE: return "The golden template you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OPENING_NEWER_MULTIPLE_GEOMETRIC_TEMPLATE: return "The multiple geometric matching template you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OUT_OF_MEMORY: return "Not enough memory for requested operation.";
+        case ERR_OVERLAY_EXTRAINFO_OPENING_NEW_VERSION: return "The overlay information you tried to open was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to read this file.";
+        case ERR_OVERLAY_GROUP_NOT_FOUND: return "Overlay Group Not Found.";
+        case ERR_PALETTE_NOT_SUPPORTED: return "Only 8-bit images support the use of palettes.  Either do not use a palette, or convert your image to an 8-bit image before using a palette.";
+        case ERR_PARTICLE: return "Invalid particle.";
+        case ERR_POINTS_ARE_COLLINEAR: return "Do not supply collinear points for this operation.";
+        case ERR_PRECISION_NOT_GTR_THAN_0: return "The precision parameter must be greater than 0.";
+        case ERR_PROP_NODE_WRITE_NOT_SUPPORTED: return "The Image Display control does not support writing this property node.";
+        case ERR_PROTECTION: return "Protection error.";
+        case ERR_QR_DETECTION_MODE: return "The data stream that was demodulated could not be read because the mode was not detected.";
+        case ERR_QR_DETECTION_MODELTYPE: return "Couldn't determine the correct model of the QR code.";
+        case ERR_QR_DETECTION_VERSION: return "Couldn't determine the correct version of the QR code.";
+        case ERR_QR_INVALID_BARCODE: return "The barcode that was read contains invalid parameters.";
+        case ERR_QR_INVALID_READ: return "Invalid read of the QR code.";
+        case ERR_REQUIRES_WIN2000_OR_NEWER: return "The function requires the operating system to be Microsoft Windows 2000 or newer.";
+        case ERR_RESERVED_MUST_BE_NULL: return "You must pass NULL for the reserved parameter.";
+        case ERR_ROI_HAS_OPEN_CONTOURS: return "The ROI you passed in may only contain closed contours.";
+        case ERR_ROI_NOT_2_LINES: return "The ROI you passed into imaqGetMeterArc must consist of two lines.";
+        case ERR_ROI_NOT_ANNULUS: return "The ROI must only have a single Annulus contour.";
+        case ERR_ROI_NOT_LINE: return "The ROI must only have a single Line contour.";
+        case ERR_ROI_NOT_POINT: return "The ROI must only have a single Point contour.";
+        case ERR_ROI_NOT_POINTS: return "The ROI must only have Point contours.";
+        case ERR_ROI_NOT_POLYGON: return "ROI is not a polygon.";
+        case ERR_ROI_NOT_RECT: return "The ROI must only have a single Rectangle contour.";
+        case ERR_ROLLBACK_DELETE_TIMER: return "No initialized timed environment is available to close.";
+        case ERR_ROLLBACK_INIT_TIMER: return "The timed environment could not be initialized.";
+        case ERR_ROLLBACK_NOT_SUPPORTED: return "The function is not supported when a time limit is active.";
+        case ERR_ROLLBACK_RESIZE: return "The results of the operation exceeded the size limits on the output data arrays.";
+        case ERR_ROLLBACK_RESOURCE_CANNOT_UNLOCK: return "A resource conflict occurred in the timed environment. Two processes cannot manage the same resource and be time bounded.";
+        case ERR_ROLLBACK_RESOURCE_CONFLICT_1: return "An image created before a time limit is started cannot be resized while a time limit is active.";
+        case ERR_ROLLBACK_RESOURCE_CONFLICT_2: return "An image with pattern matching, calibration, or overlay information cannot be manipulated while a time limit is active.";
+        case ERR_ROLLBACK_RESOURCE_CONFLICT_3: return "An image being modified by one process cannot be requested by another process while a time limit is active.";
+        case ERR_ROLLBACK_RESOURCE_ENABLED: return "Multiple timed environments are not supported.";
+        case ERR_ROLLBACK_RESOURCE_LOCKED: return "A resource conflict occurred in the timed environment. Two processes cannot access the same resource and be time bounded.";
+        case ERR_ROLLBACK_RESOURCE_NON_EMPTY_INITIALIZE: return "Multiple timed environments are not supported.";
+        case ERR_ROLLBACK_RESOURCE_OUT_OF_MEMORY: return "Not enough reserved memory in the timed environment for the requested operation.";
+        case ERR_ROLLBACK_RESOURCE_REINITIALIZE: return "The timed environment is already initialized.";
+        case ERR_ROLLBACK_RESOURCE_UNINITIALIZED_ENABLE: return "A time limit cannot be started until the timed environment is initialized.";
+        case ERR_ROLLBACK_START_TIMER: return "A time limit could not be set.";
+        case ERR_ROLLBACK_STOP_TIMER: return "No time limit is available to stop.";
+        case ERR_ROLLBACK_TIMEOUT: return "The time limit has expired.";
+        case ERR_ROLLBACK_UNBOUNDED_INTERFACE: return "During timed execution, you must use the preallocated version of this operation.";
+        case ERR_ROTATION_ANGLE_RANGE_TOO_LARGE: return "At least one range in the array of rotation angle ranges exceeds 360 degrees.";
+        case ERR_RPC_BIND: return "Unable to establish network connection.";
+        case ERR_RPC_EXECUTE: return "Unable to display remote image on network connection.";
+        case ERR_RPC_EXECUTE_IVB: return "Unable to establish network connection with remote system.";
+        case ERR_SAME_WAVELET_BANDS_SELECTED: return "Same Wavelet band is selected multiple times";
+        case ERR_SATURATION_THRESHOLD_OUT_OF_RANGE: return "The value of the saturation threshold must be from 0 to 255.";
+        case ERR_SHAPEMATCH_BADIMAGEDATA: return "Shape Match requires the image to contain only pixel values of 0 or 1.";
+        case ERR_SHAPEMATCH_BADTEMPLATE: return "The template you supplied for ShapeMatch contains no shape information.";
+        case ERR_SMOOTH_CONTOURS_MUST_BE_SAME: return "You must specify the same value for the smooth contours advanced match option for all templates you want to match.";
+        case ERR_SUCCESS: return "No error.";
+        case ERR_SYSTEM_ERROR: return "System error.";
+        case ERR_TEMPLATEDESCRIPTOR_LEARNSETUPDATA: return "Invalid template descriptor.";
+        case ERR_TEMPLATEDESCRIPTOR_ROTATION_SEARCHSTRATEGY: return "The template descriptor does not contain data required for the requested search strategy in rotation-invariant matching.";
+        case ERR_TEMPLATEIMAGE_EDGEINFO: return "The template image does not contain enough edge information for the sample size(s) requested.";
+        case ERR_TEMPLATEIMAGE_NOCIRCLE: return "The template image does not contain enough information for learning the aggressive search strategy.";
+        case ERR_TEMPLATE_DESCRIPTOR: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_1: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_2: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_3: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_4: return "The template descriptor was created with a newer version of NI Vision. Upgrade to the latest version of NI Vision to use this template.";
+        case ERR_TEMPLATE_DESCRIPTOR_NOROTATION: return "The template descriptor does not contain data required for rotation-invariant matching.";
+        case ERR_TEMPLATE_DESCRIPTOR_NOSCALE: return "The template descriptor does not contain data required for scale-invariant matching.";
+        case ERR_TEMPLATE_DESCRIPTOR_NOSHIFT: return "The template descriptor does not contain data required for shift-invariant matching.";
+        case ERR_TEMPLATE_DESCRIPTOR_ROTATION: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_ROTATION_1: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_SHIFT: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_DESCRIPTOR_SHIFT_1: return "Invalid template descriptor.";
+        case ERR_TEMPLATE_EMPTY: return "The template image is empty.";
+        case ERR_TEMPLATE_IMAGE_CONTRAST_TOO_LOW: return "The template image does not contain enough contrast.";
+        case ERR_TEMPLATE_IMAGE_TOO_LARGE: return "The template image is too large.";
+        case ERR_TEMPLATE_IMAGE_TOO_SMALL: return "The template image is too small.";
+        case ERR_TEMPLATE_NOT_LEARNED: return "You supplied a template that was not learned.";
+        case ERR_THREAD_COULD_NOT_INITIALIZE: return "Could not execute the function in the separate thread because the thread could not initialize.";
+        case ERR_THREAD_INITIALIZING: return "Could not execute the function in the separate thread because the thread has not completed initialization.";
+        case ERR_TIMEOUT: return "Trigger timeout.";
+        case ERR_TIME_BOUNDED_EXECUTION_NOT_SUPPORTED: return "NI Vision no longer supports time-bounded execution.";
+        case ERR_TOO_MANY_3DVISION_SESSIONS: return "There are too many 3D vision sessions open.  You must close a session before you can open another one.";
+        case ERR_TOO_MANY_AVI_SESSIONS: return "There are too many AVI sessions open.  You must close a session before you can open another one.";
+        case ERR_TOO_MANY_CLASSIFICATION_SESSIONS: return "There are too many classification sessions open.  You must close a session before you can open another one.";
+        case ERR_TOO_MANY_CONTOURS: return "The ROI contains too many contours.";
+        case ERR_TOO_MANY_CURVES: return "Too many curves extracted from image. Raise the edge threshold or reduce the ROI.";
+        case ERR_TOO_MANY_OCCLUSION_RANGES: return "You can specify only one occlusion range.";
+        case ERR_TOO_MANY_OCR_SESSIONS: return "There are too many OCR sessions open.  You must close a session before you can open another one.";
+        case ERR_TOO_MANY_PARTICLES: return "The image has too many particles for this process.";
+        case ERR_TOO_MANY_ROTATION_ANGLE_RANGES: return "The array of rotation angle ranges contains too many ranges.";
+        case ERR_TOO_MANY_SCALE_RANGES: return "You can specify only one scale range.";
+        case ERR_TOO_MANY_ZONES: return "The number of zones found exceeded the capacity of the algorithm.";
+        case ERR_TRIG_TIMEOUT: return "Trigger timeout.";
+        case ERR_UNDEF_POINT: return "You specified a point that lies outside the image.";
+        case ERR_UNINIT: return "NI Vision did not initialize properly.";
+        case ERR_UNKNOWN_ALGORITHM: return "You specified the dispatch status of an unknown algorithm.";
+        case ERR_UNREGISTERED: return "Unlicensed copy of NI Vision.";
+        case ERR_UNSUPPORTED_2D_BARCODE_SEARCH_MODE: return "NI Vision does not support the search mode you provided for the type of 2D barcode for which you are searching.";
+        case ERR_UNSUPPORTED_COLOR_MODE: return "This function does not currently support the color mode you specified.";
+        case ERR_UNSUPPORTED_JPEG2000_COLORSPACE_METHOD: return "NI Vision does not support reading JPEG2000 files with this colorspace method.";
+        case ERR_VALUE_NOT_IN_ENUM: return "Value not in enumeration.";
+        case ERR_WINDOW_ID: return "Invalid window ID.";
+        case ERR_WRITE_FILE_NOT_SUPPORTED: return "Writing files is not supported on this device.";
+        case ERR_WRONG_REGION_TYPE: return "You selected a region that is not of the right type.";
+        case IMAQdxErrorAsyncRead: return "Unable to perform asychronous register read.";
+        case IMAQdxErrorAsyncWrite: return "Unable to perform asychronous register write.";
+        case IMAQdxErrorAttributeNotReadable: return "Unable to get attribute.";
+        case IMAQdxErrorAttributeNotSettable: return "Unable to set attribute.";
+        case IMAQdxErrorAttributeNotSupported: return "Attribute not supported by the camera.";
+        case IMAQdxErrorAttributeOutOfRange: return "Attribute value is out of range.";
+        case IMAQdxErrorBayerPixelFormatNotSelected: return "This operation requires that the camera has a Bayer pixel format selected.";
+        case IMAQdxErrorBufferHasLostPackets: return "The requested buffer has lost packets and the user requested an error to be generated.";
+        case IMAQdxErrorBufferIncompleteData: return "The requested buffer has incomplete data and the user requested an error to be generated.";
+        case IMAQdxErrorBufferListEmpty: return "Buffer list is empty. Add one or more buffers.";
+        case IMAQdxErrorBufferListLocked: return "Buffer list is already locked. Reconfigure acquisition and try again.";
+        case IMAQdxErrorBufferListNotLocked: return "No buffer list. Reconfigure acquisition and try again.";
+        case IMAQdxErrorBufferNotAvailable: return "Requested buffer is unavailable.";
+        case IMAQdxErrorBusReset: return "Bus reset occurred during a transaction.";
+        case IMAQdxErrorCameraAcquisitionConfigFailed: return "The camera returned an error starting the acquisition.";
+        case IMAQdxErrorCameraClosePending: return "The camera still has outstanding references and will be closed when these operations complete.";
+        case IMAQdxErrorCameraConfigurationHasChanged: return "The camera did not return an image of the correct type it was configured for previously.";
+        case IMAQdxErrorCameraInUse: return "Camera is already in use.";
+        case IMAQdxErrorCameraInvalidAuthentication: return "The camera is configured with password authentication and either the user name and password were not configured or they are incorrect.";
+        case IMAQdxErrorCameraMulticastNotAvailable: return "Unable to configure the system for multicast support.";
+        case IMAQdxErrorCameraNotConfiguredForListener: return "The camera is not configured properly to support a listener.";
+        case IMAQdxErrorCameraNotFound: return "Camera not found";
+        case IMAQdxErrorCameraNotInitialized: return "Camera is not initialized.";
+        case IMAQdxErrorCameraNotRunning: return "No acquisition in progress.";
+        case IMAQdxErrorCameraPropertyInvalid: return "The value for an invalid camera property was requested.";
+        case IMAQdxErrorCameraRemoved: return "Camera has been removed.";
+        case IMAQdxErrorCameraRunning: return "Acquisition in progress.";
+        case IMAQdxErrorCameraUnreachable: return "Unable to connect to the camera.";
+        case IMAQdxErrorCorruptedImageReceived: return "The camera returned a corrupted image.";
+        case IMAQdxErrorDLLNotFound: return "The DLL could not be found.";
+        case IMAQdxErrorFileAccess: return "Unable to read/write to file.";
+        case IMAQdxErrorFirmwareUpdateNeeded: return "The acquisition hardware needs a firmware update before it can be used.";
+        case IMAQdxErrorFirmwareUpdateRebootNeeded: return "The firmware on the acquisition hardware has been updated and the system must be rebooted before use.";
+        case IMAQdxErrorFormat7Parameters: return "For format 7: The combination of speed, image position, image size, and color coding is incorrect.";
+        case IMAQdxErrorFunctionNotFound: return "The function could not be found.";
+        case IMAQdxErrorGenICamError: return "Unknown Genicam error.";
+        case IMAQdxErrorGiGEVisionError: return "Unknown GiGE Vision error.";
+        case IMAQdxErrorGuard: return "None";
+        case IMAQdxErrorHighPerformanceNotSupported: return "High performance acquisition is not supported on the specified network interface. Connect the camera to a network interface running the high performance driver.";
+        case IMAQdxErrorInterfaceNotRenamed: return "Unable to rename interface. Invalid or duplicate name specified.";
+        case IMAQdxErrorInternal: return "Internal error";
+        case IMAQdxErrorInvalidAddress: return "Invalid address";
+        case IMAQdxErrorInvalidAttributeType: return "The attribute type is not compatible with the passed variable type.";
+        case IMAQdxErrorInvalidCameraFile: return "Invalid camera file.";
+        case IMAQdxErrorInvalidCameraURLString: return "Camera has malformed URL string.";
+        case IMAQdxErrorInvalidDeviceType: return "Invalid device type";
+        case IMAQdxErrorInvalidInterface: return "Invalid camera session";
+        case IMAQdxErrorInvalidParameter: return "Invalid parameter";
+        case IMAQdxErrorInvalidPointer: return "Invalid pointer";
+        case IMAQdxErrorInvalidRegistryKey: return "Invalid registry key";
+        case IMAQdxErrorInvalidU3VUSBDescriptor: return "The camera has a USB descriptor that is incompatible with the USB3 Vision specification.";
+        case IMAQdxErrorInvalidXML: return "Unable to load camera's XML file.";
+        case IMAQdxErrorJumboFramesNotEnabled: return "Jumbo frames are not enabled on the host.  Maximum packet size is 1500 bytes.";
+        case IMAQdxErrorKernelDriverUnavailable: return "Unable to attach to the kernel mode driver.";
+        case IMAQdxErrorLicenseNotActivated: return "License not activated.";
+        case IMAQdxErrorLightingCurrentOutOfRange: return "The requested current level from the lighting controller is not possible.";
+        case IMAQdxErrorNetworkError: return "Unknown network error.";
+        case IMAQdxErrorNoSupportedVideoModes: return "The camera does not have any video modes which are supported.";
+        case IMAQdxErrorNotImplemented: return "Not implemented";
+        case IMAQdxErrorPixelFormatDecoderUnavailable: return "No decoder available for selected pixel format.";
+        case IMAQdxErrorResourcesAllocated: return "Transfer engine resources already allocated. Reconfigure acquisition and try again.";
+        case IMAQdxErrorResourcesUnavailable: return "Insufficient transfer engine resources.";
+        case IMAQdxErrorSoftwareFault: return "An unexpected software error occurred.";
+        case IMAQdxErrorSoftwareTriggerOverrun: return "Software trigger overrun.";
+        case IMAQdxErrorSystemMemoryFull: return "Not enough memory";
+        case IMAQdxErrorTestPacketNotReceived: return "The system did not receive a test packet from the camera. The packet size may be too large for the network configuration or a firewall may be enabled.";
+        case IMAQdxErrorTimeout: return "Timeout.";
+        case IMAQdxErrorU3VControlInterfaceError: return "There was an error from the control interface of the USB3 Vision camera.";
+        case IMAQdxErrorU3VEventInterfaceError: return "There was an error from the event interface of the USB3 Vision camera.";
+        case IMAQdxErrorU3VInsufficientPower: return "The USB3 Vision camera requires more current than can be supplied by the USB port in use.";
+        case IMAQdxErrorU3VInvalidControlInterface: return "The USB3 Vision control interface is not implemented or is invalid on this camera.";
+        case IMAQdxErrorU3VInvalidEventInterface: return "The USB3 Vision event interface is not implemented or is invalid on this camera.";
+        case IMAQdxErrorU3VInvalidMaxCurrent: return "The U3V_MaximumCurrentUSB20_mA registry value is not valid for the connected USB3 Vision camera.";
+        case IMAQdxErrorU3VInvalidStreamInterface: return "The USB3 Vision stream interface is not implemented or is invalid on this camera.";
+        case IMAQdxErrorU3VStreamInterfaceError: return "There was an error from the stream interface of the USB3 Vision camera.";
+        case IMAQdxErrorU3VUnsupportedConnectionSpeed: return "The USB connection speed is not supported by the camera.  Check whether the camera is plugged into a USB 2.0 port instead of a USB 3.0 port.  If so, verify that the camera supports this use case.";
+        case IMAQdxErrorUSB3VisionError: return "Unknown USB3 Vision error.";
+        case IMAQdxErrorUnknownHTTPError: return "The camera returned an unknown HTTP error.";
+        default: return "Unknown error";
+    }
 }

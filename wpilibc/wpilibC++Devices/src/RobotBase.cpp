@@ -16,6 +16,7 @@
 #include "Utility.h"
 #include <cstring>
 #include "HAL/HAL.hpp"
+#include <cstdio>
 
 #ifdef __vxworks
 // VXWorks needs som special unloading code
@@ -60,6 +61,13 @@ RobotBase::RobotBase()
 	HLUsageReporting::SetImplementation(new HardwareHLReporting()); \
 
 	RobotBase::setInstance(this);
+	
+	FILE *file = NULL;
+	file = fopen("/tmp/frc_versions/FRC_Lib_Version.ini", "w");
+
+	fputs("2015 C++ 1.2.0", file);
+	if (file != NULL)
+	fclose(file);
 }
 
 /**
@@ -123,6 +131,8 @@ bool RobotBase::IsTest()
 /**
  * This hook is called right before startCompetition(). By default, tell the DS that the robot is now ready to
  * be enabled. If you don't want for the robot to be enabled yet, you can override this method to do nothing.
+ * If you do so, you will need to call HALNetworkCommunicationObserveUserProgramStarting() from your code when
+ * you are ready for the robot to be enabled.
  */
 void RobotBase::Prestart()
 {

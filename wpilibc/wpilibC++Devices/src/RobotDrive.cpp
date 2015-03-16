@@ -41,14 +41,16 @@ void RobotDrive::InitRobotDrive() {
 	m_maxOutput = 1.0;
 	m_safetyHelper = new MotorSafetyHelper(this);
 	m_safetyHelper->SetSafetyEnabled(true);
+	m_syncGroup = 0;
 }
 
-/** Constructor for RobotDrive with 2 motors specified with channel numbers.
+/** 
+ * Constructor for RobotDrive with 2 motors specified with channel numbers.
  * Set up parameters for a two wheel drive system where the
  * left and right motor pwm channels are specified in the call.
  * This call assumes Talons for controlling the motors.
- * @param leftMotorChannel The PWM channel number that drives the left motor.
- * @param rightMotorChannel The PWM channel number that drives the right motor.
+ * @param leftMotorChannel The PWM channel number that drives the left motor. 0-9 are on-board, 10-19 are on the MXP port
+ * @param rightMotorChannel The PWM channel number that drives the right motor. 0-9 are on-board, 10-19 are on the MXP port
  */
 RobotDrive::RobotDrive(uint32_t leftMotorChannel, uint32_t rightMotorChannel)
 {
@@ -68,10 +70,10 @@ RobotDrive::RobotDrive(uint32_t leftMotorChannel, uint32_t rightMotorChannel)
  * Set up parameters for a four wheel drive system where all four motor
  * pwm channels are specified in the call.
  * This call assumes Talons for controlling the motors.
- * @param frontLeftMotor Front left motor channel number
- * @param rearLeftMotor Rear Left motor channel number
- * @param frontRightMotor Front right motor channel number
- * @param rearRightMotor Rear Right motor channel number
+ * @param frontLeftMotor Front left motor channel number. 0-9 are on-board, 10-19 are on the MXP port
+ * @param rearLeftMotor Rear Left motor channel number. 0-9 are on-board, 10-19 are on the MXP port
+ * @param frontRightMotor Front right motor channel number. 0-9 are on-board, 10-19 are on the MXP port
+ * @param rearRightMotor Rear Right motor channel number. 0-9 are on-board, 10-19 are on the MXP port
  */
 RobotDrive::RobotDrive(uint32_t frontLeftMotor, uint32_t rearLeftMotor,
 		uint32_t frontRightMotor, uint32_t rearRightMotor)
@@ -94,7 +96,7 @@ RobotDrive::RobotDrive(uint32_t frontLeftMotor, uint32_t rearLeftMotor,
  * The SpeedController version of the constructor enables programs to use the RobotDrive classes with
  * subclasses of the SpeedController objects, for example, versions with ramping or reshaping of
  * the curve to suit motor bias or deadband elimination.
- * @param leftMotor The left SpeedController object used to drive the robot.
+ * @param leftMotor The left SpeedController object used to drive the robot. 
  * @param rightMotor the right SpeedController object used to drive the robot.
  */
 RobotDrive::RobotDrive(SpeedController *leftMotor, SpeedController *rightMotor)
@@ -506,14 +508,15 @@ void RobotDrive::MecanumDrive_Cartesian(float x, float y, float rotation, float 
 
 	Normalize(wheelSpeeds);
 
-	uint8_t syncGroup = 0x80;
+	m_frontLeftMotor->Set(wheelSpeeds[kFrontLeftMotor] * m_invertedMotors[kFrontLeftMotor] * m_maxOutput, m_syncGroup);
+	m_frontRightMotor->Set(wheelSpeeds[kFrontRightMotor] * m_invertedMotors[kFrontRightMotor] * m_maxOutput, m_syncGroup);
+	m_rearLeftMotor->Set(wheelSpeeds[kRearLeftMotor] * m_invertedMotors[kRearLeftMotor] * m_maxOutput, m_syncGroup);
+	m_rearRightMotor->Set(wheelSpeeds[kRearRightMotor] * m_invertedMotors[kRearRightMotor] * m_maxOutput, m_syncGroup);
 
-	m_frontLeftMotor->Set(wheelSpeeds[kFrontLeftMotor] * m_invertedMotors[kFrontLeftMotor] * m_maxOutput, syncGroup);
-	m_frontRightMotor->Set(wheelSpeeds[kFrontRightMotor] * m_invertedMotors[kFrontRightMotor] * m_maxOutput, syncGroup);
-	m_rearLeftMotor->Set(wheelSpeeds[kRearLeftMotor] * m_invertedMotors[kRearLeftMotor] * m_maxOutput, syncGroup);
-	m_rearRightMotor->Set(wheelSpeeds[kRearRightMotor] * m_invertedMotors[kRearRightMotor] * m_maxOutput, syncGroup);
-
-	CANJaguar::UpdateSyncGroup(syncGroup);
+	if (m_syncGroup != 0)
+	{
+		CANJaguar::UpdateSyncGroup(m_syncGroup);
+	}
 
 	m_safetyHelper->Feed();
 }
@@ -555,14 +558,15 @@ void RobotDrive::MecanumDrive_Polar(float magnitude, float direction, float rota
 
 	Normalize(wheelSpeeds);
 
-	uint8_t syncGroup = 0x80;
+	m_frontLeftMotor->Set(wheelSpeeds[kFrontLeftMotor] * m_invertedMotors[kFrontLeftMotor] * m_maxOutput, m_syncGroup);
+	m_frontRightMotor->Set(wheelSpeeds[kFrontRightMotor] * m_invertedMotors[kFrontRightMotor] * m_maxOutput, m_syncGroup);
+	m_rearLeftMotor->Set(wheelSpeeds[kRearLeftMotor] * m_invertedMotors[kRearLeftMotor] * m_maxOutput, m_syncGroup);
+	m_rearRightMotor->Set(wheelSpeeds[kRearRightMotor] * m_invertedMotors[kRearRightMotor] * m_maxOutput, m_syncGroup);
 
-	m_frontLeftMotor->Set(wheelSpeeds[kFrontLeftMotor] * m_invertedMotors[kFrontLeftMotor] * m_maxOutput, syncGroup);
-	m_frontRightMotor->Set(wheelSpeeds[kFrontRightMotor] * m_invertedMotors[kFrontRightMotor] * m_maxOutput, syncGroup);
-	m_rearLeftMotor->Set(wheelSpeeds[kRearLeftMotor] * m_invertedMotors[kRearLeftMotor] * m_maxOutput, syncGroup);
-	m_rearRightMotor->Set(wheelSpeeds[kRearRightMotor] * m_invertedMotors[kRearRightMotor] * m_maxOutput, syncGroup);
-
-	CANJaguar::UpdateSyncGroup(syncGroup);
+	if (m_syncGroup != 0)
+	{
+		CANJaguar::UpdateSyncGroup(m_syncGroup);
+	}
 
 	m_safetyHelper->Feed();
 }
@@ -594,17 +598,18 @@ void RobotDrive::SetLeftRightMotorOutputs(float leftOutput, float rightOutput)
 {
 	wpi_assert(m_rearLeftMotor != NULL && m_rearRightMotor != NULL);
 
-	uint8_t syncGroup = 0x80;
-
 	if (m_frontLeftMotor != NULL)
-		m_frontLeftMotor->Set(Limit(leftOutput) * m_invertedMotors[kFrontLeftMotor] * m_maxOutput, syncGroup);
-	m_rearLeftMotor->Set(Limit(leftOutput) * m_invertedMotors[kRearLeftMotor] * m_maxOutput, syncGroup);
+		m_frontLeftMotor->Set(Limit(leftOutput) * m_invertedMotors[kFrontLeftMotor] * m_maxOutput, m_syncGroup);
+	m_rearLeftMotor->Set(Limit(leftOutput) * m_invertedMotors[kRearLeftMotor] * m_maxOutput, m_syncGroup);
 
 	if (m_frontRightMotor != NULL)
-		m_frontRightMotor->Set(-Limit(rightOutput) * m_invertedMotors[kFrontRightMotor] * m_maxOutput, syncGroup);
-	m_rearRightMotor->Set(-Limit(rightOutput) * m_invertedMotors[kRearRightMotor] * m_maxOutput, syncGroup);
+		m_frontRightMotor->Set(-Limit(rightOutput) * m_invertedMotors[kFrontRightMotor] * m_maxOutput, m_syncGroup);
+	m_rearRightMotor->Set(-Limit(rightOutput) * m_invertedMotors[kRearRightMotor] * m_maxOutput, m_syncGroup);
 
-	CANJaguar::UpdateSyncGroup(syncGroup);
+	if (m_syncGroup != 0)
+	{
+		CANJaguar::UpdateSyncGroup(m_syncGroup);
+	}
 
 	m_safetyHelper->Feed();
 }
@@ -697,7 +702,15 @@ void RobotDrive::SetMaxOutput(double maxOutput)
 	m_maxOutput = maxOutput;
 }
 
-
+/**
+ * Set the number of the sync group for the motor controllers.  If the motor controllers are {@link CANJaguar}s,
+ * then they will all be added to this sync group, causing them to update their values at the same time.
+ *
+ * @param syncGroup the update group to add the motor controllers to
+ */
+void RobotDrive::SetCANJaguarSyncGroup(uint8_t syncGroup) {
+	m_syncGroup = syncGroup;
+}
 
 void RobotDrive::SetExpiration(float timeout)
 {

@@ -8,16 +8,25 @@
 #include "DigitalInput.h"
 #include "DigitalOutput.h"
 #include "SPI.h"
+#include "LiveWindow/LiveWindow.h"
 
 const uint8_t ADXL345_SPI::kPowerCtlRegister;
 const uint8_t ADXL345_SPI::kDataFormatRegister;
 const uint8_t ADXL345_SPI::kDataRegister;
 constexpr double ADXL345_SPI::kGsPerLSB;
 
+
+/**
+ * Constructor.
+ *
+ * @param port The SPI port the accelerometer is attached to
+ * @param range The range (+ or -) that the accelerometer will measure.
+ */
 ADXL345_SPI::ADXL345_SPI(SPI::Port port, ADXL345_SPI::Range range)
 {
 	m_port = port;
 	Init(range);
+	LiveWindow::GetInstance()->AddSensor("ADXL345_SPI", port, this);
 }
 
 /**
@@ -106,7 +115,7 @@ double ADXL345_SPI::GetAcceleration(ADXL345_SPI::Axes axis)
 /**
  * Get the acceleration of all axes in Gs.
  *
- * @return Acceleration measured on all axes of the ADXL345 in Gs.
+ * @return An object containing the acceleration measured on each axis of the ADXL345 in Gs.
  */
 ADXL345_SPI::AllAxes ADXL345_SPI::GetAccelerations()
 {
@@ -130,4 +139,25 @@ ADXL345_SPI::AllAxes ADXL345_SPI::GetAccelerations()
 		data.ZAxis = rawData[2] * kGsPerLSB;
 	}
 	return data;
+}
+
+std::string ADXL345_SPI::GetSmartDashboardType() {
+	return "3AxisAccelerometer";
+}
+
+void ADXL345_SPI::InitTable(ITable *subtable) {
+	m_table = subtable;
+	UpdateTable();
+}
+
+void ADXL345_SPI::UpdateTable() {
+	if (m_table != NULL) {
+		m_table->PutNumber("X", GetX());
+		m_table->PutNumber("Y", GetY());
+		m_table->PutNumber("Z", GetZ());
+	}
+}
+
+ITable* ADXL345_SPI::GetTable() {
+	return m_table;
 }

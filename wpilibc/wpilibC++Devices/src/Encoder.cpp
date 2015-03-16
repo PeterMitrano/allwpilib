@@ -28,11 +28,12 @@ void Encoder::InitEncoder(bool reverseDirection, EncodingType encodingType)
 {
 	m_table = NULL;
 	m_encodingType = encodingType;
-	int32_t index = 0;
+	m_index = 0;
 	switch (encodingType)
 	{
 		case k4X:
 		{
+			m_encodingScale = 4;
 			if (m_aSource->StatusIsFatal())
 			{
 				CloneError(m_aSource);
@@ -44,28 +45,32 @@ void Encoder::InitEncoder(bool reverseDirection, EncodingType encodingType)
 				return;
 			}
 			int32_t status = 0;
-			int32_t index = 0;
 			m_encoder =  initializeEncoder(m_aSource->GetModuleForRouting(), m_aSource->GetChannelForRouting(),
 										   m_aSource->GetAnalogTriggerForRouting(),
 										   m_bSource->GetModuleForRouting(), m_bSource->GetChannelForRouting(),
 										   m_bSource->GetAnalogTriggerForRouting(),
-										   reverseDirection, &index, &status);
+										   reverseDirection, &m_index, &status);
 			  wpi_setErrorWithContext(status, getHALErrorMessage(status));
 			m_counter = NULL;
+			SetMaxPeriod(.5);
 			break;
 		}
 		case k1X:
 		case k2X:
 		{
+			m_encodingScale = encodingType == k1X ? 1 : 2;
 			m_counter = new Counter(m_encodingType, m_aSource, m_bSource, reverseDirection);
-			index = m_counter->GetIndex();
+			m_index = m_counter->GetFPGAIndex();
 			break;
 		}
+		default:
+			wpi_setErrorWithContext(-1, "Invalid encodingType argument");
+			break;
 	}
 	m_distancePerPulse = 1.0;
 	m_pidSource = kDistance;
 
-	HALReport(HALUsageReporting::kResourceType_Encoder, index, encodingType);
+	HALReport(HALUsageReporting::kResourceType_Encoder, m_index, encodingType);
 	LiveWindow::GetInstance()->AddSensor("Encoder", m_aSource->GetChannelForRouting(), this);
 }
 
@@ -75,8 +80,8 @@ void Encoder::InitEncoder(bool reverseDirection, EncodingType encodingType)
  *
  * The counter will start counting immediately.
  *
- * @param aChannel The a channel digital input channel.
- * @param bChannel The b channel digital input channel.
+ * @param aChannel The a channel DIO channel. 0-9 are on-board, 10-25 are on the MXP port
+ * @param bChannel The b channel DIO channel. 0-9 are on-board, 10-25 are on the MXP port
  * @param reverseDirection represents the orientation of the encoder and inverts the output values
  * if necessary so forward represents positive values.
  * @param encodingType either k1X, k2X, or k4X to indicate 1X, 2X or 4X decoding. If 4X is
@@ -178,6 +183,12 @@ Encoder::~Encoder()
 }
 
 /**
+ * The encoding scale factor 1x, 2x, or 4x, per the requested encodingType.
+ * Used to divide raw edge counts down to spec'd counts.
+ */
+int32_t Encoder::GetEncodingScale() { return m_encodingScale; }
+
+/**
  * Gets the raw value from the encoder.
  * The raw value is the actual count unscaled by the 1x, 2x, or 4x scale
  * factor.
@@ -231,7 +242,7 @@ void Encoder::Reset()
 /**
  * Returns the period of the most recent pulse.
  * Returns the period of the most recent Encoder pulse in seconds.
- * This method compenstates for the decoding type.
+ * This method compensates for the decoding type.
  *
  * @deprecated Use GetRate() in favor of this method.  This returns unscaled periods and GetRate() scales using value from SetDistancePerPulse().
  *
@@ -494,6 +505,47 @@ double Encoder::PIDGet()
 	default:
 		return 0.0;
 	}
+}
+
+/**
+ * Set the index source for the encoder.  When this source is activated, the encoder count automatically resets.
+ *
+ * @param channel A DIO channel to set as the encoder index
+ * @param type The state that will cause the encoder to reset
+ */
+void Encoder::SetIndexSource(uint32_t channel, Encoder::IndexingType type) {
+	int32_t status = 0;
+	bool activeHigh = (type == kResetWhileHigh) || (type == kResetOnRisingEdge);
+	bool edgeSensitive = (type == kResetOnFallingEdge) || (type == kResetOnRisingEdge);
+
+  setEncoderIndexSource(m_encoder, channel, false, activeHigh, edgeSensitive, &status);
+  wpi_setGlobalErrorWithContext(status, getHALErrorMessage(status));
+}
+
+/**
+ * Set the index source for the encoder.  When this source is activated, the encoder count automatically resets.
+ *
+ * @param channel A digital source to set as the encoder index
+ * @param type The state that will cause the encoder to reset
+ */
+void Encoder::SetIndexSource(DigitalSource *source, Encoder::IndexingType type) {
+	int32_t status = 0;
+	bool activeHigh = (type == kResetWhileHigh) || (type == kResetOnRisingEdge);
+	bool edgeSensitive = (type == kResetOnFallingEdge) || (type == kResetOnRisingEdge);
+
+  setEncoderIndexSource(m_encoder, source->GetChannelForRouting(), source->GetAnalogTriggerForRouting(), activeHigh,
+  		edgeSensitive, &status);
+  wpi_setGlobalErrorWithContext(status, getHALErrorMessage(status));
+}
+
+/**
+ * Set the index source for the encoder.  When this source is activated, the encoder count automatically resets.
+ *
+ * @param channel A digital source to set as the encoder index
+ * @param type The state that will cause the encoder to reset
+ */
+void Encoder::SetIndexSource(DigitalSource &source, Encoder::IndexingType type) {
+	SetIndexSource(&source, type);
 }
 
 void Encoder::UpdateTable() {

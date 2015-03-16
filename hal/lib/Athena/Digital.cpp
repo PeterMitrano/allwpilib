@@ -633,6 +633,25 @@ void setCounterAverageSize(void* counter_pointer, int32_t size, int32_t *status)
 }
 
 /**
+ * remap the digital source pin and set the module.
+ * If it's an analog trigger, determine the module from the high order routing channel
+ * else do normal digital input remapping based on pin number (MXP)
+ */
+void remapDigitalSource(bool analogTrigger, uint32_t &pin, uint8_t &module) {
+  if (analogTrigger) {
+    module = pin >> 4;
+  } else {
+    if(pin >= kNumHeaders) {
+      pin = remapMXPChannel(pin);
+      module = 1;
+    } else {
+      module = 0;
+    }
+  }
+}
+
+
+/**
  * Set the source object that causes the counter to count up.
  * Set the up counting DigitalSource.
  */
@@ -641,12 +660,7 @@ void setCounterUpSource(void* counter_pointer, uint32_t pin, bool analogTrigger,
 
   uint8_t module;
 
-  if(pin >= kNumHeaders) {
-    pin = remapMXPChannel(pin);
-    module = 1;
-  } else {
-    module = 0;
-  }
+  remapDigitalSource(analogTrigger, pin, module);
 
   counter->counter->writeConfig_UpSource_Module(module, status);
   counter->counter->writeConfig_UpSource_Channel(pin, status);
@@ -696,12 +710,7 @@ void setCounterDownSource(void* counter_pointer, uint32_t pin, bool analogTrigge
 
   uint8_t module;
 
-  if(pin >= kNumHeaders) {
-    pin = remapMXPChannel(pin);
-    module = 1;
-  } else {
-    module = 0;
-  }
+  remapDigitalSource(analogTrigger, pin, module);
 
   counter->counter->writeConfig_DownSource_Module(module, status);
   counter->counter->writeConfig_DownSource_Channel(pin, status);
@@ -838,7 +847,7 @@ double getCounterPeriod(void* counter_pointer, int32_t *status) {
 	// output.Period is a fixed point number that counts by 2 (24 bits, 25 integer bits)
 	period = (double)(output.Period << 1) / (double)output.Count;
   }
-  return period * 1.0e-6;
+  return period * 2.5e-8;  // result * timebase (currently 40ns)
 }
 
 /**
@@ -850,7 +859,7 @@ double getCounterPeriod(void* counter_pointer, int32_t *status) {
  */
 void setCounterMaxPeriod(void* counter_pointer, double maxPeriod, int32_t *status) {
   Counter* counter = (Counter*) counter_pointer;
-  counter->counter->writeTimerConfig_StallPeriod((uint32_t)(maxPeriod * 1.0e6), status);
+  counter->counter->writeTimerConfig_StallPeriod((uint32_t)(maxPeriod * 4.0e8), status);
 }
 
 /**
@@ -925,15 +934,8 @@ void* initializeEncoder(uint8_t port_a_module, uint32_t port_a_pin, bool port_a_
   // Initialize encoder structure
   Encoder* encoder = new Encoder();
 
-  if(port_a_pin >= kNumHeaders) {
-    port_a_pin = remapMXPChannel(port_a_pin);
-    port_a_module = 1;
-  }
-
-  if(port_b_pin >= kNumHeaders) {
-    port_b_pin = remapMXPChannel(port_b_pin);
-    port_b_module = 1;
-  }
+  remapDigitalSource(port_a_analog_trigger, port_a_pin, port_a_module);
+  remapDigitalSource(port_b_analog_trigger, port_b_pin, port_b_module);
 
   Resource::CreateResourceObject(&quadEncoders, tEncoder::kNumSystems);
   encoder->index = quadEncoders->Allocate("4X Encoder");
@@ -1000,7 +1002,7 @@ double getEncoderPeriod(void* encoder_pointer, int32_t *status) {
 	// output.Period is a fixed point number that counts by 2 (24 bits, 25 integer bits)
 	value = (double)(output.Period << 1) / (double)output.Count;
   }
-  double measuredPeriod = value * 1.0e-6;
+  double measuredPeriod = value * 2.5e-8;
   return measuredPeriod / DECODING_SCALING_FACTOR;
 }
 
@@ -1018,7 +1020,7 @@ double getEncoderPeriod(void* encoder_pointer, int32_t *status) {
  */
 void setEncoderMaxPeriod(void* encoder_pointer, double maxPeriod, int32_t *status) {
   Encoder* encoder = (Encoder*) encoder_pointer;
-  encoder->encoder->writeTimerConfig_StallPeriod((uint32_t)(maxPeriod * 1.0e6 * DECODING_SCALING_FACTOR), status);
+  encoder->encoder->writeTimerConfig_StallPeriod((uint32_t)(maxPeriod * 4.0e8 * DECODING_SCALING_FACTOR), status);
 }
 
 /**
@@ -1076,6 +1078,20 @@ void setEncoderSamplesToAverage(void* encoder_pointer, uint32_t samplesToAverage
 uint32_t getEncoderSamplesToAverage(void* encoder_pointer, int32_t *status) {
   Encoder* encoder = (Encoder*) encoder_pointer;
   return encoder->encoder->readTimerConfig_AverageSize(status);
+}
+
+/**
+ * Set an index source for an encoder, which is an input that resets the
+ * encoder's count.
+ */
+void setEncoderIndexSource(void *encoder_pointer, uint32_t pin, bool analogTrigger, bool activeHigh,
+    bool edgeSensitive, int32_t *status) {
+  Encoder* encoder = (Encoder*) encoder_pointer;
+  encoder->encoder->writeConfig_IndexSource_Channel((unsigned char)pin, status);
+  encoder->encoder->writeConfig_IndexSource_Module((unsigned char)0, status);
+  encoder->encoder->writeConfig_IndexSource_AnalogTrigger(analogTrigger, status);
+  encoder->encoder->writeConfig_IndexActiveHigh(activeHigh, status);
+  encoder->encoder->writeConfig_IndexEdgeSensitive(edgeSensitive, status);
 }
 
 /**

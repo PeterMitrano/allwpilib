@@ -33,6 +33,9 @@ import edu.wpi.first.wpilibj.util.BoundaryException;
  * to be zeroed before use.
  */
 public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveWindowSendable {
+	public enum IndexingType {
+		kResetWhileHigh, kResetWhileLow, kResetOnFallingEdge, kResetOnRisingEdge
+	}
 
 	/**
 	 * The a source
@@ -52,6 +55,7 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 										// tick
 	private Counter m_counter; // Counter object for 1x and 2x encoding
 	private EncodingType m_encodingType = EncodingType.k4X;
+	private int m_encodingScale; // 1x, 2x, or 4x, per the encodingType
 	private boolean m_allocatedA;
 	private boolean m_allocatedB;
 	private boolean m_allocatedI;
@@ -77,6 +81,7 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 	private void initEncoder(boolean reverseDirection) {
 		switch (m_encodingType.value) {
 		case EncodingType.k4X_val:
+			m_encodingScale = 4;
 			ByteBuffer status = ByteBuffer.allocateDirect(4);
 			// set the byte order
 			status.order(ByteOrder.LITTLE_ENDIAN);
@@ -94,11 +99,14 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 			HALUtil.checkStatus(status.asIntBuffer());
 			m_index = index.asIntBuffer().get(0);
 			m_counter = null;
+			setMaxPeriod(.5);
 			break;
 		case EncodingType.k2X_val:
 		case EncodingType.k1X_val:
+			m_encodingScale = m_encodingType == EncodingType.k1X ? 1 : 2;
 			m_counter = new Counter(m_encodingType, m_aSource, m_bSource,
 					reverseDirection);
+			m_index = m_counter.getFPGAIndex();
 			break;
 		}
 		m_distancePerPulse = 1.0;
@@ -115,9 +123,9 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 	 * The encoder will start counting immediately.
 	 *
 	 * @param aChannel
-	 *            The a channel digital input channel.
+	 *            The a channel DIO channel. 0-9 are on-board, 10-25 are on the MXP port
 	 * @param bChannel
-	 *            The b channel digital input channel.
+	 *            The b channel DIO channel. 0-9 are on-board, 10-25 are on the MXP port
 	 * @param reverseDirection
 	 *            represents the orientation of the encoder and inverts the
 	 *            output values if necessary so forward represents positive
@@ -208,6 +216,7 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 		m_bSource = new DigitalInput(bChannel);
 		m_indexSource = new DigitalInput(indexChannel);
 		initEncoder(reverseDirection);
+		setIndexSource(indexChannel);
 	}
 
 	/**
@@ -320,7 +329,7 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 	}
 
 	/**
-	 * Encoder constructor. Construct a Encoder given a and b channels as
+	 * Encoder constructor. Construct a Encoder given a, b and index channels as
 	 * digital inputs. This is used in the case where the digital inputs are
 	 * shared. The Encoder class will not allocate the digital inputs and assume
 	 * that they already are counted.
@@ -352,10 +361,11 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 		m_bSource = bSource;
 		m_indexSource = indexSource;
 		initEncoder(reverseDirection);
+		setIndexSource(indexSource);
 	}
 
 	/**
-	 * Encoder constructor. Construct a Encoder given a and b channels as
+	 * Encoder constructor. Construct a Encoder given a, b and index channels as
 	 * digital inputs. This is used in the case where the digital inputs are
 	 * shared. The Encoder class will not allocate the digital inputs and assume
 	 * that they already are counted.
@@ -372,6 +382,21 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 	public Encoder(DigitalSource aSource, DigitalSource bSource,
 			DigitalSource indexSource) {
 		this(aSource, bSource, indexSource, false);
+	}
+
+	/**
+	 * @return the Encoder's FPGA index
+	 */
+	public int getFPGAIndex() {
+		return m_index;
+	}
+
+	/**
+	 * @return the encoding scale factor 1x, 2x, or 4x, per the requested
+	 *   encodingType. Used to divide raw edge counts down to spec'd counts.
+	 */
+	public int getEncodingScale() {
+		return m_encodingScale;
 	}
 
 	public void free() {
@@ -464,7 +489,7 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 	public double getPeriod() {
 		double measuredPeriod;
 		if (m_counter != null) {
-			measuredPeriod = m_counter.getPeriod();
+			measuredPeriod = m_counter.getPeriod() / decodingScaleFactor();
 		} else {
 			ByteBuffer status = ByteBuffer.allocateDirect(4);
 			// set the byte order
@@ -472,7 +497,7 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 			measuredPeriod = EncoderJNI.getEncoderPeriod(m_encoder, status.asIntBuffer());
 			HALUtil.checkStatus(status.asIntBuffer());
 		}
-		return measuredPeriod / decodingScaleFactor();
+		return measuredPeriod;
 	}
 
 	/**
@@ -705,6 +730,59 @@ public class Encoder extends SensorBase implements CounterBase, PIDSource, LiveW
 		default:
 			return 0.0;
 		}
+	}
+
+	/**
+	 * Set the index source for the encoder.  When this source rises, the encoder count automatically resets.
+	 *
+	 * @param channel A DIO channel to set as the encoder index
+	 * @param type The state that will cause the encoder to reset
+	 */
+	public void setIndexSource(int channel, IndexingType type) {
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
+			
+		boolean activeHigh = (type == IndexingType.kResetWhileHigh) || (type == IndexingType.kResetOnRisingEdge);
+		boolean edgeSensitive = (type == IndexingType.kResetOnFallingEdge) || (type == IndexingType.kResetOnRisingEdge);
+
+		EncoderJNI.setEncoderIndexSource(m_encoder, channel, false, activeHigh, edgeSensitive, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
+	}
+
+	/**
+	 * Set the index source for the encoder.  When this source is activated, the encoder count automatically resets.
+	 *
+	 * @param channel A DIO channel to set as the encoder index
+	 */
+	public void setIndexSource(int channel) {
+		this.setIndexSource(channel, IndexingType.kResetOnRisingEdge);
+	}
+
+	/**
+	 * Set the index source for the encoder.  When this source rises, the encoder count automatically resets.
+	 *
+	 * @param source A digital source to set as the encoder index
+	 * @param type The state that will cause the encoder to reset
+	 */
+	public void setIndexSource(DigitalSource source, IndexingType type) {
+		ByteBuffer status = ByteBuffer.allocateDirect(4);
+		status.order(ByteOrder.LITTLE_ENDIAN);
+			
+		boolean activeHigh = (type == IndexingType.kResetWhileHigh) || (type == IndexingType.kResetOnRisingEdge);
+		boolean edgeSensitive = (type == IndexingType.kResetOnFallingEdge) || (type == IndexingType.kResetOnRisingEdge);
+
+		EncoderJNI.setEncoderIndexSource(m_encoder, source.getChannelForRouting(), source.getAnalogTriggerForRouting(),
+				activeHigh, edgeSensitive, status.asIntBuffer());
+		HALUtil.checkStatus(status.asIntBuffer());
+	}
+
+	/**
+	 * Set the index source for the encoder.  When this source is activated, the encoder count automatically resets.
+	 *
+	 * @param source A digital source to set as the encoder index
+	 */
+	public void setIndexSource(DigitalSource source) {
+		this.setIndexSource(source, IndexingType.kResetOnRisingEdge);
 	}
 
 	/*
