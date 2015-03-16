@@ -1,5 +1,6 @@
 apply plugin: 'cpp'
 
+// TODO: This is currently broken, as there doesn't seem to be an archived version of 8u6
 def jdkDownloadSite = 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html'
 def jdkFolder = 'jdk-linux-arm-vfp-sflt'
 def jdkVersion = 'jdk1.8.0_06'
@@ -11,35 +12,34 @@ niLibraries.exclude '*libwpi*'
 
 evaluationDependsOn(':wpilibj:wpilibJavaDevices')
 
-libraries {
-    wpilibJavaJNI {
-        binaries.all {
-            tasks.withType(CppCompile) {
-                // Ensure the jni headers are generated and put in the build directory
-                dependsOn project(':wpilibj:wpilibJavaDevices').jniHeaders
-                // Ensure the user has the JDK installed
-                dependsOn verifyJre
-                dependsOn addNiLibraryLinks
+model {
+    components {
+        wpilibJavaJNI(NativeLibrarySpec) {
+            binaries.all {
+                tasks.withType(CppCompile) {
+                    // Ensure the jni headers are generated and put in the build directory
+                    dependsOn project(':wpilibj:wpilibJavaDevices').jniHeaders
+                    // Ensure the user has the JDK installed
+                    dependsOn verifyJre
+                    dependsOn addNiLibraryLinks
+                }
             }
-        }
-    }
-}
-
-sources {
-    wpilibJavaJNI {
-        cpp {
-            source {
-                srcDirs = ['lib']
-                includes = ['**/*.cpp']
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ['lib']
+                        includes = ['**/*.cpp']
+                    }
+                    exportedHeaders {
+                        // JDK is included for jni.h. We also need the arm-linux specific headers. This does not need to change
+                        // when compiling on Windows
+                        // The JNI headers are put into the build/include directory by the jniHeaders task on wpilibJavaDevices
+                        def includeLocation = jdkLocation + File.separator + 'include'
+                        srcDirs = ["include", "build/include", includeLocation, includeLocation + File.separator + "linux"]
+                    }
+                    lib project: ':hal', library: 'HALAthena', linkage: 'static'
+                }
             }
-            exportedHeaders {
-                // JDK is included for jni.h. We also need the arm-linux specific headers. This does not need to change
-                // when compiling on Windows
-                // The JNI headers are put into the build/include directory by the jniHeaders task on wpilibJavaDevices
-                def includeLocation = jdkLocation + File.separator + 'include'
-                srcDirs = ["include", "build/include", includeLocation, includeLocation + File.separator + "linux"]
-            }
-            lib project: ':hal', library: 'HALAthena', linkage: 'static'
         }
     }
 }

@@ -1,19 +1,20 @@
 apply plugin: 'cpp'
 
-libraries {
-    NetworkTables {}
-}
-
-sources {
-    NetworkTables {
-        cpp {
-            source {
-                srcDirs = ["lib/share", "lib/Athena"]
-                includes = ["**/*.cpp"]
-            }
-            exportedHeaders {
-                srcDirs = ["include"]
+model {
+    components {
+        NetworkTables(NativeLibrarySpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ["lib/share", "lib/Athena"]
+                        includes = ["**/*.cpp"]
+                    }
+                    exportedHeaders {
+                        srcDirs = ["include"]
+                    }
+                }
             }
         }
     }
 }
+

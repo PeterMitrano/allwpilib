@@ -1,23 +1,30 @@
-def libPattern = /(\/|\\)lib(.+).so$/
+// This regex matches either a Windows or Unix style file separator, then the lib part of the library,
+// then the name of the library itself, and finally the .so extension at the end. The name of the library
+// is in the libName capture group, which is extracted and used for the linker flags
+def libPattern = /(\/|\\)lib(?<libName>.+).so$/
 def niLibraryArgs = []
 def wpiLibraryArgs = []
 def niLibraryPath = file('ni-libraries').absolutePath
 
+// The NI Library tree includes all non-wpi libraries, which is everything that doesn't have libwpi in the name
 def niLibraryTree = fileTree(niLibraryPath)
 niLibraryTree.include '*.so'
 niLibraryTree.exclude '*libwpi*.so'
 
+// This adds all linker flags to the list of ni library linker flags
 niLibraryTree.each { lib ->
     def nameMatcher = (lib.path =~ libPattern)
     if (nameMatcher[0].size() > 1) {
-        def name = nameMatcher[0][1]
+        def name = nameMatcher.group('libName')
         niLibraryArgs << '-l' + name
     }
 }
 
+// The WPI libraries are libraries in the ni-libraries folder that have libwpi in their names
 def wpiLibraryTree = fileTree(niLibraryPath)
 wpiLibraryTree.include '*libwpi*.so'
 
+// This adds all linker flags to the list of wpi library linker flags
 wpiLibraryTree.each { lib ->
     def nameMatcher = (lib.path =~ libPattern)
     if (nameMatcher[0].size() > 1) {
@@ -40,28 +47,37 @@ subprojects {
             buildTypes {
                 debug
             }
+            toolChains {
+                gcc(Gcc) {
+                    eachPlatform {
+                        // We use a custom-built cross compiler with the prefix arm-frc-linux-gnueabi-<util name>
+                        // If this ever changes, the prefix will need to be changed here
+                        def compilerPrefix = 'arm-frc-linux-gnueabi-'
+                        cppCompiler.executable = compilerPrefix + cppCompiler.executable
+                        linker.executable = compilerPrefix + linker.executable
+                        assembler.executable = compilerPrefix + assembler.executable
+                        // Gradle auto-adds the -m32 argument to the linker and compiler. Our compiler only supports
+                        // arm, and doesn't understand this flag, so it is removed from both
+                        cppCompiler.withArguments { args ->
+                            args << '-std=c++1y' << '-Wformat=2' << '-Wall' << '-Wextra' << '-Werror' << '-pedantic'
+                            args << '-Wno-psabi' << '-Wno-unused-parameter' << '-fPIC' << '-O0' << '-g3'
+                            args.remove('-m32')
+                        }
+                        linker.withArguments { args ->
+                            args.remove('-m32')
+                        }
+                    }
+                }
+            }
             platforms {
                 arm {
                     architecture 'arm'
                     operatingSystem 'linux'
                 }
             }
-            toolChains {
-                gcc(Gcc) {
-                    target('arm') {
-                        def compilerPrefix = 'arm-frc-linux-gnueabi-'
-                        cppCompiler.executable = compilerPrefix + cppCompiler.executable
-                        linker.executable = compilerPrefix + linker.executable
-                        assembler.executable = compilerPrefix + assembler.executable
-                        cppCompiler.withArguments { args ->
-                            args << '-std=c++1y' << '-Wformat=2' << '-Wall' << '-Wextra' << '-Werror' << '-pedantic'
-                            args << '-Wno-psabi' << '-Wno-unused-parameter' << '-fPIC' << '-O0' << '-g3'
-                        }
-                    }
-                }
-            }
         }
 
+        // This task adds the appropriate linker flags for the NI libraries
         task addNiLibraryLinks << {
             binaries.all {
                 linker.args << '-L' + niLibraryPath
@@ -70,7 +86,8 @@ subprojects {
             model {
                 repositories {
                     libs(PrebuiltLibraries) { libs ->
-                        // Loops through all .so files in ../ni-libraries and includes them for linking
+                        // Loops through all .so files (except files matching *libwpi*.so) in ../ni-libraries
+                        // and includes them for linking
                         niLibraryTree.each { niLib ->
                             libs.create(niLib) {
                                 binaries.withType(SharedLibraryBinary) {
@@ -83,6 +100,7 @@ subprojects {
             }
         }
 
+        // This task adds the appropriate linker flags for the WPI libraries
         task addWpiLibraryLinks << {
             binaries.all {
                 linker.args.addAll(wpiLibraryArgs)
@@ -90,7 +108,7 @@ subprojects {
             model {
                 repositories {
                     libs(PrebuiltLibraries) { libs ->
-                        // Loops through all .so files in ../ni-libraries and includes them for linking
+                        // Loops through all libwpi*.so files in ../ni-libraries and includes them for linking
                         wpiLibraryTree.each { niLib ->
                             libs.create(niLib) {
                                 binaries.withType(SharedLibraryBinary) {
@@ -103,6 +121,7 @@ subprojects {
             }
         }
 
+        // Whenever we add the WPI library links, we'll also need the ni libraries, so set up that dependency
         addWpiLibraryLinks.dependsOn addNiLibraryLinks
     }
 }

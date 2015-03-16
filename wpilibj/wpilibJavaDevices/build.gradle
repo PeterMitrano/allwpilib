@@ -46,10 +46,10 @@ jniHeaders.dependsOn classes
 sourceSets {
     main {
         java {
-            excludes = ['edu/wpi/first/wpilibj/image/', 'edu/wpi/first/wpilibj/camera/']
+            excludes = ['edu/wpi/first/wpilibj/camera/']
         }
         javadoc {
-            excludes = ['edu/wpi/first/wpilibj/image/', 'edu/wpi/first/wpilibj/camera/']
+            excludes = ['edu/wpi/first/wpilibj/camera/']
         }
     }
 }

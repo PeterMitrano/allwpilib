@@ -5,35 +5,31 @@ evaluationDependsOn(':hal')
 def shared = 'wpilibC++' + File.separator
 def devices = 'wpilibC++Devices' + File.separator
 
-libraries {
-    wpilib_nonshared {
-        binaries.all {
-            tasks.withType(CppCompile) {
-                dependsOn addNiLibraryLinks
-                dependsOn project(':hal').hALAthenaStaticLibrary
-                dependsOn project(':networktables:cpp').networkTablesStaticLibrary
-                wpilibc.dependsOn wpilib_nonsharedStaticLibrary
+model {
+    components {
+        wpilib_nonshared(NativeLibrarySpec) {
+            binaries.all {
+                tasks.withType(CppCompile) {
+                    dependsOn addNiLibraryLinks
+                    dependsOn project(':hal').hALAthenaStaticLibrary
+                    dependsOn project(':networktables:cpp').networkTablesStaticLibrary
+                }
+            }
+            sources {
+                cpp {
+                    source {
+                        srcDirs = [shared + 'src', devices + 'src']
+                        includes = ['**/*.cpp']
+                    }
+                    exportedHeaders {
+                        srcDirs = [shared + 'include', devices + 'include']
+                        includes = ['**/*.h']
+                    }
+                    lib project: ':hal', library: 'HALAthena', linkage: 'static'
+                    lib project: ':networktables:cpp', library: 'NetworkTables', linkage: 'static'
+                }
             }
         }
     }
 }
-
-sources {
-    wpilib_nonshared {
-        cpp {
-            source {
-                srcDirs = [shared + 'src', devices + 'src']
-                includes = ['**/*.cpp']
-            }
-            exportedHeaders {
-                srcDirs = [shared + 'include', devices + 'include']
-                includes = ['**/*.h']
-            }
-            lib project: ':hal', library: 'HALAthena', linkage: 'static'
-            lib project: ':networktables:cpp', library: 'NetworkTables', linkage: 'static'
-        }
-    }
-}
-
-task wpilibc << {}
 
