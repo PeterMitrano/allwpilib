@@ -21,6 +21,11 @@
  * update. Only the task containing the wait will pause until the wait time is expired.
  *
  * @param seconds Length of time to pause, in seconds.
+ *
+ * @warning If you're tempted to use this function in autonomous mode to time transitions
+ * between actions, don't do it! Delaying the main robot thread for more than a few
+ * milliseconds is bad practice and generally discouraged. Doing this will typically cause
+ * problems and possibly leave the robot unresponsive.
  */
 void Wait(double seconds)
 {

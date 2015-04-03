@@ -47,6 +47,13 @@ public class Timer {
 	 * continue to run at their last assigned values, and sensors will continue
 	 * to update. Only the task containing the wait will pause until the wait
 	 * time is expired.
+	 * <p>
+	 * <b>Warning</b>: If you're tempted to use this function in autonomous
+     * mode to time transitions between actions, <i>don't do it</i>!
+     * <p>
+     * Delaying the main robot thread for more than a few milliseconds is bad
+     * practice and generally discouraged. Doing this will typically cause
+     * problems and possibly leave the robot unresponsive.
 	 *
 	 * @param seconds Length of time to pause
 	 */
