@@ -1,13 +1,17 @@
 codename=trusty
 allwpilib=../..
 
+#Whenever the version changes, run the following within the revelent folder
+# $>dch -v VERSION_NUMBER-PACKAGE_NUMBER "message you want" 
+
 package-version = 1
 gazebo-plugins-version = 0.2
 gazebo-plugins-package-version = $(gazebo-plugins-version)-$(package-version)
-gazebo-models-version = 0.3
+gazebo-models-version = 0.4
 gazebo-models-package-version = $(gazebo-models-version)-$(package-version)
 gazebo-models-orig-url = https://usfirst.collab.net/sf/frs/do/downloadFile/projects.wpilib/frs.simulation.frcsim_gazebo_models/frs1070?dl=1
-eclipse-plugins-version = 0.1
+# allow this to automatically match the eclipse plugins version number from the main project
+eclipse-plugins-version = 0.2
 eclipse-plugins-package-version = $(eclipse-plugins-version)-$(package-version)
 eclipse-toolchain-version = 0.1
 eclipse-toolchain-package-version = $(eclipse-toolchain-version)-$(package-version)

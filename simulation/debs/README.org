@@ -1,4 +1,3 @@
-
 * Setting up apt-repository
 : sudo apt-get install reprepro
 http://kaivanov.blogspot.com/2012/08/creating-apt-repository-with-reprepro.html
@@ -12,9 +11,43 @@ http://kaivanov.blogspot.com/2012/08/creating-apt-repository-with-reprepro.html
 
 ** To use
 : sudo nano /etc/apt/sources.list.d/frcsim-latest.list
-: deb http://users.wpi.edu/~adhenning/frcsim raring main
-: deb-src http://users.wpi.edu/~adhenning/frcsim raring main
+: deb http://users.wpi.edu/~adhenning/frcsim trusty main
+: deb-src http://users.wpi.edu/~adhenning/frcsim trusy main
 
 : curl -H GET users.wpi.edu/~adhenning/frcsim.key | sudo apt-key add -
 : sudo apt-get update
 : sudo apt-get install frcsim
+
+** For first Time Building
+
+SBUILD
+For building 32-bit builds on 64-bit machines
+
+First install ubuntu-dev-tools
+
+: mk-sbuild --arch i386 --personality=linux32 trusty
+
+If the a signed key can't be found, run
+:sbuild-update --keygen
+
+**If gazebo can't be installed, install stuff manually. this is because gazebo is at a different source
+
+enter the golden image
+:sudo schroot -c source:trusty-i386 -u root
+
+install a bunch of stuff
+:echo "deb http://packages.osrfoundation.org/gazebo/ubuntu trusy` main" > /etc/apt/sources.list.d/gazebo-latest.list
+:apt-get update
+:apt-get install debhelper gazebo3 libgazebo-dev libavcodec-dev libavformat-dev libswscale-dev
+:
+
+
+To CHANGE the golden image: sudo schroot -c source:trusty-i386 -u root
+To ENTER an image snapshot: schroot -c trusty-i386
+To BUILD within a snapshot: sbuild -A -d trusty-i386 PACKAGE*.dsc
+ 
+sbuild --arch=i386 -A -d trusty-i386 frcsim-gazebo-plugins_0.2-1.dsc
+
+
+** To install manually to /usr/local/bin
+$ make prefix=/usr/local install
