@@ -2,8 +2,9 @@
 #ifndef _SIM_MAIN_NODE_H
 #define _SIM_MAIN_NODE_H
 
+#include "simulation/gz_msgs/msgs.h"
 #include <gazebo/transport/transport.hh>
-#include "simulation/msgs/msgs.h"
+#include <gazebo/gazebo_client.hh>
 
 using namespace gazebo;
 
@@ -38,7 +39,7 @@ public:
 	transport::NodePtr main;
 private:
 	MainNode() {
-		gazebo::transport::init();
+		gazebo::client::setup();
 		main = transport::NodePtr(new transport::Node());
 		main->Init("frc");
 		gazebo::transport::run();

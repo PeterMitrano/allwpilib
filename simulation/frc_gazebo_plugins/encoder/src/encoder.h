@@ -1,8 +1,11 @@
 #pragma once
 
+#include "simulation/gz_msgs/msgs.h"
+
+#include <gazebo/physics/physics.hh>
+#include <gazebo/transport/transport.hh>
 #include <gazebo/gazebo.hh>
 
-#include "msgs/msgs.h"
 
 using namespace gazebo;
 

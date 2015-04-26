@@ -51,6 +51,8 @@ double GetTime()
     return Timer::GetFPGATimestamp(); // The epoch starts when Gazebo starts
 }
 
+//for compatibility with msvc12--see C2864
+const double Timer::kRolloverTime = (1ll << 32) / 1e6;
 /**
  * Create a new timer object.
  *
@@ -200,6 +202,4 @@ namespace wpilib { namespace internal {
         simTime = msg->data();
         time_wait.notify_all();
     }
-
-    transport::SubscriberPtr time_pub = MainNode::Subscribe("~/time", &time_callback);
 }}

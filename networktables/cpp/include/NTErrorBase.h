@@ -8,7 +8,6 @@
 #define _ERROR_BASE_H
 
 #if defined WIN32
-#include <semLib.h>
 
 #define wpi_setErrnoErrorWithContext(context) 
 #define wpi_setErrnoError() 

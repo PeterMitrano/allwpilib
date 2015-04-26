@@ -1,7 +1,5 @@
 #include "internal_limit_switch.h"
 
-#include <gazebo/physics/physics.hh>
-
 InternalLimitSwitch::InternalLimitSwitch(physics::ModelPtr model, sdf::ElementPtr sdf) {
   joint = model->GetJoint(sdf->Get<std::string>("joint"));
   min = sdf->Get<double>("min");

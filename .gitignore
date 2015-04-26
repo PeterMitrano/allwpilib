@@ -184,3 +184,6 @@ __pycache__
 
 # TeXlipse plugin
 .texlipse
+
+#catkin stuff
+package.xml

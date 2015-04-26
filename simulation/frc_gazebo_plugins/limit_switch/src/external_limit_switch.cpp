@@ -1,7 +1,5 @@
 #include "external_limit_switch.h"
 
-#include <gazebo/sensors/sensors.hh>
-#include <boost/pointer_cast.hpp>
 
 ExternalLimitSwitch::ExternalLimitSwitch(sdf::ElementPtr sdf) {
   sensor = boost::dynamic_pointer_cast<sensors::ContactSensor>(

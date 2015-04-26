@@ -1,7 +1,5 @@
 #include "gyro.h"
 
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
 
 GZ_REGISTER_MODEL_PLUGIN(Gyro)
 

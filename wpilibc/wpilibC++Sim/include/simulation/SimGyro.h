@@ -3,7 +3,7 @@
 #ifndef _SIM_GYRO_H
 #define _SIM_GYRO_H
 
-#include "simulation/msgs/msgs.h"
+#include "simulation/gz_msgs/msgs.h"
 #include <gazebo/transport/transport.hh>
 
 using namespace gazebo;

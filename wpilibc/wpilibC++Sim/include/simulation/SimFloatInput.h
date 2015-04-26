@@ -3,7 +3,7 @@
 #ifndef _SIM_FLOAT_INPUT_H
 #define _SIM_FLOAT_INPUT_H
 
-#include "simulation/msgs/msgs.h"
+#include "simulation/gz_msgs/msgs.h"
 #include <gazebo/transport/transport.hh>
 
 using namespace gazebo;

@@ -52,10 +52,30 @@ public class Node implements Runnable, ServerCallback {
 	}
 
 	public void waitForConnection() throws IOException, InterruptedException {
+		//enable user to change master uri via environment variable GAZEBO_MASTER_URI
+		String user_defined_uri = System.getenv("GAZEBO_MASTER_URI");
+		String gazebo_master_uri = "localhost";
+		int port = 11345;
+		if (user_defined_uri != null) {
+			String[] parts = user_defined_uri.split(":");
+			if (parts.length != 2){
+				LOG.severe("invalid GAZEBO_MASTER_URI " + user_defined_uri+ ". URI must be of the form HOSTNAME:PORT");
+				LOG.warning("using default GAZEBO_MASTER_URI=localhost:11345");
+			}
+			else {
+				gazebo_master_uri = parts[0];
+				port = Integer.parseInt(parts[1]);
+			}
+		}
+
 		server.serve(this);
-		master.connectAndWait("localhost", 11345);
+
+		LOG.info("GAZEBO_MASTER_URI is host=" + gazebo_master_uri + " port="+port);
+
+		master.connectAndWait(gazebo_master_uri, port);
+
 		initializeConnection();
-		
+
 		new Thread(this).start();
 		LOG.info("Serving on: "+server.host+":"+server.port);
 	}
@@ -68,7 +88,7 @@ public class Node implements Runnable, ServerCallback {
 		publishers.put(topic, pub);
 		
 		Publish req = Publish.newBuilder().setTopic(topic).setMsgType(type)
-					  	.setHost(server.host).setPort(server.port).build();
+						.setHost(server.host).setPort(server.port).build();
 		try {
 			master.writePacket("advertise", req);
 		} catch (IOException e) {
@@ -140,7 +160,7 @@ public class Node implements Runnable, ServerCallback {
 		if (publisherData.getType().equals("publishers_init")) {
 			Publishers pubs = Publishers.parseFrom(publisherData.getSerializedData());
 			for (Publish pub : pubs.getPublisherList()) {
- 				PublisherRecord record = new RemotePublisherRecord(pub);
+				PublisherRecord record = new RemotePublisherRecord(pub);
 				publishers.put(record.getTopic(), record);
 			}
 			LOG.info(publishers.toString());
@@ -185,6 +205,9 @@ public class Node implements Runnable, ServerCallback {
 	}
 
 	@Override
+	/**
+	 * This is called when another node requests subscription to a topic we are publishing
+	 */
 	public void handle(Connection conn) throws IOException {
 		LOG.fine("Handling new connection");
 		Packet msg = conn.read();
@@ -205,11 +228,12 @@ public class Node implements Runnable, ServerCallback {
 			PublisherRecord pub = publishers.get(sub.getTopic());
 			if (!pub.getMsgType().equals(sub.getMsgType())) {
 				LOG.severe(String.format("Message type mismatch requested=%d publishing=%s\n",
-						   				 pub.getMsgType(), sub.getMsgType()));
+										 pub.getMsgType(), sub.getMsgType()));
 				return;
 			}
 
 			LOG.info("CONN " + sub.getTopic());
+			//Tell the publisher that it has recieved a connection from a subscriver
 			pub.connect(conn);
 		} else {
 			LOG.warning("Unknown message type: " + msg.getType());
