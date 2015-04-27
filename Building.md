@@ -27,3 +27,7 @@ and then import that directory into eclipse. Eclipse will detect a CDT project a
 GCC versions
 ------------
 Update arm-toolchain.cmake if the triplet changes (eg using Ubuntu repo arm compiler is arm-linux-gnueabi) or in a non-standard location. Currently it assumes that the compiler is on the path.
+
+Building with plugins
+--------------------
+mvn package -DskipITs -DskipTests -Dwith-eclipse-plugins
