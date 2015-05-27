@@ -96,10 +96,13 @@
   <target name="simulate">
     <parallel>
       <sequential>
-	    <echo>[simulate] Running Gazebo.</echo>
-	    <exec executable="frcsim">
-	      <arg value="${simulation.world.file}"/>
-	    </exec>
+	      <condition property="frcsim.executable" value="frcsim.bat" else="frcsim">
+          <os family="windows" />
+        </condition>
+        <echo>[simulate] Running ${frcsim.executable}</echo>
+        <exec executable="${frcsim.executable}" >
+          <arg value="${simulation.world.file}"/>
+        </exec>
       </sequential>
       <sequential>
         <sleep seconds="5"/>

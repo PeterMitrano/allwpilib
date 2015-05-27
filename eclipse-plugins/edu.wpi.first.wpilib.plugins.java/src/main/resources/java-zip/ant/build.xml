@@ -166,10 +166,10 @@
   <target name="simulate" depends="jar-for-simulation">
     <parallel>
       <sequential>
-  	    <echo>[simulate] Running FRCSim.</echo>
   	    <condition property="frcsim.executable" value="frcsim.bat" else="frcsim">
           <os family="windows" />
         </condition>
+        <echo>[simulate] Running ${frcsim.executable}</echo>
         <exec executable="${frcsim.executable}" >
           <arg value="${simulation.world.file}"/>
         </exec>
