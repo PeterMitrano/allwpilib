@@ -36,6 +36,7 @@ frcsim-gazebo-plugins/frcsim-gazebo-plugins/Makefile
 *.debian.tar.gz
 *.changes
 *.build
+*.xz
 *.substvars
 */*/debian/*/DEBIAN/
 

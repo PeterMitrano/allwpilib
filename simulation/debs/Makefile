@@ -1,4 +1,4 @@
-codename=trusty
+codename=vivid
 allwpilib=../..
 
 #Whenever the version changes, run the following within the revelent folder
@@ -9,7 +9,7 @@ gazebo-plugins-version = 0.2
 gazebo-plugins-package-version = $(gazebo-plugins-version)-$(package-version)
 gazebo-models-version = 0.4
 gazebo-models-package-version = $(gazebo-models-version)-$(package-version)
-gazebo-models-orig-url = https://usfirst.collab.net/sf/frs/do/downloadFile/projects.wpilib/frs.simulation.frcsim_gazebo_models/frs1070?dl=1
+gazebo-models-orig-url = https://usfirst.collab.net/sf/frs/do/downloadFile/projects.wpilib/frs.simulation.frcsim_gazebo_models/frs1156?dl=1
 # allow this to automatically match the eclipse plugins version number from the main project
 eclipse-plugins-version = 0.2
 eclipse-plugins-package-version = $(eclipse-plugins-version)-$(package-version)
@@ -35,6 +35,12 @@ orig: orig-frcsim-gazebo-plugins orig-frcsim-gazebo-models orig-frcsim-eclipse-p
 
 debs: debs-frcsim-gazebo-plugins debs-frcsim-gazebo-models debs-frcsim-eclipse-plugins \
 	  debs-frcsim-libwpilibsim-cpp debs-frcsim
+
+debs-64: frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_amd64.deb \
+    frcsim-gazebo-models/frcsim-gazebo-models_$(gazebo-models-package-version)_all.deb \
+    frcsim-eclipse-plugins/frcsim-eclipse-plugins_$(eclipse-plugins-package-version)_all.deb \
+    frcsim-libwpilibsim-cpp/frcsim-libwpilibsim-cpp_$(libwpilibsim-package-version)_amd64.deb \
+    frcsim/frcsim_$(frcsim-package-version)_all.deb
 
 update-repository: debs clean-repository 
 	cd repository && reprepro includedeb $(codename) ../frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_amd64.deb
@@ -167,7 +173,7 @@ frcsim/frcsim_$(frcsim-version).orig.tar.gz:
 
 debs-frcsim-gazebo-plugins: frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_amd64.deb frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_i386.deb
 frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_i386.deb: frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-version).orig.tar.gz frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_amd64.deb
-	cd frcsim-gazebo-plugins/frcsim-gazebo-plugins && make clean
+	cd frcsim-gazebo-plugins/frcsim-gazebo-plugins && make
 	cd frcsim-gazebo-plugins && sbuild --arch=i386 -A -d trusty-i386 frcsim-gazebo-plugins_$(gazebo-plugins-package-version).dsc
 frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-package-version)_amd64.deb: frcsim-gazebo-plugins/frcsim-gazebo-plugins_$(gazebo-plugins-version).orig.tar.gz
 	cd frcsim-gazebo-plugins/frcsim-gazebo-plugins && debuild --no-lintian -us -uc -aamd64

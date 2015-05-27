@@ -21,6 +21,9 @@ namespace gazebo {
     
     typedef boost::shared_ptr< msgs::Bool > BoolPtr;
     typedef const boost::shared_ptr< const msgs::Bool > ConstBoolPtr;
+
+    typedef boost::shared_ptr< msgs::Joystick > JoystickPtr;
+    typedef const boost::shared_ptr< const msgs::Joystick > ConstJoystickPtr;
     
     typedef boost::shared_ptr< msgs::DriverStation > DriverStationPtr;
     typedef const boost::shared_ptr< const msgs::DriverStation > ConstDriverStationPtr;
