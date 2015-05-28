@@ -49,15 +49,15 @@ foreach(FIL ${msgs})
   get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
   get_filename_component(FIL_WE ${FIL} NAME_WE)
 
-  list(APPEND PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc")
-  list(APPEND PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h")
+  list(APPEND PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/../include/simulation/msgs/${FIL_WE}.pb.cc")
+  list(APPEND PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/../include/simulation/msgs/${FIL_WE}.pb.h")
 
   add_custom_command(
     OUTPUT
-      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
-      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
+      "${CMAKE_CURRENT_BINARY_DIR}/../include/simulation/msgs/${FIL_WE}.pb.cc"
+      "${CMAKE_CURRENT_BINARY_DIR}/../include/simulation/msgs/${FIL_WE}.pb.h"
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-    ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path=${PROTO_DIR} ${ABS_FIL} 
+    ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/../include/simulation/msgs/ --proto_path=${PROTO_DIR} ${ABS_FIL} 
     COMMENT "compiling ${ABS_FIL}"
     VERBATIM)
 endforeach()
