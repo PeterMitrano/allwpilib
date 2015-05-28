@@ -1,8 +1,6 @@
-
-#include "simulation/msgs/float64.pb.h"
-#include "simulation/msgs/bool.pb.h"
-#include "simulation/msgs/joystick.pb.h"
-#include "simulation/msgs/driver-station.pb.h"
+//Auto Generated
+//@author Peter Mitrano <peter@osrfoudatin.org>
+${message_headers}
 
 #include <gazebo/msgs/msgs.hh>
 #include <boost/shared_ptr.hpp>
@@ -14,6 +12,7 @@ namespace gazebo {
   namespace msgs {
 
     typedef GzString String;
+
     typedef boost::shared_ptr< gazebo::msgs::String > StringPtr;
     typedef const boost::shared_ptr< const gazebo::msgs::String > ConstStringPtr;
 
