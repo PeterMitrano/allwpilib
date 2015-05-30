@@ -9,9 +9,9 @@ endif()
 find_package(gazebo REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_library(GZ_MSGS NAMES gz_msgs PATHS ../msgs/build)
-
+set(GZ_MSGS_INCLUDE_DIR ../msgs/build)
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
-include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ../msgs/src)
+include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIR})
 add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
 
 link_directories(${GAZEBO_LIBRARY_DIRS} ../msgs/build/)

@@ -1,5 +1,5 @@
 //Auto Generated
-//@author Peter Mitrano <peter@osrfoudatin.org>
+//@author Peter Mitrano <peter@osrfoundation.org>
 ${message_headers}
 
 #include <gazebo/msgs/msgs.hh>
