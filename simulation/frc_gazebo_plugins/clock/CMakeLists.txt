@@ -7,11 +7,21 @@ if (PKG_CONFIG_FOUND)
 endif()
 
 find_package(Boost COMPONENTS system REQUIRED)
-find_library(GZ_MSGS NAMES gz_msgs PATHS ../msgs/build)
-set(GZ_MSGS_INCLUDE_DIR ../msgs/build)
+
+if(WIN32)
+	SET(CMAKE_FIND_LIBRARY_PREFIXES "")
+	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+else()
+	SET(CMAKE_FIND_LIBRARY_PREFIXES ".lib" "")
+	SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
+endif()
+
+MESSAGE("\n gz lib = ${GZ_MSGS} \n")
+
+set(GZ_MSGS_INCLUDE_DIR msgs/build)
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIR})
 add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
 
-link_directories(${GAZEBO_LIBRARY_DIRS} ../msgs/build/)
+link_directories(${GAZEBO_LIBRARY_DIRS} msgs/build/)
 target_link_libraries(${PROJECT_NAME} ${GZ_MSGS} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})

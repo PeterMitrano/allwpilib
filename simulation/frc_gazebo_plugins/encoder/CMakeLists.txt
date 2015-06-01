@@ -6,7 +6,6 @@ if (PKG_CONFIG_FOUND)
   pkg_check_modules(GAZEBO gazebo)
 endif()
 
-find_package(gazebo REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_library(GZ_MSGS NAMES gz_msgs PATHS ../msgs/build)
 

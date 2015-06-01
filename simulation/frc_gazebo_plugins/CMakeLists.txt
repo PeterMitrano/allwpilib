@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(frc_gazebo_plugins)
+
+add_subdirectory(msgs)
+add_subdirectory(clock)
+add_subdirectory(dc_motor)
+add_subdirectory(encoder)
+add_subdirectory(gyro)
+add_subdirectory(limit_switch)
+add_subdirectory(pneumatic_piston)
+add_subdirectory(potentiometer)
+add_subdirectory(rangefinder)
+add_subdirectory(servo)
