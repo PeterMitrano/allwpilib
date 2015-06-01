@@ -19,13 +19,13 @@ include (FindPkgConfig)
 #check to see if protobuf is installed correctly
 find_package(Protobuf REQUIRED)
 if (NOT PROTOBUF_FOUND)
-  BUILD_ERROR ("Missing: Google Protobuf (libprotobuf-dev)")
+	MESSAGE ("Missing: Google Protobuf (libprotobuf-dev)")
 endif()
 if (NOT PROTOBUF_PROTOC_EXECUTABLE)
-  BUILD_ERROR ("Missing: Google Protobuf Compiler (protobuf-compiler)")
+	MESSAGE ("Missing: Google Protobuf Compiler (protobuf-compiler)")
 endif()
 if (NOT PROTOBUF_PROTOC_LIBRARY)
-  BUILD_ERROR ("Missing: Google Protobuf Compiler Library (libprotoc-dev)")
+	MESSAGE ("Missing: Google Protobuf Compiler Library (libprotoc-dev)")
 endif()
 
 #list all proto files used
