@@ -10,11 +10,6 @@ MACRO (APPEND_TO_CACHED_STRING _string _cacheDesc)
 ENDMACRO (APPEND_TO_CACHED_STRING)
 
 include (FindPkgConfig)
-#if (PKG_CONFIG_FOUND)
-#  pkg_check_modules(GAZEBO gazebo)
-#endif()
-
-#find_package(gazebo REQUIRED)
 
 #check to see if protobuf is installed correctly
 find_package(Protobuf REQUIRED)
@@ -22,7 +17,7 @@ if (NOT PROTOBUF_FOUND)
 	MESSAGE ("Missing: Google Protobuf (libprotobuf-dev)")
 endif()
 if (NOT PROTOBUF_PROTOC_EXECUTABLE)
-	MESSAGE ("Missing: Google Protobuf Compiler (protobuf-compiler)")
+	MESSAGE ( "Missing: Google Protobuf Compiler (protobuf-compiler)")
 endif()
 if (NOT PROTOBUF_PROTOC_LIBRARY)
 	MESSAGE ("Missing: Google Protobuf Compiler Library (libprotoc-dev)")
@@ -72,8 +67,7 @@ foreach (hdr ${PROTO_HDRS})
 endforeach()
 configure_file(msgs.h.in msgs/msgs.h)
 
-
 file(GLOB_RECURSE COM_SRC_FILES msgs/*.cc)
-include_directories(msgs ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS})
+include_directories(msgs ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIR})
 add_library(${PROJECT_NAME} SHARED ${PROTO_SRCS} ${SRC_FILES})
-target_link_libraries(${PROJECT_NAME} ${GAZEBO_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARIES})
