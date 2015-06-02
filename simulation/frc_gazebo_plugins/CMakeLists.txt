@@ -31,9 +31,11 @@ foreach(PLUGIN ${PLUGINS})
 		SET(CMAKE_FIND_LIBRARY_PREFIXES "")
 		SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 	else()
-		SET(CMAKE_FIND_LIBRARY_PREFIXES ".lib" "")
+		SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
 		SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
 	endif()
+
+  
 
 	#the plugins need the gz_msgs library
 	find_library(GZ_MSGS NAMES gz_msgs PATHS msgs/build)
