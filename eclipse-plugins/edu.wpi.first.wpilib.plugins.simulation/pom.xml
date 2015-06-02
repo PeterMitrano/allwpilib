@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>edu.wpi.first.wpilib.plugins.simulation</artifactId>
+    <packaging>eclipse-plugin</packaging>
+
+    <parent>
+        <groupId>edu.wpi.first.wpilib.plugins</groupId>
+        <artifactId>edu.wpi.first.wpilib.plugins</artifactId>
+        <version>0.1.0.qualifier</version>
+        <relativePath>..</relativePath>
+    </parent>
+
+    <properties>
+        <build-number>DEVELOPMENT</build-number>
+        <java-zip>${project.build.directory}/simulation-zip</java-zip>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <includes>
+                    <include>resources/configuration.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+
+                    <!-- Set time stamp and version properties. -->
+                    <execution>
+                        <id>set-version-info</id>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                        <configuration>
+                            <target>
+                                <tstamp>
+                                    <format property="timestamp" pattern="yyyy/MM/dd HH:mm:ss z"/>
+                                </tstamp>
+                                <tstamp>
+                                    <format property="version-info" pattern="yyyy.MM.dd.HH.mm.ss"/>
+                                </tstamp>
+                                <property name="version" value="${version-info}.${build-number}"/>
+                            </target>
+                            <exportAntProperties>true</exportAntProperties>
+                        </configuration>
+                    </execution>
+
+                    <!-- Generate zip file to unzip for the user. -->
+                    <execution>
+                        <id>generate-jar-zip</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <zip destfile="${project.build.directory}/classes/resources/simulation.zip"
+                                     basedir="${simulation-zip}"
+                                     update="true"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.apache.maven.plugins
+                                        </groupId>
+                                        <artifactId>
+                                            maven-dependency-plugin
+                                        </artifactId>
+                                        <versionRange>[2.8,)</versionRange>
+                                        <goals>
+                                            <goal>copy</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore/>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

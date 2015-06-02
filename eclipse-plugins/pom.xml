@@ -16,6 +16,7 @@
         <module>edu.wpi.first.wpilib.plugins.java</module>
         <module>edu.wpi.first.wpilib.plugins.java.feature</module>
         <module>edu.wpi.first.wpilib.plugins.riolog</module>
+        <module>edu.wpi.first.wpilib.plugins.simulation</module>
         <module>edu.wpi.first.wpilib.plugins.updatesite</module>
     </modules>
 
