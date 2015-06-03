@@ -21,18 +21,13 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 	// The shared instance
 	private static WPILibSimulationPlugin plugin;
 	
-	private static BundleContext context;
-
-	static BundleContext getContext() {
-		return context;
-	}
-
 	/*
 	 * (non-Javadoc)
-	 * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
+	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
 	 */
-	public void start(BundleContext bundleContext) throws Exception {
-		WPILibSimulationPlugin.context = bundleContext;
+	public void start(BundleContext context) throws Exception {
+		super.start(context);
+		plugin = this;
 	}
 
 	/*
@@ -40,7 +35,8 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 	 * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext bundleContext) throws Exception {
-		WPILibSimulationPlugin.context = null;
+		plugin = null;
+		super.stop(bundleContext);
 	}
 
 	/**
@@ -64,6 +60,11 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 			WPILibSimulationPlugin.logError("Error getting properties.", e);
 			return "DEVELOPMENT";
 		}
+	}
+	
+	public String getSimulationDir() {
+		return WPILibCore.getDefault().getWPILibBaseDir()
+				+ File.separator + "simulation" + File.separator + "current";
 	}
 	
 	public static void logInfo(String msg) {

@@ -13,8 +13,7 @@ import edu.wpi.first.wpilib.plugins.simulation.preferences.PreferenceConstants;
 public class SimulationInstaller extends AbstractInstaller {
 
 	public SimulationInstaller(String version) {
-		super(version, WPILibSimulationPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.LIBRARY_INSTALLED), WPILibCore.getDefault().getWPILibBaseDir() + "/simulation");
-		WPILibSimulationPlugin.logInfo("\n\n HELLO FROM SIMULATION!!! \n\n");
+		super(version, WPILibSimulationPlugin.getDefault().getPreferenceStore().getString(PreferenceConstants.LIBRARY_INSTALLED), WPILibSimulationPlugin.getDefault().getSimulationDir());
 	}
 	
 	

@@ -15,7 +15,7 @@
 
     <properties>
         <build-number>DEVELOPMENT</build-number>
-        <java-zip>${project.build.directory}/simulation-zip</java-zip>
+        <simulation-zip>${project.build.directory}/simulation-zip</simulation-zip>
     </properties>
 
     <build>
@@ -58,7 +58,7 @@
 
                     <!-- Generate zip file to unzip for the user. -->
                     <execution>
-                        <id>generate-jar-zip</id>
+                        <id>generate-simulation-zip</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>run</goal>
