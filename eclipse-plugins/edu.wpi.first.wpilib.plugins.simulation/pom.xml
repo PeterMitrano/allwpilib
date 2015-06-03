@@ -18,6 +18,13 @@
         <simulation-zip>${project.build.directory}/simulation-zip</simulation-zip>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>WPILib Maven Repository</id>
+            <url>http://first.wpi.edu/FRC/roborio/maven/</url>
+        </repository>
+    </repositories>
+
     <build>
         <resources>
             <resource>
@@ -36,6 +43,27 @@
                 <executions>
                     <execution>
                         <id>copy-ant-resources-to-simualation-zip</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${simulation-zip}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources/simulation-zip</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-ant-resources-to-simulation-zip</id>
                         <phase>generate-sources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -87,6 +115,7 @@
                         </goals>
                         <configuration>
                             <target>
+                                <unzip src="${simulation-zip}/../simulation.zip" dest="${simulation-zip}"/>
                                 <zip destfile="${project.build.directory}/classes/resources/simulation.zip"
                                      basedir="${simulation-zip}"
                                      update="true"/>
@@ -130,4 +159,23 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <dependencies>
+        <!-- Add fake dependencies to inform Maven of the correct
+             order it should build projects in during a multi-module build.
+
+             This list should match the list in the invocation of
+             maven-dependency-plugin:copy above.
+
+             It may be possible to avoid this duplication by using the
+             maven-assembly-plugin instead.-->
+
+        <!-- Library sources for debugging WPILib on the Athena -->
+        <dependency>
+            <groupId>edu.wpi.first.wpilib</groupId>
+            <artifactId>sfx</artifactId>
+            <type>zip</type>
+            <version>LATEST</version>
+        </dependency>
+    </dependencies>
 </project>
