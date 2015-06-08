@@ -50,8 +50,8 @@ public class SimulationInstaller extends AbstractInstaller {
 				}
 			}
 			// unzip
-			super.installIfNecessary(inputFilePath, WPILibSimulationPlugin
-					.getDefault().getSimulationDir());
+      WPILibSimulationPlugin.logInfo("unzipping to "+ WPILibSimulationPlugin.getDefault().getSimulationDir());
+			super.installIfNecessary(inputFilePath, WPILibSimulationPlugin.getDefault().getSimulationDir());
 		} catch (MalformedURLException mue) {
 			WPILibSimulationPlugin
 					.logInfo("Malformed URL Exception when downloading models");

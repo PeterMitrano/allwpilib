@@ -93,11 +93,12 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 	@Override
 	public void earlyStartup() {
 		SimulationInstaller simulationInstaller = new SimulationInstaller(getCurrentVersion());
-		//extracts and copies the gazebo plugins from simulation.zip to wpilib/simulation/plugins 
-		simulationInstaller.installPlugins();
 		//downloads and copies the models from collabnet and unzips to
 		//wpilib/simulation/models and wpilib/simulation/worlds
 		simulationInstaller.installModels();
+		//extracts and copies the gazebo plugins from simulation.zip to wpilib/simulation/plugins 
+		simulationInstaller.installPlugins();
+
 	}
 	
 }
