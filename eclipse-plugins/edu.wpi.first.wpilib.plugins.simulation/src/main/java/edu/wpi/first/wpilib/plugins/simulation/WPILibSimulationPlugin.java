@@ -1,5 +1,9 @@
 package edu.wpi.first.wpilib.plugins.simulation;
 
+/**
+ * @author peter mitrano <pdmitrano@wpi.edu>
+ */
+
 import java.io.File;
 import java.util.Properties;
 
@@ -50,7 +54,9 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 
 	public String getCurrentVersion() {
 		try {
-			Properties props = new AntPropertiesParser(WPILibSimulationPlugin.class.getResourceAsStream("/resources/configuration.properties")).getProperties();
+			Properties props = new AntPropertiesParser(
+					WPILibSimulationPlugin.class.getResourceAsStream("/resources/configuration.properties")).
+					getProperties();
 			if (props.getProperty("version").startsWith("$")) {
 				return "DEVELOPMENT";
 			} else {
@@ -64,7 +70,11 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 	
 	public String getSimulationDir() {
 		return WPILibCore.getDefault().getWPILibBaseDir()
-				+ File.separator + "simulation" + File.separator + "current";
+				+ File.separator + "simulation";
+	}
+	
+	public String getPluginsDir() {
+		return getSimulationDir() + File.separator + "plugins";
 	}
 	
 	public static void logInfo(String msg) {
@@ -82,8 +92,12 @@ public class WPILibSimulationPlugin extends AbstractUIPlugin implements IStartup
 	
 	@Override
 	public void earlyStartup() {
-		new SimulationInstaller(getCurrentVersion()).installIfNecessary();
-		
+		SimulationInstaller simulationInstaller = new SimulationInstaller(getCurrentVersion());
+		//extracts and copies the gazebo plugins from simulation.zip to wpilib/simulation/plugins 
+		simulationInstaller.installPlugins();
+		//downloads and copies the models from collabnet and unzips to
+		//wpilib/simulation/models and wpilib/simulation/worlds
+		simulationInstaller.installModels();
 	}
 	
 }

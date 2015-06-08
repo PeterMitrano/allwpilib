@@ -6,6 +6,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import edu.wpi.first.wpilib.plugins.core.WPILibCore;
 
 /**
+ * @author peter mitrano <pdmitrano@wpi.edu>
+ * 
  * Class used to initialize default preference values.
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
