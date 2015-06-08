@@ -42,7 +42,7 @@ public class SimulationInstaller extends AbstractInstaller {
 			if (inputFile.exists()) {
 				WPILibSimulationPlugin.logInfo("models doesn't need to be downloaded again");
 			} else {
-				URL url = new URL("https://usfirst.collab.net/sf/frs/do/downloadFile/projects.wpilib/frs.simulation.frcsim_gazebo_models/frs1161?dl=1");
+				URL url = new URL("https://usfirst.collab.net/sf/frs/do/downloadFile/projects.wpilib/frs.simulation.frcsim_gazebo_models/frs1160?dl=1");
 				HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
 				try (InputStream stream = con.getInputStream()) {
 					WPILibSimulationPlugin.logInfo("downloading models zip");
