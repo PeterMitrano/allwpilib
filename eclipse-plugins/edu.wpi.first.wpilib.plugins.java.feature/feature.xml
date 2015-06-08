@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.wpi.first.wpilib.plugins.simulation.feature"
-      label="Robot Simulation"
-      version="0.1.0.201505291925"
+      id="edu.wpi.first.wpilib.plugins.java.feature"
+      label="Robot Java Development"
+      version="0.1.0.qualifier"
       provider-name="Worcester Polytechnic Institute">
 
    <description>
-      FRC Robot Simulation Environment.
+      FRC Robot Java Program Development Environment.
    </description>
 
    <copyright>
       * Copyright (c) 2015 FIRST and WPI
-* All rights reserved
+* All rights reserved.
    </copyright>
 
    <license>
-    * Copyright (c) 2015 FIRST and WPI
+      * Copyright (c) 2015 FIRST and WPI
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or
@@ -44,21 +44,16 @@
 * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    </license>
-   
-   <url>
-      <discovery label="CDT" url="http://download.eclipse.org/tools/cdt/releases/juno/"/>
-      <discovery label="RSE" url="http://download.eclipse.org/tm/updates/2.0/"/>
-   </url>
-   
+
    <includes
          id="edu.wpi.first.wpilib.plugins.core.feature"
-         version="0.1.0.201505291925"/>   
+         version="0.0.0"/>
 
    <plugin
-         id="edu.wpi.first.wpilib.plugins.simulation"
+         id="edu.wpi.first.wpilib.plugins.java"
          download-size="0"
          install-size="0"
-         version="0.1.0.201505291925"
+         version="0.0.0"
          unpack="false"/>
 
 </feature>
