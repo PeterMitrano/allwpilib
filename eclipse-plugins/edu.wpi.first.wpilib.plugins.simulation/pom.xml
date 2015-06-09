@@ -15,7 +15,7 @@
 
     <properties>
         <build-number>DEVELOPMENT</build-number>
-        <simulation-zip>${project.build.directory}/simulation-zip</simulation-zip>
+      	<simulation-zip>${project.build.directory}\simulation-zip</simulation-zip>
     </properties>
 
     <repositories>
@@ -50,7 +50,7 @@
                             <outputDirectory>${simulation-zip}</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>src/main/resources/simulation-zip</directory>
+				                          <directory>src\main\resources\simulation-zip</directory>
                                 </resource>
                             </resources>
                         </configuration>
@@ -93,7 +93,6 @@
                         </goals>
                         <configuration>
                             <target>
-                                <unzip src="${simulation-zip}/../simulation.zip" dest="${simulation-zip}"/>
                                 <zip destfile="${project.build.directory}/classes/resources/simulation.zip"
                                      basedir="${simulation-zip}"
                                      update="true"/>
