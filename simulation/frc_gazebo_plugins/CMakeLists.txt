@@ -24,7 +24,7 @@ find_package(Boost COMPONENTS system REQUIRED)
 
 
 foreach(PLUGIN ${PLUGINS})
-	MESSAGE("\nconfiguring ${PLUGIN}\n")
+	MESSAGE("configuring ${PLUGIN}")
 
 	#on windows we produce .dlls with no prefix
 	if(WIN32)
@@ -34,14 +34,9 @@ foreach(PLUGIN ${PLUGINS})
 		SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
 		SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
 	endif()
-
-  
-
-	#the plugins need the gz_msgs library
-	find_library(GZ_MSGS NAMES gz_msgs PATHS msgs/build)
-
-	#the header files are all in the build folder so they don't pollute the src files
-	set(GZ_MSGS_INCLUDE_DIR msgs/build)
+	
+  #find_library(GZ_MSGS NAMES gz_msgs PATHS msgs/build)
+  set(GZ_MSGS_INCLUDE_DIR ${CMAKE_BINARY_DIR}/msgs)
 
 	file(GLOB_RECURSE SRC_FILES ${PLUGIN}/src/*.cpp)
 
@@ -51,6 +46,8 @@ foreach(PLUGIN ${PLUGINS})
 
 	link_directories(${GAZEBO_LIBRARY_DIRS} msgs/build)
 
-	target_link_libraries(${PLUGIN} ${GZ_MSGS} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+  add_dependencies(${PLUGIN} gz_msgs)
+
+	target_link_libraries(${PLUGIN} gz_msgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
 endforeach()
