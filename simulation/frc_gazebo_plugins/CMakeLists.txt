@@ -22,6 +22,11 @@ endif()
 find_package(gazebo REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 
+# defines things like M_PI
+add_definitions(-D_USE_MATH_DEFINES)
+
+# get rid of min max macros on windows 
+add_definitions(-DNOMINMAX)
 
 foreach(PLUGIN ${PLUGINS})
 	MESSAGE("configuring ${PLUGIN}")
@@ -42,7 +47,7 @@ foreach(PLUGIN ${PLUGINS})
 
 	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIR})
 
-	add_library(${PLUGIN} SHARED ${SRC_FILES})
+  add_library(${PLUGIN} ${SRC_FILES})
 
 	link_directories(${GAZEBO_LIBRARY_DIRS} msgs/build)
 

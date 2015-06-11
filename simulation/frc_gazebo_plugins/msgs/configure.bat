@@ -5,8 +5,6 @@
 
 @set PROTOBUF_PATH=%WS%\protobuf-2.6.0-win64-vc12
 
-@set LIB=%BOOST_LIBRARY_DIR%;%LIB%
-
 cmake -G "NMake Makefiles"^
     -DPROTOBUF_SRC_ROOT_FOLDER="%PROTOBUF_PATH%"^
     ..

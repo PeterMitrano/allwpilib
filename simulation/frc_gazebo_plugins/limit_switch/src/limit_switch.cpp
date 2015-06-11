@@ -1,3 +1,9 @@
+#ifdef _WIN32
+  // Ensure that Winsock2.h is included before Windows.h, which can get
+  // pulled in by anybody (e.g., Boost).
+  #include <Winsock2.h>
+#endif
+
 #include "limit_switch.h"
 #include "internal_limit_switch.h"
 #include "external_limit_switch.h"

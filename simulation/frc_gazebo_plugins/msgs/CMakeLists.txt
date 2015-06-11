@@ -31,7 +31,7 @@ set(msgs
   "${PROTO_DIR}/float64.proto"
   "${PROTO_DIR}/joystick.proto"
 )
-set(TAG "[======DEBUG======] ")
+
 set(PROTO_SRCS)
 set(PROTO_HDRS)
 foreach(FIL ${msgs})
@@ -68,6 +68,6 @@ endforeach()
 configure_file(msgs.h.in msgs/msgs.h)
 
 file(GLOB_RECURSE COM_SRC_FILES msgs/*.cc)
-include_directories(msgs ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${PROTOBUF_INCLUDE_DIR})
+include_directories(msgs ${PROTOBUF_INCLUDE_DIR})
 add_library(${PROJECT_NAME} SHARED ${PROTO_SRCS} ${SRC_FILES})
-target_link_libraries(${PROJECT_NAME} ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
