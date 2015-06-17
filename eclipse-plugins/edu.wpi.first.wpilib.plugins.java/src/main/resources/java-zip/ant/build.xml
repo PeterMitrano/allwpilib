@@ -176,10 +176,7 @@
       </sequential>
       <sequential>
         <sleep seconds="5"/>
-	    <echo>[simulate] Running DriverStation.</echo>
-	    <java jar="${wpilib.sim.tools}/SimDS.jar" fork="true">
-          <jvmarg value="-Djava.library.path=${wpilib.sim.lib}" />
-        </java>
+	    <echo>[debug-simulate] you may now run your DriverStation.</echo>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
@@ -201,10 +198,7 @@
       </sequential>
       <sequential>
         <sleep seconds="5"/>
-	    <echo>[debug-simulate] Running DriverStation.</echo>
-	    <java jar="${wpilib.sim.tools}/SimDS.jar" fork="true">
-          <jvmarg value="-Djava.library.path=${wpilib.sim.lib}" />
-        </java>
+	    <echo>[debug-simulate] you may now run your DriverStation.</echo>
       </sequential>
       <sequential>
         <sleep seconds="5"/>

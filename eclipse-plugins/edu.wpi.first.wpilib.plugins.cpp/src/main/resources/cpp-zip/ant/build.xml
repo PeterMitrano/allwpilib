@@ -105,11 +105,8 @@
         </exec>
       </sequential>
       <sequential>
-        <sleep seconds="5"/>
-	    <echo>[simulate] Running DriverStation.</echo>
-	    <java jar="${sim.tools}/SimDS.jar" fork="true">
-          <jvmarg value="-Djava.library.path=${sim.lib}" />
-        </java>
+	      <echo>[simulate] You can now run your DriverStation!</echo>
+  	    <echo>[simulate] on linux, run simDS (java -jar wpilib/java/current/sim/tools/SimDS.jar</echo>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
