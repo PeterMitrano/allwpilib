@@ -3,7 +3,7 @@
 #ifndef _SIM_ENCODER_H
 #define _SIM_ENCODER_H
 
-#include "simulation/msgs/msgs.h"
+#include "msgs/msgs.h"
 #include <gazebo/transport/transport.hh>
 #include <gazebo/common/Time.hh>
 

@@ -5,7 +5,7 @@
 /*----------------------------------------------------------------------------*/
 #pragma once
 
-#include "simulation/msgs/msgs.h"
+#include "msgs/msgs.h"
 #include <gazebo/transport/transport.hh>
 #include "SensorBase.h"
 #include "RobotState.h"

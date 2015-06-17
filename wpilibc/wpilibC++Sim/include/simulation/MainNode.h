@@ -3,7 +3,7 @@
 #define _SIM_MAIN_NODE_H
 
 #include <gazebo/transport/transport.hh>
-#include "simulation/msgs/msgs.h"
+#include "msgs/msgs.h"
 
 using namespace gazebo;
 

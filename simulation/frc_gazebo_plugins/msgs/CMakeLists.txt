@@ -71,3 +71,20 @@ file(GLOB_RECURSE COM_SRC_FILES msgs/*.cc)
 include_directories(msgs ${PROTOBUF_INCLUDE_DIR})
 add_library(${PROJECT_NAME} SHARED ${PROTO_SRCS} ${SRC_FILES})
 target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
+
+#install
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}\${PROJECT_NAME})
+
+#we want msgs to be used by the plugins and wpilibC++Sim, so we used a gz_msgs-config.cmake
+#first step is find out where Cmake is installed
+include(GNUInstallDirs)
+
+set (CONF_INCLUDE_DIRS ${PROJECT_BINARY_DIR})
+set (CMAKE_INSTALL_PREFIX "/usr")
+get_filename_component(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} ABSOLUTE)
+set (CONF_LIB_DIRS ${LIB_INSTALL_DIR})
+
+#fill in all the variables in the cmake file 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
+#install gz_msgs.cmake
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
