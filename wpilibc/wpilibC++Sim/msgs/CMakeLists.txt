@@ -32,8 +32,18 @@ set(msgs
   "${PROTO_DIR}/joystick.proto"
 )
 
+#on windows we produce .dlls with no prefix
+if(WIN32)
+  SET(CMAKE_FIND_LIBRARY_PREFIXES "")
+  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
+else()
+  SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
+  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
+endif()
+
 set(PROTO_SRCS)
 set(PROTO_HDRS)
+set(MSGS_HEADER "${CMAKE_CURRENT_BINARY_DIR}/msgs/msgs.h")
 foreach(FIL ${msgs})
   get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
   get_filename_component(FIL_WE ${FIL} NAME_WE)
@@ -65,7 +75,7 @@ foreach (hdr ${PROTO_HDRS})
   APPEND_TO_CACHED_STRING(message_headers
     "Message Types" "#include \"${hdr}\"\n")
 endforeach()
-configure_file(msgs.h.in msgs/msgs.h)
+configure_file(msgs.h.in ${MSGS_HEADER})
 
 file(GLOB_RECURSE COM_SRC_FILES msgs/*.cc)
 include_directories(msgs ${PROTOBUF_INCLUDE_DIR})
@@ -73,18 +83,19 @@ add_library(${PROJECT_NAME} SHARED ${PROTO_SRCS} ${SRC_FILES})
 target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
 #install
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}\${PROJECT_NAME})
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
+install(FILES ${MSGS_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
+install(FILES ${PROTO_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
 
 #we want msgs to be used by the plugins and wpilibC++Sim, so we used a gz_msgs-config.cmake
 #first step is find out where Cmake is installed
 include(GNUInstallDirs)
 
 set (CONF_INCLUDE_DIRS ${PROJECT_BINARY_DIR})
-set (CMAKE_INSTALL_PREFIX "/usr")
 get_filename_component(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} ABSOLUTE)
 set (CONF_LIB_DIRS ${LIB_INSTALL_DIR})
 
 #fill in all the variables in the cmake file 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
 #install gz_msgs.cmake
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/..) #pretty sure this only works on windows, and also it's a hack

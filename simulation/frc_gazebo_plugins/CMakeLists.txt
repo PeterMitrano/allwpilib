@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(frc_gazebo_plugins)
 
+MESSAGE("\nCMAKE PREFIX = ${CMAKE_PREFIX_PATH}\n")
+
 set (PLUGINS
 	clock
 	dc_motor
@@ -38,7 +40,7 @@ foreach(PLUGIN ${PLUGINS})
 
 	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIRS})
 
-  add_library(${PLUGIN} ${SRC_FILES})
+  	add_library(${PLUGIN} ${SRC_FILES})
 
 	link_directories(${GAZEBO_LIBRARY_DIRS} msgs/build)
 

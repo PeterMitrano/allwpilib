@@ -1,6 +1,8 @@
 :: This file is a helper for frc_gazebo_plugin configuration (cmake) on Windows
 :: 
 :: Usage: cd /build && ../configure
+::
+:: WARNING -- this is only temporary, and only meant for debug, and only works on my computer
 @set WS=C:\Users\peter\gz-ws
 @set BOOST_PATH=%WS%\boost_1_56_0
 @set BOOST_LIBRARY_DIR=%BOOST_PATH%\lib64-msvc-12.0
@@ -25,10 +27,13 @@
 
 @set TINY_XML_INCLUDE_DIR=%WS%\sdformat\src\win\tinyxml
 
+@set IGNITION-MATH_PATH=%WS%\ign-math\build\install\Debug
+
+@set gz_msgs_DIR=C:\Program Files\gz_msgs
 @set GZ_MSGS_LIBRARY_DIR=msgs\build
 
 @set INCLUDE=%PROTOBUF_INCLUDE_DIR%;%TINY_XML_INCLUDE_DIR%;%FREEIMAGE_INCLUDE_DIR%;%TBB_INCLUDEDIR%;%DLFCN_WIN32_INCLUDE_DIR%;%INCLUDE%
-@set LIB=GZ_MSGS_LIBRARY_DIR;%LIB%
+@set LIB=%LIB%
 
 cmake -G "NMake Makefiles"^
 	-DOGRE_SOURCE="%OGRE_SOURCE%"^

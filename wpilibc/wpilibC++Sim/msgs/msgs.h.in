@@ -1,12 +1,12 @@
 //Auto Generated
 //@author Peter Mitrano <peter@osrfoundation.org>
+#ifndef _FRC_MSGS_H_
+#define _FRC_MSGS_H_
+
 ${message_headers}
 
 #include <gazebo/msgs/msgs.hh>
 #include <boost/shared_ptr.hpp>
-
-#ifndef _FRC_MSGS_H_
-#define _FRC_MSGS_H_
 
 namespace gazebo {
   namespace msgs {
