@@ -13,7 +13,8 @@ macro(filter_valid_compiler_flags)
 endmacro()
 
 
-filter_valid_compiler_flags(-Wno-unused-parameter -fPIC -std=c++11 -DFRC_SIMULATOR)
+filter_valid_compiler_flags(-Wno-unused-parameter -fPIC -DFRC_SIMULATOR)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)

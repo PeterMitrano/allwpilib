@@ -3,6 +3,10 @@ project(frc_gazebo_plugins)
 
 MESSAGE("\nCMAKE PREFIX = ${CMAKE_PREFIX_PATH}\n")
 
+if (UNIX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
 set (PLUGINS
 	clock
 	dc_motor
