@@ -6,9 +6,13 @@
 #pragma once
 
 // If don't have C++11, define constexpr as const for WindRiver
-#if __cplusplus < 201103L
-#define constexpr const
-#define nullptr NULL
+#if (__cplusplus < 201103L)
+	// MSVC is exception: see https://connect.microsoft.com/VisualStudio/feedback/details/763051/a-value-of-predefined-macro-cplusplus-is-still-199711l
+	#if defined(_MSC_VER)
+		#define _XKEYCHECK_H //this disables the rule that you can't use keywords as macros. very dangerous, but I can't think of another way
+	#endif
+	#define constexpr const
+	#define nullptr NULL
 #endif
 
 // A macro to disallow the copy constructor and operator= functions

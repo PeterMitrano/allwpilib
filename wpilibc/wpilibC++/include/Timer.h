@@ -37,7 +37,7 @@ public:
     static double GetMatchTime();
 	
 	// The time, in seconds, at which the 32-bit FPGA timestamp rolls over to 0
-	static constexpr double kRolloverTime = (1ll << 32) / 1e6;
+	static const double kRolloverTime;
 
 private:
 	double m_startTime;
@@ -46,3 +46,6 @@ private:
 	MUTEX_ID m_semaphore;
 	DISALLOW_COPY_AND_ASSIGN(Timer);
 };
+
+//for compatibility with msvc12--see C2864
+const double Timer::kRolloverTime = (1ll << 32) / 1e6;

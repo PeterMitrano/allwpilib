@@ -7,8 +7,7 @@
 #ifndef _ERROR_BASE_H
 #define _ERROR_BASE_H
 
-//mingw is being user to compile C++ sim robot programs on windows and it doesn't use semlib
-#if (defined __vxworks || defined WIN32 && not defined __MINGW32__)
+#ifdef __vxworks
 #include <semLib.h>
 #ifdef __vxworks
 #include <vxWorks.h>

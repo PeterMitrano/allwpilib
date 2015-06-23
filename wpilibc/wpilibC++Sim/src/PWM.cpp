@@ -10,10 +10,10 @@
 #include "Utility.h"
 #include "WPIErrors.h"
 
-constexpr float PWM::kDefaultPwmPeriod;
-constexpr float PWM::kDefaultPwmCenter;
-const int32_t PWM::kDefaultPwmStepsDown;
-const int32_t PWM::kPwmDisabled;
+constexpr float PWM::kDefaultPwmPeriod = 5.05;
+constexpr float PWM::kDefaultPwmCenter = 1.5;
+const int32_t PWM::kDefaultPwmStepsDown = 1000;
+const int32_t PWM::kPwmDisabled = 0;
 
 /**
  * Initialize PWMs given a channel.

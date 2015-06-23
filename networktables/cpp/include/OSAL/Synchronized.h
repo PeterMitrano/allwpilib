@@ -10,8 +10,7 @@
 #define NT_CRITICAL_REGION(s) { NTSynchronized _sync(s);
 #define NT_END_REGION }
 
-//mingw is being used for compiling C++ sim robot programs on windows, and it has pthread not semlib
-#if (defined __vxworks || defined WIN32 && not defined __MINGW32__)
+#if (defined __vxworks)
 
 #ifdef __vxworks
 #include <vxWorks.h>
@@ -72,8 +71,7 @@ private:
  * that is shared between two or more tasks has to be prevented from executing at the same time
  * otherwise a race condition is possible when both tasks try to update the data. Typically
  * semaphores are used to ensure only single task access to the data.
- * Synchronized objects are a simple wrapper around sema
- phores to help ensure that semaphores
+ * Synchronized objects are a simple wrapper around semaphores to help ensure that semaphores
  * are always signaled (semGive) after a wait (semTake).
  */
 class NTSynchronized
@@ -81,12 +79,12 @@ class NTSynchronized
 public:
 	explicit NTSynchronized(NTReentrantSemaphore&);
 	//TODO remove vxworks SEM_ID support
-#if (defined __vxworks || defined WIN32 && not defined __MINGW32__)
+#if (defined __vxworks)
 	explicit NTSynchronized(SEM_ID);
 #endif
 	virtual ~NTSynchronized();
 private:
-#if (defined __vxworks || defined WIN32 && not defined __MINGW32__)
+#if (defined __vxworks)
 	bool usingSem;
 	NTReentrantSemaphore* m_sem;
 	SEM_ID m_semaphore;

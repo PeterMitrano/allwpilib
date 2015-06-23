@@ -17,8 +17,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <execinfo.h>
-#include <cxxabi.h>
+#ifdef _UNIX
+	#include <execinfo.h>
+	#include <cxxabi.h>
+#endif
 
 static bool stackTraceEnabled = false;
 static bool suspendOnAssertEnabled = false;
@@ -181,6 +183,8 @@ static std::string demangle(char const *mangledSymbol)
 	size_t length;
 	int status;
 
+//TODO: implement symbol demangling on windows
+#ifdef _UNIX
 	if(sscanf(mangledSymbol, "%*[^(]%*[^_]%255[^)+]", buffer))
 	{
 		char *symbol = abi::__cxa_demangle(buffer, NULL, &length, &status);
@@ -196,11 +200,13 @@ static std::string demangle(char const *mangledSymbol)
 			return buffer;
 		}
 	}
+#endif
 
 	// If everything else failed, just return the mangled symbol
 	return mangledSymbol;
 }
 
+#ifdef _UNIX
 /**
  * Get a stack trace, ignoring the first "offset" symbols.
  */
@@ -225,3 +231,4 @@ std::string GetStackTrace(uint32_t offset)
 	return trace.str();
 }
 
+#endif

@@ -13,34 +13,76 @@ macro(filter_valid_compiler_flags)
 endmacro()
 
 
-filter_valid_compiler_flags(-Wno-unused-parameter -fPIC -DFRC_SIMULATOR)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR )
+
+# defines things like M_PI
+add_definitions(-D_USE_MATH_DEFINES)
+
+# get rid of min max macros on windows 
+add_definitions(-DNOMINMAX)
 
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
 add_subdirectory(../wpilibC++ wpilibC++)
 
+set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
+set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
+
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gz_msgs REQUIRED)
 
+#on windows we produce .dlls with no prefix
+if(WIN32)
+  SET(CMAKE_FIND_LIBRARY_PREFIXES "")
+  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
+endif()
+
+#also on window,s use sprintf_s instead of snprintf
+if (WIN32)
+add_definitions(-Dsnprintf=sprintf_s)
+endif()
+
+if (WIN32)
+file(GLOB_RECURSE SRC_FILES src/*.cpp
+#  ../../networktables/cpp/lib/share/*.cpp
+#  ../../networktables/cpp/lib/WIN32/*.cpp
+#  ../../hal/lib/Athena/Task.cpp
+#  ../../hal/lib/Athena/Semaphore.cpp
+#  ../../hal/lib/Athena/cpp/Synchronized.cpp
+)
+else()
 file(GLOB_RECURSE SRC_FILES src/*.cpp ../../networktables/cpp/lib/share/*.cpp
                                       ../../networktables/cpp/lib/Athena/*.cpp
                                       ../../hal/lib/Athena/Task.cpp
                                       ../../hal/lib/Athena/Semaphore.cpp
                                       ../../hal/lib/Athena/cpp/Synchronized.cpp)
+endif()
 
 file(GLOB_RECURSE COM_SRC_FILES ../wpilibC++/src/*.cpp)
 
-MESSAGE("\n\n ${GAZEBO_INCLUDE_DIRS} \n\n")
-
-include_directories(include/ ../../wpilibc/wpilibC++/include
-                    ../../networktables/cpp/include
-                    ../../hal/include
-                    ${Boost_INCLUDE_DIR}
-                    ${GAZEBO_INCLUDE_DIRS}
-                    ${GZ_MSGS_INCLUDE_DIRS})
-add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
-target_link_libraries(WPILibSim ${GAZEBO_LIBRARIES}  -fPIC) # NetworkTables
+include_directories(
+  include/
+  ../../wpilibc/wpilibC++/include
+  ../../networktables/cpp/include
+  ../../hal/include
+#  C:/Users/peter/wpilib/cpp/current/sim/include
+  C:/Users/peter/gz-ws/protobuf-2.6.0-win64-vc12/src
+#  C:/Users/peter/gz-ws/boost_1_56_0
+#  C:/Users/peter/gz-ws/gazebo/build/install/Debug/include/gazebo-6.0
+#  C:/Users/peter/gz-ws/sdformat/build/install/Debug/include/sdformat-3.0
+  C:/Users/peter/gz-ws/sdformat/src/win/tinyxml
+#  C:/Users/peter/gz-ws/ign-math/build/install/Debug/include/ignition/math2
+  C:/Users/peter/gz-ws/FreeImage-vc12-x64-release-debug/Source
+  C:/Users/peter/gz-ws/tbb43_20141023oss/include
+#  C:/Users/peter/allwpilib/wpilibc/wpilibC++Sim/msgs/build
+  ${PTHREAD_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIR}
+  ${GAZEBO_INCLUDE_DIRS}
+  ${GZ_MSGS_INCLUDE_DIRS}
+  )
+add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
+target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
 
 INSTALL(TARGETS WPILibSim DESTINATION src COMPONENT src)
 INSTALL(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT headers)
