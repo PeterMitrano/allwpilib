@@ -13,7 +13,7 @@ macro(filter_valid_compiler_flags)
 endmacro()
 
 
-filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR )
+filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR /MDd)
 
 # defines things like M_PI
 add_definitions(-D_USE_MATH_DEFINES)
@@ -45,11 +45,11 @@ endif()
 
 if (WIN32)
 file(GLOB_RECURSE SRC_FILES src/*.cpp
-#  ../../networktables/cpp/lib/share/*.cpp
+  #../../networktables/cpp/lib/share/*.cpp
 #  ../../networktables/cpp/lib/WIN32/*.cpp
-#  ../../hal/lib/Athena/Task.cpp
-#  ../../hal/lib/Athena/Semaphore.cpp
-#  ../../hal/lib/Athena/cpp/Synchronized.cpp
+  ../../hal/lib/Athena/Task.cpp
+  ../../hal/lib/Athena/Semaphore.cpp
+  ../../hal/lib/Athena/cpp/Synchronized.cpp
 )
 else()
 file(GLOB_RECURSE SRC_FILES src/*.cpp ../../networktables/cpp/lib/share/*.cpp

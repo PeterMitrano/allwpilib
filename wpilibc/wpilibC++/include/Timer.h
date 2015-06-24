@@ -47,5 +47,3 @@ private:
 	DISALLOW_COPY_AND_ASSIGN(Timer);
 };
 
-//for compatibility with msvc12--see C2864
-const double Timer::kRolloverTime = (1ll << 32) / 1e6;
