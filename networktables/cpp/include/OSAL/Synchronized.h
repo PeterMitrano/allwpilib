@@ -10,7 +10,7 @@
 #define NT_CRITICAL_REGION(s) { NTSynchronized _sync(s);
 #define NT_END_REGION }
 
-#if (defined __vxworks)
+#if defined(__vxworks)
 
 #ifdef __vxworks
 #include <vxWorks.h>
@@ -39,6 +39,7 @@ private:
 #else
 
 #include <pthread.h>
+
 
 class NTReentrantSemaphore
 {
@@ -79,12 +80,12 @@ class NTSynchronized
 public:
 	explicit NTSynchronized(NTReentrantSemaphore&);
 	//TODO remove vxworks SEM_ID support
-#if (defined __vxworks)
+#if defined (__vxworks)
 	explicit NTSynchronized(SEM_ID);
 #endif
 	virtual ~NTSynchronized();
 private:
-#if (defined __vxworks)
+#if defined (__vxworks)
 	bool usingSem;
 	NTReentrantSemaphore* m_sem;
 	SEM_ID m_semaphore;

@@ -32,21 +32,22 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gz_msgs REQUIRED)
 
-#on windows we produce .dlls with no prefix
+# on windows we produce .dlls with no prefix
 if(WIN32)
   SET(CMAKE_FIND_LIBRARY_PREFIXES "")
   SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
 
-#also on window,s use sprintf_s instead of snprintf
+# also on window,s use sprintf_s instead of snprintf
+# this is probably a horrible hacky idea
 if (WIN32)
 add_definitions(-Dsnprintf=sprintf_s)
 endif()
 
 if (WIN32)
 file(GLOB_RECURSE SRC_FILES src/*.cpp
-  #../../networktables/cpp/lib/share/*.cpp
-#  ../../networktables/cpp/lib/WIN32/*.cpp
+  ../../networktables/cpp/lib/share/*.cpp
+  ../../networktables/cpp/lib/WIN32/*.cpp
   ../../hal/lib/Athena/Task.cpp
   ../../hal/lib/Athena/Semaphore.cpp
   ../../hal/lib/Athena/cpp/Synchronized.cpp
@@ -66,16 +67,11 @@ include_directories(
   ../../wpilibc/wpilibC++/include
   ../../networktables/cpp/include
   ../../hal/include
-#  C:/Users/peter/wpilib/cpp/current/sim/include
+  ../../hal/lib/Athena
   C:/Users/peter/gz-ws/protobuf-2.6.0-win64-vc12/src
-#  C:/Users/peter/gz-ws/boost_1_56_0
-#  C:/Users/peter/gz-ws/gazebo/build/install/Debug/include/gazebo-6.0
-#  C:/Users/peter/gz-ws/sdformat/build/install/Debug/include/sdformat-3.0
   C:/Users/peter/gz-ws/sdformat/src/win/tinyxml
-#  C:/Users/peter/gz-ws/ign-math/build/install/Debug/include/ignition/math2
   C:/Users/peter/gz-ws/FreeImage-vc12-x64-release-debug/Source
   C:/Users/peter/gz-ws/tbb43_20141023oss/include
-#  C:/Users/peter/allwpilib/wpilibc/wpilibC++Sim/msgs/build
   ${PTHREAD_INCLUDE_DIR}
   ${Boost_INCLUDE_DIR}
   ${GAZEBO_INCLUDE_DIRS}

@@ -7,10 +7,11 @@
 #ifndef _ERROR_BASE_H
 #define _ERROR_BASE_H
 
-#ifdef __vxworks
-#include <semLib.h>
-#ifdef __vxworks
-#include <vxWorks.h>
+#if defined(__vxworks) || defined(WIN32)
+#if defined(UNIX)
+	#include <semLib.h>
+#elif defined(__vxworks)
+	#include <vxWorks.h>
 #endif
 
 #define DISALLOW_COPY_AND_ASSIGN(ErrorBase) 

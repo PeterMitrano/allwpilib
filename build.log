@@ -1,0 +1,25 @@
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\I2C.java:253: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\InterruptHandlerFunction.java:21: warning - Tag @link: reference not found: java.util.concurrent.atomic
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:238: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:238: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:263: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:263: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:323: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:323: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:323: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\PWM.java:323: warning - @pre is an unknown tag.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\Solenoid.java:112: warning - Tag @see: missing '#': "clearAllPCMStickyFaults()"
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\client\ClientConnectionAdapter.java:64: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\client\ClientNetworkTableEntryStore.java:22: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\client\NetworkTableClient.java:24: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\AbstractNetworkTableEntryStore.java:52: warning - @param argument "name" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\NetworkTableNode.java:17: warning - Tag @link: can't find init(NetworkTableTransactionPool, AbstractNetworkTableEntryStore) in edu.wpi.first.wpilibj.networktables2.NetworkTableNode
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\WriteManager.java:40: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\server\NetworkTableServer.java:27: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\server\ServerConnectionAdapter.java:47: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\server\ServerIncomingStreamMonitor.java:35: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\networktables\java\src\main\java\edu\wpi\first\wpilibj\networktables2\server\ServerNetworkTableEntryStore.java:22: warning - @param argument "transactionPool" is not a parameter name.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\InterruptHandlerFunction.java:21: warning - Tag @link: reference not found: java.util.concurrent.atomic
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaDevices\src\main\java\edu\wpi\first\wpilibj\InterruptHandlerFunction.java:21: warning - Tag @link: reference not found: java.util.concurrent.atomic
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaSim\src\main\java\edu\wpi\first\wpilibj\Preferences.java:808: warning - @return tag has no arguments.
+C:\Users\peter\allwpilib\wpilibj\wpilibJavaSim\src\main\java\edu\wpi\first\wpilibj\simulation\SimSpeedController.java:18: warning - @param argument "channel" is not a parameter name.

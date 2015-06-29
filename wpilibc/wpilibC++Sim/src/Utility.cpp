@@ -17,7 +17,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#ifdef _UNIX
+#if defined(UNIX)
 	#include <execinfo.h>
 	#include <cxxabi.h>
 #endif
@@ -173,6 +173,8 @@ uint32_t GetFPGATime()
 	return wpilib::internal::simTime * 1e6;
 }
 
+//TODO: implement symbol demangling on windows
+#if defined(UNIX)
 
 /**
  * Demangle a C++ symbol, used for printing stack traces.
@@ -183,8 +185,6 @@ static std::string demangle(char const *mangledSymbol)
 	size_t length;
 	int status;
 
-//TODO: implement symbol demangling on windows
-#ifdef _UNIX
 	if(sscanf(mangledSymbol, "%*[^(]%*[^_]%255[^)+]", buffer))
 	{
 		char *symbol = abi::__cxa_demangle(buffer, NULL, &length, &status);
@@ -200,13 +200,12 @@ static std::string demangle(char const *mangledSymbol)
 			return buffer;
 		}
 	}
-#endif
+
 
 	// If everything else failed, just return the mangled symbol
 	return mangledSymbol;
 }
 
-#ifdef _UNIX
 /**
  * Get a stack trace, ignoring the first "offset" symbols.
  */
@@ -230,5 +229,13 @@ std::string GetStackTrace(uint32_t offset)
 
 	return trace.str();
 }
-
+#else
+static std::string demangle(char const *mangledSymbol)
+{
+	return "no demangling on windows";
+}
+std::string GetStackTrace(uint32_t offset)
+{
+	return "no stack trace on windows";
+}
 #endif

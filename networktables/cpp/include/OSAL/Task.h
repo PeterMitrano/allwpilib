@@ -7,8 +7,7 @@
 #ifndef __NTTASK_H__
 #define __NTTASK_H__
 
-#if (defined __vxworks)
-
+#if defined(__vxworks) //|| defined(WIN32)
 #include "NTErrorBase.h"
 #ifdef __vxworks
 #include <vxWorks.h>

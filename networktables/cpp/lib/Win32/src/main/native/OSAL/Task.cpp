@@ -1,5 +1,6 @@
-#include "stdafx.h"
 #include "OSAL/Task.h"
+
+#if defined(__vxworks)
 
 #include "NetworkCommunication/UsageReporting.h"
 #include "WPIErrors.h"
@@ -314,3 +315,6 @@ bool NTTask::HandleError(STATUS results)
 	//}
 	return false;
 }
+
+
+#endif //_-vxworks
