@@ -5,6 +5,7 @@
 :: WARNING -- this is only temporary, and only meant for debug, and only works on my computer
 @set WS=C:\Users\peter\gz-ws
 @set BOOST_PATH=%WS%\boost_1_56_0
+
 @set BOOST_LIBRARY_DIR=%BOOST_PATH%\lib64-msvc-12.0
 
 @set GAZEBO_PATH=%WS%\gazebo\build\install\Debug\lib\cmake\gazebo

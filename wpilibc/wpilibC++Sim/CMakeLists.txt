@@ -21,6 +21,9 @@ add_definitions(-D_USE_MATH_DEFINES)
 # get rid of min max macros on windows 
 add_definitions(-DNOMINMAX)
 
+# Use dynamic linking for boost
+add_definitions(-DBOOST_ALL_DYN_LINK)
+
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
 add_subdirectory(../wpilibC++ wpilibC++)
@@ -31,6 +34,7 @@ set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(gazebo REQUIRED)
 find_package(gz_msgs REQUIRED)
+
 
 # on windows we produce .dlls with no prefix
 if(WIN32)
