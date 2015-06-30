@@ -15,6 +15,14 @@ endmacro()
 
 filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR /MDd)
 
+
+CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CPP_11)
+
+
+if(${HAS_CPP_11})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
+
 # defines things like M_PI
 add_definitions(-D_USE_MATH_DEFINES)
 
