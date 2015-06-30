@@ -10,8 +10,8 @@
 #include "Utility.h"
 #include "WPIErrors.h"
 
-constexpr float PWM::kDefaultPwmPeriod = 5.05;
-constexpr float PWM::kDefaultPwmCenter = 1.5;
+const float PWM::kDefaultPwmPeriod = 5.05;
+const float PWM::kDefaultPwmCenter = 1.5;
 const int32_t PWM::kDefaultPwmStepsDown = 1000;
 const int32_t PWM::kPwmDisabled = 0;
 

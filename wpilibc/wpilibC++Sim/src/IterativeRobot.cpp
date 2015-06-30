@@ -15,7 +15,7 @@
 	#include <unistd.h>
 #endif
 
-constexpr double IterativeRobot::kDefaultPeriod = 0;
+const double IterativeRobot::kDefaultPeriod = 0;
 
 /**
  * Constructor for RobotIterativeBase

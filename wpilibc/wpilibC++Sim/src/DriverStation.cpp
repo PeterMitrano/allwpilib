@@ -25,7 +25,7 @@ TLogLevel dsLogLevel = logDEBUG;
 const uint32_t DriverStation::kBatteryChannel;
 const uint32_t DriverStation::kJoystickPorts;
 const uint32_t DriverStation::kJoystickAxes;
-constexpr float DriverStation::kUpdatePeriod = 0.02;
+const float DriverStation::kUpdatePeriod = 0.02;
 DriverStation* DriverStation::m_instance = NULL;
 uint8_t DriverStation::m_updateNumber = 0;
 

@@ -26,11 +26,11 @@ class AnalogModule;
 class Gyro : public SensorBase, public PIDSource, public LiveWindowSendable
 {
 public:
-	static constexpr uint32_t kOversampleBits;
-	static constexpr uint32_t kAverageBits;
-	static constexpr float kSamplesPerSecond;
-	static constexpr float kCalibrationSampleTime;
-	static constexpr float kDefaultVoltsPerDegreePerSecond;
+	static const uint32_t kOversampleBits;
+	static const uint32_t kAverageBits;
+	static const float kSamplesPerSecond;
+	static const float kCalibrationSampleTime;
+	static const float kDefaultVoltsPerDegreePerSecond;
 
 	explicit Gyro(uint32_t channel);
 	virtual ~Gyro();

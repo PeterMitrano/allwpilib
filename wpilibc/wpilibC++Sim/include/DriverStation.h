@@ -111,7 +111,7 @@ private:
 	static DriverStation *m_instance;
 	static uint8_t m_updateNumber;
 	///< TODO: Get rid of this and use the semaphore signaling
-	static constexpr float kUpdatePeriod;
+	static const float kUpdatePeriod;
 
     void stateCallback(const msgs::ConstDriverStationPtr &msg);
     void joystickCallback(const msgs::ConstJoystickPtr &msg, int i);
