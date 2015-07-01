@@ -7,8 +7,12 @@
 #ifndef _ERROR_BASE_H
 #define _ERROR_BASE_H
 
+// TODO: understand what this class is doing.
+// 
 #if defined(__vxworks) || defined(WIN32)
 #if defined(UNIX)
+// this will currently never be used
+// It does not exist by default on windows, and we're using pthread instead
 	#include <semLib.h>
 #elif defined(__vxworks)
 	#include <vxWorks.h>

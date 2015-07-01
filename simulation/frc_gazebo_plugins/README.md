@@ -1,10 +1,16 @@
-Notes for building the gazebo pluginos
-=================
+Notes for building the gazebo plugins
+=====================================
 
-run make in this directory. If you get errors about proto buf being uncompatable, install protobuf compiler and recompile the .proto files
+the resulting plugins (shared libraries, .so/.dll) are delivered to students via the eclipse simulation plugins, and unzipped to ${HOME}/wpilib/simulation/plugins
 
-    $> sudo apt-get install protobuf-compiler
-    $> cd msgs/proto
-    $> protoc --cpp_out ../src/msgs *.proto
+## Building
+If it doesn't exist, create a build directory.
+In that directory, run the following
 
-Then it should work
+    //on windows
+    ..\configure.bat
+    nmake
+
+    //on linux
+    cmake ..
+    make

@@ -30,7 +30,7 @@ public:
 
 class PeriodicNTThread : public NTThread {
 private:
-#if defined(__vxworks) //|| defined(WIN32)
+#if defined(__vxworks) 
 	const char* name;
 	NTTask* thread;
 #else
@@ -38,7 +38,7 @@ private:
 #endif
 	PeriodicRunnable* r;
 	bool run;
-#if defined(__vxworks) //|| defined(WIN32)
+#if defined(__vxworks)
 	int _taskMain();
 	static int taskMain(PeriodicNTThread* o);
 #else//TODO make return int for pthread as well

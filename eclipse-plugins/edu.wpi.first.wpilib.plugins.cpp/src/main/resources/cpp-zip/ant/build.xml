@@ -96,6 +96,7 @@
   <target name="simulate">
     <parallel>
       <sequential>
+        <!-- windows uses a batch file to run frcsim, linux uses a shell script -->
 	      <condition property="frcsim.executable" value="frcsim.bat" else="frcsim">
           <os family="windows" />
         </condition>
@@ -106,7 +107,7 @@
       </sequential>
       <sequential>
 	      <echo>[simulate] You can now run your DriverStation!</echo>
-  	    <echo>[simulate] on linux, run simDS (java -jar wpilib/java/current/sim/tools/SimDS.jar</echo>
+  	    <echo>[simulate] on linux, run simDS (java -jar wpilib/java/current/sim/tools/SimDS.jar)</echo>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
