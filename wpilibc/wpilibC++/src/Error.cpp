@@ -90,7 +90,13 @@ void Error::Report()
 	std::stringstream errorStream;
 
 	errorStream << "Error on line " << m_lineNumber << " ";
+#if defined(_UNIX)
 	errorStream << "of "<< basename(m_filename.c_str()) << ": ";
+#elif defined(_WIN32)
+  basic_path::basic_path path(m_filename.c_str());
+  errorStream << "of " << basename(path) << ": ";
+#endif
+
 	errorStream << m_message << std::endl;
 	errorStream << GetStackTrace(4);
 

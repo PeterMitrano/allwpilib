@@ -8,9 +8,7 @@
 #include "Base.h"
 
 #ifdef _WIN32
-//implementation of basename provided by boost on windows
-  #include <boost/filesystem/convenience.hpp>
-	#define basename boost::filesystem::basename
+  #include <Windows.h>
 #endif
 
 #include <string>
