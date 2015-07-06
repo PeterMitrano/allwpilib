@@ -40,6 +40,7 @@ public class Connection {
 	public void connect(String host, int port) throws UnknownHostException, IOException {
 		this.host = host;
 		this.port = port;
+		LOG.warning("connect called with host="+host+" port="+port);
 		socket = new Socket(host, port);
 		is = socket.getInputStream();
 		os = socket.getOutputStream();
@@ -70,7 +71,7 @@ public class Connection {
 		new Thread("Gazebo Server Thread") {
 			@Override
 			public void run() {
-				LOG.config("Listening on "+host+":"+port);
+				LOG.warning("Listening on "+host+":"+port);
 				while (true) {
 					Connection conn = new Connection();
 					try {

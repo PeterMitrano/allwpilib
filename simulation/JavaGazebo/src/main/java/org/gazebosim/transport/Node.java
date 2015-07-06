@@ -52,8 +52,28 @@ public class Node implements Runnable, ServerCallback {
 	}
 
 	public void waitForConnection() throws IOException, InterruptedException {
+
+		//enable user to change master uri via environment variable GAZEBO_MASTER_URI
+		String user_defined_uri = System.getenv("GAZEBO_MASTER_URI");
+		String gazebo_master_uri = "localhost";
+		int port = 11345;
+        if (user_defined_uri != null) {
+        	String[] parts = user_defined_uri.split(":");
+        	if (parts.length != 2){
+        		LOG.severe("invalid GAZEBO_MASTER_URI " + user_defined_uri+ ". URI must be of the form HOSTNAME:PORT");
+        		LOG.warning("using default GAZEBO_MASTER_URI=localhost:11345");	
+        	}
+        	else {
+            	gazebo_master_uri = parts[0];
+            	port = Integer.parseInt(parts[1]);
+            }
+        }
+        
+        LOG.warning("GAZEBO_MASTER_URI is host=" + gazebo_master_uri + " port="+port);
+
 		server.serve(this);
-		master.connectAndWait("localhost", 11345);
+		master.connectAndWait(gazebo_master_uri, port);
+
 		initializeConnection();
 		
 		new Thread(this).start();
@@ -62,7 +82,7 @@ public class Node implements Runnable, ServerCallback {
 
 	public synchronized <T extends Message> Publisher<T> advertise(String topic, T defaultMessage) {
 		topic = fixTopic(topic);
-		LOG.info("ADV "+topic);
+		LOG.warning("ADV "+topic);
 		String type = defaultMessage.getDescriptorForType().getFullName();
 		Publisher<T> pub = new Publisher<T>(topic, type, server.host, server.port);
 		publishers.put(topic, pub);
@@ -80,7 +100,7 @@ public class Node implements Runnable, ServerCallback {
 	public synchronized <T extends Message> Subscriber<T>
 			subscribe(String topic, T defaultMessage, SubscriberCallback<T> cb) {
 		topic = fixTopic(topic);
-		LOG.info("SUB "+topic);
+		LOG.warning("SUB "+topic);
 		if (subscriptions.containsKey(topic)) {
 			throw new RuntimeException("Multiple subscribers for: "+topic);
 		}
@@ -92,6 +112,7 @@ public class Node implements Runnable, ServerCallback {
 			master.writePacket("subscribe", req);
 		} catch (IOException e) {
 			e.printStackTrace(); // FIXME: Shouldn't happen, should probably complain louder
+			LOG.warning("SOMETHING TERRIBLE HAS HAPPENED");
 		}
 		
 		Subscriber<T> s = new Subscriber<>(topic, type, cb, defaultMessage,
@@ -185,8 +206,10 @@ public class Node implements Runnable, ServerCallback {
 	}
 
 	@Override
+	/**
+	 * This is called when another node requests subscription to a topic we are publishing
+	 */
 	public void handle(Connection conn) throws IOException {
-		LOG.fine("Handling new connection");
 		Packet msg = conn.read();
 		if (msg == null) {
 			LOG.warning("Read null message.");
@@ -210,6 +233,7 @@ public class Node implements Runnable, ServerCallback {
 			}
 
 			LOG.info("CONN " + sub.getTopic());
+			//Tell the publisher that it has recieved a connection from a subscriver
 			pub.connect(conn);
 		} else {
 			LOG.warning("Unknown message type: " + msg.getType());
