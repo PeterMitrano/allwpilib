@@ -68,16 +68,17 @@ public class Node implements Runnable, ServerCallback {
             	port = Integer.parseInt(parts[1]);
             }
         }
-        
-        LOG.warning("GAZEBO_MASTER_URI is host=" + gazebo_master_uri + " port="+port);
 
 		server.serve(this);
-		master.connectAndWait(gazebo_master_uri, port);
+
+    LOG.warning("GAZEBO_MASTER_URI is host=" + gazebo_master_uri + " port="+port);
+		LOG.info("Serving on: "+server.host+":"+server.port);
+
+    master.connectAndWait(gazebo_master_uri, port);
 
 		initializeConnection();
 		
 		new Thread(this).start();
-		LOG.info("Serving on: "+server.host+":"+server.port);
 	}
 
 	public synchronized <T extends Message> Publisher<T> advertise(String topic, T defaultMessage) {
