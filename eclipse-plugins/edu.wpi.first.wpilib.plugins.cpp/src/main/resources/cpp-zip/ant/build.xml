@@ -107,7 +107,6 @@
       </sequential>
       <sequential>
 	      <echo>[simulate] You can now run your DriverStation!</echo>
-  	    <echo>[simulate] on linux, run simDS (java -jar wpilib/java/current/sim/tools/SimDS.jar)</echo>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
