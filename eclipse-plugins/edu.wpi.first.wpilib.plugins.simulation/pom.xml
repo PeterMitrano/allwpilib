@@ -41,19 +41,19 @@
                 <version>2.6</version>
                 <executions>
                     <execution>
-                        <id>copy-ant-resources-to-simulation-zip</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${simulation-zip}</outputDirectory>
-                            <resources>
-                                <resource>
-				                          <directory>src\main\resources\simulation-zip</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
+                      <id>copy-plugins-to-simulation-zip</id>
+                      <phase>generate-sources</phase>
+                      <goals>
+                        <goal>copy-resources</goal>
+                      </goals>
+                      <configuration>
+                        <outputDirectory>${simulation-zip}</outputDirectory>
+                        <resources>
+                          <resource>
+                            <directory>../../simulation/frc_gazebo_plugins/build/plugins/</directory><!-- TODO do this with variables -->
+                          </resource>
+                        </resources>
+                      </configuration>
                     </execution>
                 </executions>
             </plugin>

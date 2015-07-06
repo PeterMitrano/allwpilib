@@ -44,10 +44,12 @@ foreach(PLUGIN ${PLUGINS})
 
 	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIRS})
 
-  	add_library(${PLUGIN} ${SRC_FILES})
+
+  add_library(${PLUGIN} SHARED ${SRC_FILES})
 
 	link_directories(${GAZEBO_LIBRARY_DIRS} msgs/build)
 
 	target_link_libraries(${PLUGIN} gz_msgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 endforeach()
