@@ -93,8 +93,10 @@ void Error::Report()
 #if defined(_UNIX)
 	errorStream << "of "<< basename(m_filename.c_str()) << ": ";
 #elif defined(_WIN32)
-  basic_path::basic_path path(m_filename.c_str());
-  errorStream << "of " << basename(path) << ": ";
+	const int MAX_DIR = 100;
+	char basename[MAX_DIR];
+	_splitpath_s(m_filename.c_str(), NULL, 0, basename, MAX_DIR, NULL, 0, NULL, 0);
+	errorStream << "of " << basename << ": ";
 #endif
 
 	errorStream << m_message << std::endl;

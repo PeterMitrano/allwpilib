@@ -23,6 +23,9 @@ if(${HAS_CPP_11})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
+#prevent windows.h from including winsock.h
+add_definitions(-DWIN32_LEAN_AND_MEAN)
+
 # defines things like M_PI
 add_definitions(-D_USE_MATH_DEFINES)
 
@@ -34,7 +37,6 @@ add_definitions(-DBOOST_ALL_DYN_LINK)
 
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
-add_subdirectory(../wpilibC++ wpilibC++)
 
 set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
 set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
@@ -50,10 +52,10 @@ if(WIN32)
   SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
 
-# also on window,s use sprintf_s instead of snprintf
-# this is probably a horrible hacky idea
+# also on windows use sprintf_s instead of snprintf
+# TODO: find a more permenenant solution
 if (WIN32)
-add_definitions(-Dsnprintf=sprintf_s)
+  add_definitions(-Dsnprintf=sprintf_s)
 endif()
 
 if (WIN32)
@@ -89,7 +91,9 @@ include_directories(
   ${GAZEBO_INCLUDE_DIRS}
   ${GZ_MSGS_INCLUDE_DIRS}
   )
+
 add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
+
 target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
 
 INSTALL(TARGETS WPILibSim DESTINATION src COMPONENT src)

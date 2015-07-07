@@ -7,11 +7,8 @@
 
 // If don't have C++11, define constexpr as const for WindRiver
 // MSVC is exception: see https://connect.microsoft.com/VisualStudio/feedback/details/763051/a-value-of-predefined-macro-cplusplus-is-still-199711l
-#if (__cplusplus < 201103L)
-  // MSVC supports nullptr but NOT constexpr
-	#if defined(_MSC_VER)
-	  #define nullptr NULL
-	#endif
+#if (__cplusplus < 201103L) && !defined(_MSC_VER)
+	#define nullptr NULL
 	#define constexpr const
 #endif
 
