@@ -3,7 +3,7 @@ project(WPILibSim)
 
 include(CheckCXXCompilerFlag)
 
-macro(filter_valid_compiler_flags) 
+ macro(filter_valid_compiler_flags) 
   foreach(flag ${ARGN})
     CHECK_CXX_COMPILER_FLAG(${flag} R${flag})
     if(${R${flag}})
@@ -23,6 +23,7 @@ if(${HAS_CPP_11})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
+if (_WIN32)
 #prevent windows.h from including winsock.h
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 
@@ -35,11 +36,14 @@ add_definitions(-DNOMINMAX)
 # Use dynamic linking for boost
 add_definitions(-DBOOST_ALL_DYN_LINK)
 
+# XXX: should be set via CMake variables in configure.bat
+set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
+set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
+endif()
+
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
 
-set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
-set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
 
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(gazebo REQUIRED)
@@ -47,7 +51,7 @@ find_package(gz_msgs REQUIRED)
 
 
 # on windows we produce .dlls with no prefix
-if(WIN32)
+if(_WIN32)
   SET(CMAKE_FIND_LIBRARY_PREFIXES "")
   SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
@@ -59,43 +63,54 @@ if (WIN32)
 endif()
 
 if (WIN32)
-file(GLOB_RECURSE SRC_FILES src/*.cpp
-  ../../networktables/cpp/lib/share/*.cpp
-  ../../networktables/cpp/lib/WIN32/*.cpp
-  ../../hal/lib/Athena/Task.cpp
-  ../../hal/lib/Athena/Semaphore.cpp
-  ../../hal/lib/Athena/cpp/Synchronized.cpp
-)
+  file(GLOB_RECURSE SRC_FILES src/*.cpp
+    ../../networktables/cpp/lib/share/*.cpp
+    ../../networktables/cpp/lib/WIN32/*.cpp
+    ../../hal/lib/Athena/Task.cpp
+    ../../hal/lib/Athena/Semaphore.cpp
+    ../../hal/lib/Athena/cpp/Synchronized.cpp
+  )
 else()
-file(GLOB_RECURSE SRC_FILES src/*.cpp ../../networktables/cpp/lib/share/*.cpp
-                                      ../../networktables/cpp/lib/Athena/*.cpp
-                                      ../../hal/lib/Athena/Task.cpp
-                                      ../../hal/lib/Athena/Semaphore.cpp
-                                      ../../hal/lib/Athena/cpp/Synchronized.cpp)
+  file(GLOB_RECURSE SRC_FILES src/*.cpp 
+    ../../networktables/cpp/lib/share/*.cpp
+    ../../networktables/cpp/lib/Athena/*.cpp
+    ../../hal/lib/Athena/Task.cpp
+    ../../hal/lib/Athena/Semaphore.cpp
+    ../../hal/lib/Athena/cpp/Synchronized.cpp)
 endif()
 
 file(GLOB_RECURSE COM_SRC_FILES ../wpilibC++/src/*.cpp)
 
-include_directories(
-  include/
+set (INCLUDE_FOLDERS include/
   ../../wpilibc/wpilibC++/include
   ../../networktables/cpp/include
   ../../hal/include
   ../../hal/lib/Athena
-  C:/Users/peter/gz-ws/protobuf-2.6.0-win64-vc12/src
-  C:/Users/peter/gz-ws/sdformat/src/win/tinyxml
-  C:/Users/peter/gz-ws/FreeImage-vc12-x64-release-debug/Source
-  C:/Users/peter/gz-ws/tbb43_20141023oss/include
-  ${PTHREAD_INCLUDE_DIR}
   ${Boost_INCLUDE_DIR}
   ${GAZEBO_INCLUDE_DIRS}
-  ${GZ_MSGS_INCLUDE_DIRS}
-  )
+  ${GZ_MSGS_INCLUDE_DIRS})
 
-add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
+if (_WIN32)
+  set(INCLUDE_FOLDERS ${INCLUDE_FOLDERS}
+    C:/Users/peter/gz-ws/protobuf-2.6.0-win64-vc12/src
+    C:/Users/peter/gz-ws/sdformat/src/win/tinyxml
+    C:/Users/peter/gz-ws/FreeImage-vc12-x64-release-debug/Source
+    C:/Users/peter/gz-ws/tbb43_20141023oss/include
+    ${PTHREAD_INCLUDE_DIR})
+endif()
+
+include_directories(${INCLUDE_FOLDERS})
+
+if (_WIN32)
+  add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
+else()
+  add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
+endif()
 
 target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
-set_target_properties(WPILibSim  PROPERTIES LINK_FLAGS "/DEBUG")
 
-INSTALL(TARGETS WPILibSim DESTINATION src COMPONENT src)
-INSTALL(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT headers)
+if (_WIN32)
+  set_target_properties(${project}  PROPERTIES LINK_FLAGS "/DEBUG")
+endif()
+
+#copy to eclipse plugin

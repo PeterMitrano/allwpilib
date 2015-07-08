@@ -79,8 +79,12 @@ configure_file(msgs.h.in ${MSGS_HEADER})
 
 file(GLOB_RECURSE COM_SRC_FILES msgs/*.cc)
 include_directories(msgs ${PROTOBUF_INCLUDE_DIR})
-#add_library(${PROJECT_NAME} SHARED ${PROTO_SRCS} ${SRC_FILES})
-add_library(${PROJECT_NAME} ${PROTO_SRCS} ${SRC_FILES})
+if (_WIN32)
+  add_library(${PROJECT_NAME} ${PROTO_SRCS} ${SRC_FILES})
+else()
+  add_library(${PROJECT_NAME} SHARED ${PROTO_SRCS} ${SRC_FILES})
+endif()
+
 target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
 #install
