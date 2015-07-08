@@ -53,22 +53,22 @@ DriverStation::DriverStation()
 	stateSub = MainNode::Subscribe("~/ds/state",
 		                   &DriverStation::stateCallback, this);
 	// TODO: for loop + boost bind
-	joysticks[0] = msgs::FRCJoystickPtr(new msgs::Joystick());
+	joysticks[0] = msgs::FRCJoystickPtr(new msgs::FRCJoystick());
 	joysticksSub[0] =  MainNode::Subscribe("~/ds/joysticks/0",
 		                           &DriverStation::joystickCallback0, this);
-	joysticks[1] = msgs::FRCJoystickPtr(new msgs::Joystick());
+	joysticks[1] = msgs::FRCJoystickPtr(new msgs::FRCJoystick());
 	joysticksSub[1] =  MainNode::Subscribe("~/ds/joysticks/1",
 		                           &DriverStation::joystickCallback1, this);
-	joysticks[2] = msgs::FRCJoystickPtr(new msgs::Joystick());
+	joysticks[2] = msgs::FRCJoystickPtr(new msgs::FRCJoystick());
 	joysticksSub[2] =  MainNode::Subscribe("~/ds/joysticks/2",
 		                           &DriverStation::joystickCallback2, this);
-	joysticks[3] = msgs::FRCJoystickPtr(new msgs::Joystick());
+	joysticks[3] = msgs::FRCJoystickPtr(new msgs::FRCJoystick());
 	joysticksSub[3] =  MainNode::Subscribe("~/ds/joysticks/5",
 	                                   &DriverStation::joystickCallback3, this);
-	joysticks[4] = msgs::FRCJoystickPtr(new msgs::Joystick());
+	joysticks[4] = msgs::FRCJoystickPtr(new msgs::FRCJoystick());
 	joysticksSub[4] =  MainNode::Subscribe("~/ds/joysticks/4",
 	                                   &DriverStation::joystickCallback4, this);
-	joysticks[5] = msgs::FRCJoystickPtr(new msgs::Joystick());
+	joysticks[5] = msgs::FRCJoystickPtr(new msgs::FRCJoystick());
 	joysticksSub[5] =  MainNode::Subscribe("~/ds/joysticks/5",
 	                                   &DriverStation::joystickCallback5, this);
 
