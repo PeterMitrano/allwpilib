@@ -114,13 +114,13 @@ private:
 	static const float kUpdatePeriod;
 
     void stateCallback(const msgs::ConstDriverStationPtr &msg);
-    void joystickCallback(const msgs::ConstJoystickPtr &msg, int i);
-    void joystickCallback0(const msgs::ConstJoystickPtr &msg);
-    void joystickCallback1(const msgs::ConstJoystickPtr &msg);
-    void joystickCallback2(const msgs::ConstJoystickPtr &msg);
-    void joystickCallback3(const msgs::ConstJoystickPtr &msg);
-    void joystickCallback4(const msgs::ConstJoystickPtr &msg);
-    void joystickCallback5(const msgs::ConstJoystickPtr &msg);
+    void joystickCallback(const msgs::ConstFRCJoystickPtr &msg, int i);
+    void joystickCallback0(const msgs::ConstFRCJoystickPtr &msg);
+    void joystickCallback1(const msgs::ConstFRCJoystickPtr &msg);
+    void joystickCallback2(const msgs::ConstFRCJoystickPtr &msg);
+    void joystickCallback3(const msgs::ConstFRCJoystickPtr &msg);
+    void joystickCallback4(const msgs::ConstFRCJoystickPtr &msg);
+    void joystickCallback5(const msgs::ConstFRCJoystickPtr &msg);
 
 	uint8_t m_digitalOut;
 	MULTIWAIT_ID m_waitForDataSem;
@@ -136,5 +136,5 @@ private:
     transport::SubscriberPtr stateSub;
     transport::SubscriberPtr joysticksSub[6];
     msgs::DriverStationPtr state;
-    msgs::JoystickPtr joysticks[6];
+    msgs::FRCJoystickPtr joysticks[6];
 };

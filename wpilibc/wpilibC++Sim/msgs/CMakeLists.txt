@@ -29,7 +29,7 @@ set(msgs
   "${PROTO_DIR}/bool.proto"
   "${PROTO_DIR}/driver-station.proto"
   "${PROTO_DIR}/float64.proto"
-  "${PROTO_DIR}/joystick.proto"
+  "${PROTO_DIR}/frc_joystick.proto"
 )
 
 #on windows we produce .dlls with no prefix
