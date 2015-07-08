@@ -13,7 +13,7 @@ macro(filter_valid_compiler_flags)
 endmacro()
 
 
-filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR /MDd)
+filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR /MDd /Z7)
 
 
 CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CPP_11)
@@ -95,6 +95,7 @@ include_directories(
 add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
 
 target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
+set_target_properties(WPILibSim  PROPERTIES LINK_FLAGS "/DEBUG")
 
 INSTALL(TARGETS WPILibSim DESTINATION src COMPONENT src)
 INSTALL(DIRECTORY include DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT headers)
