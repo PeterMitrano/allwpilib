@@ -213,5 +213,5 @@ namespace wpilib { namespace internal {
         giveMultiWait(time_wait);
     }
 
-    transport::SubscriberPtr time_pub = MainNode::Subscribe("~/time", &time_callback);
+    transport::SubscriberPtr time_pub = MainNode::Subscribe("time", &time_callback);
 }}
