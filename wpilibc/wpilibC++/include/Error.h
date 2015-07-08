@@ -8,7 +8,9 @@
 #include "Base.h"
 
 #ifdef _WIN32
-  #include <Windows.h>
+	#include <Windows.h>
+	//Windows.h defines #define GetMessage GetMessageW, which is stupid and we don't want it.
+	#undef GetMessage
 #endif
 
 #include <string>
