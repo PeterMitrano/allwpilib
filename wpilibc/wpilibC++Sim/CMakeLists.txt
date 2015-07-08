@@ -23,7 +23,7 @@ if(${HAS_CPP_11})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
-if (_WIN32)
+if (WIN32)
 #prevent windows.h from including winsock.h
 add_definitions(-DWIN32_LEAN_AND_MEAN)
 
@@ -51,7 +51,7 @@ find_package(gz_msgs REQUIRED)
 
 
 # on windows we produce .dlls with no prefix
-if(_WIN32)
+if(WIN32)
   SET(CMAKE_FIND_LIBRARY_PREFIXES "")
   SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
@@ -90,7 +90,7 @@ set (INCLUDE_FOLDERS include/
   ${GAZEBO_INCLUDE_DIRS}
   ${GZ_MSGS_INCLUDE_DIRS})
 
-if (_WIN32)
+if (WIN32)
   set(INCLUDE_FOLDERS ${INCLUDE_FOLDERS}
     C:/Users/peter/gz-ws/protobuf-2.6.0-win64-vc12/src
     C:/Users/peter/gz-ws/sdformat/src/win/tinyxml
@@ -99,9 +99,11 @@ if (_WIN32)
     ${PTHREAD_INCLUDE_DIR})
 endif()
 
+MESSAGE("includes = ${INCLUDE_FOLDERS}")
+
 include_directories(${INCLUDE_FOLDERS})
 
-if (_WIN32)
+if (WIN32)
   add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
 else()
   add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
@@ -109,7 +111,7 @@ endif()
 
 target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
 
-if (_WIN32)
+if (WIN32)
   set_target_properties(${project}  PROPERTIES LINK_FLAGS "/DEBUG")
 endif()
 
