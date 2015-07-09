@@ -1,8 +1,15 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-
 #include "switch.h"
+
+#include "internal_limit_switch.h"
+#include "external_limit_switch.h"
+
+#include "msgs/msgs.h"
+
+#include <gazebo/physics/physics.hh>
+#include <gazebo/transport/transport.hh>
+#include <gazebo/gazebo.hh>
 
 using namespace gazebo;
 

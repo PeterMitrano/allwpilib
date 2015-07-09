@@ -1,8 +1,9 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-
 #include "switch.h"
+
+#include <gazebo/physics/physics.hh>
+#include <gazebo/gazebo.hh>
 
 using namespace gazebo;
 

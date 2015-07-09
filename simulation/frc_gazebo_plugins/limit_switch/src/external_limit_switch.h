@@ -1,8 +1,10 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-
 #include "switch.h"
+
+#include <gazebo/sensors/sensors.hh>
+#include <boost/pointer_cast.hpp>
+#include <gazebo/gazebo.hh>
 
 using namespace gazebo;
 
