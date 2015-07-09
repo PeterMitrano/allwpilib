@@ -10,6 +10,7 @@
 
 
 #include <gazebo/transport/transport.hh>
+#include <gazebo/gazebo_client.hh>
 #include "msgs/msgs.h"
 
 using namespace gazebo;
@@ -49,7 +50,8 @@ private:
   	static MainNode* instance;
 
 	MainNode() {
-		gazebo::transport::init();
+//		gazebo::transport::init();
+    gazebo::client::setup();
 		main = transport::NodePtr(new transport::Node());
 		main->Init("frc");
 		gazebo::transport::run();
