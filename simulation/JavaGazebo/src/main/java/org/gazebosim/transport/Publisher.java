@@ -70,7 +70,7 @@ public class Publisher<T extends Message> implements PublisherRecord {
 	 * Called in Node.java in the handle() function
 	 */
 	public synchronized void connect(Connection conn) {
-		LOG.warning("Handling subscriber connection for topic: "+topic);
+		LOG.fine("Handling subscriber connection for topic: "+topic);
 		if (latching && lastMsg != null) {
 			try {
 				conn.write(lastMsg);

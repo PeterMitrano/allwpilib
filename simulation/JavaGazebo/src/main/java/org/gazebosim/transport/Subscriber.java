@@ -43,7 +43,7 @@ public class Subscriber<T extends Message> {
 	}
 
 	private void handle_connect(PublisherRecord pub) {
-		LOG.info(String.format("CONN for %s from %s:%s\n", topic, pub.getHost(),
+		LOG.fine(String.format("CONN for %s from %s:%s\n", topic, pub.getHost(),
 									pub.getPort()));
 		Connection conn = new Connection();
 		try {

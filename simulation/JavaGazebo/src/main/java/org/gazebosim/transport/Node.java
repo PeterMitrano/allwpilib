@@ -52,44 +52,43 @@ public class Node implements Runnable, ServerCallback {
 	}
 
 	public void waitForConnection() throws IOException, InterruptedException {
-
 		//enable user to change master uri via environment variable GAZEBO_MASTER_URI
 		String user_defined_uri = System.getenv("GAZEBO_MASTER_URI");
 		String gazebo_master_uri = "localhost";
 		int port = 11345;
-        if (user_defined_uri != null) {
-        	String[] parts = user_defined_uri.split(":");
-        	if (parts.length != 2){
-        		LOG.severe("invalid GAZEBO_MASTER_URI " + user_defined_uri+ ". URI must be of the form HOSTNAME:PORT");
-        		LOG.warning("using default GAZEBO_MASTER_URI=localhost:11345");	
-        	}
-        	else {
-            	gazebo_master_uri = parts[0];
-            	port = Integer.parseInt(parts[1]);
-            }
-        }
+		if (user_defined_uri != null) {
+			String[] parts = user_defined_uri.split(":");
+			if (parts.length != 2){
+				LOG.severe("invalid GAZEBO_MASTER_URI " + user_defined_uri+ ". URI must be of the form HOSTNAME:PORT");
+				LOG.warning("using default GAZEBO_MASTER_URI=localhost:11345");
+			}
+			else {
+				gazebo_master_uri = parts[0];
+				port = Integer.parseInt(parts[1]);
+			}
+		}
 
 		server.serve(this);
 
-    LOG.warning("GAZEBO_MASTER_URI is host=" + gazebo_master_uri + " port="+port);
-		LOG.info("Serving on: "+server.host+":"+server.port);
+		LOG.info("GAZEBO_MASTER_URI is host=" + gazebo_master_uri + " port="+port);
 
-    master.connectAndWait(gazebo_master_uri, port);
+		master.connectAndWait(gazebo_master_uri, port);
 
 		initializeConnection();
-		
+
 		new Thread(this).start();
+		LOG.info("Serving on: "+server.host+":"+server.port);
 	}
 
 	public synchronized <T extends Message> Publisher<T> advertise(String topic, T defaultMessage) {
 		topic = fixTopic(topic);
-		LOG.warning("ADV "+topic);
+		LOG.info("ADV "+topic);
 		String type = defaultMessage.getDescriptorForType().getFullName();
 		Publisher<T> pub = new Publisher<T>(topic, type, server.host, server.port);
 		publishers.put(topic, pub);
 		
 		Publish req = Publish.newBuilder().setTopic(topic).setMsgType(type)
-					  	.setHost(server.host).setPort(server.port).build();
+						.setHost(server.host).setPort(server.port).build();
 		try {
 			master.writePacket("advertise", req);
 		} catch (IOException e) {
@@ -101,7 +100,7 @@ public class Node implements Runnable, ServerCallback {
 	public synchronized <T extends Message> Subscriber<T>
 			subscribe(String topic, T defaultMessage, SubscriberCallback<T> cb) {
 		topic = fixTopic(topic);
-		LOG.warning("SUB "+topic);
+		LOG.info("SUB "+topic);
 		if (subscriptions.containsKey(topic)) {
 			throw new RuntimeException("Multiple subscribers for: "+topic);
 		}
@@ -113,7 +112,6 @@ public class Node implements Runnable, ServerCallback {
 			master.writePacket("subscribe", req);
 		} catch (IOException e) {
 			e.printStackTrace(); // FIXME: Shouldn't happen, should probably complain louder
-			LOG.warning("SOMETHING TERRIBLE HAS HAPPENED");
 		}
 		
 		Subscriber<T> s = new Subscriber<>(topic, type, cb, defaultMessage,
@@ -162,7 +160,7 @@ public class Node implements Runnable, ServerCallback {
 		if (publisherData.getType().equals("publishers_init")) {
 			Publishers pubs = Publishers.parseFrom(publisherData.getSerializedData());
 			for (Publish pub : pubs.getPublisherList()) {
- 				PublisherRecord record = new RemotePublisherRecord(pub);
+				PublisherRecord record = new RemotePublisherRecord(pub);
 				publishers.put(record.getTopic(), record);
 			}
 			LOG.info(publishers.toString());
@@ -211,6 +209,7 @@ public class Node implements Runnable, ServerCallback {
 	 * This is called when another node requests subscription to a topic we are publishing
 	 */
 	public void handle(Connection conn) throws IOException {
+		LOG.fine("Handling new connection");
 		Packet msg = conn.read();
 		if (msg == null) {
 			LOG.warning("Read null message.");
@@ -229,7 +228,7 @@ public class Node implements Runnable, ServerCallback {
 			PublisherRecord pub = publishers.get(sub.getTopic());
 			if (!pub.getMsgType().equals(sub.getMsgType())) {
 				LOG.severe(String.format("Message type mismatch requested=%d publishing=%s\n",
-						   				 pub.getMsgType(), sub.getMsgType()));
+										 pub.getMsgType(), sub.getMsgType()));
 				return;
 			}
 

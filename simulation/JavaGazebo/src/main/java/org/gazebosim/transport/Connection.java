@@ -41,7 +41,6 @@ public class Connection {
 	public void connect(String host, int port) throws UnknownHostException, IOException {
 		this.host = host;
 		this.port = port;
-		LOG.warning("connect called with host="+host+" port="+port);
 		socket = new Socket(host, port);
 		is = socket.getInputStream();
 		os = socket.getOutputStream();
@@ -66,7 +65,6 @@ public class Connection {
 
 	public void serve(final ServerCallback cb) throws IOException {
 		ssocket = new ServerSocket(0);
-
 		host = ssocket.getInetAddress().getHostAddress();
 		port = ssocket.getLocalPort();
 
@@ -81,7 +79,7 @@ public class Connection {
 		new Thread("Gazebo Server Thread") {
 			@Override
 			public void run() {
-				LOG.warning("Listening on "+host+":"+port);
+				LOG.config("Listening on "+host+":"+port);
 				while (true) {
 					Connection conn = new Connection();
 					try {
