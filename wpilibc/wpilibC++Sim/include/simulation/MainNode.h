@@ -51,7 +51,7 @@ private:
 
 	MainNode() {
 //		gazebo::transport::init();
-    gazebo::client::setup();
+		gazebo::client::setup();
 		main = transport::NodePtr(new transport::Node());
 		main->Init("frc");
 		gazebo::transport::run();

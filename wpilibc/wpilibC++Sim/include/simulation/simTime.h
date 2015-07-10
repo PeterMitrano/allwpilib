@@ -6,9 +6,12 @@
   #include <Winsock2.h>
 #endif
 
+#include "simulation/SimFloatInput.h"
+
 namespace wpilib { namespace internal {
     extern double simTime;
 	extern MULTIWAIT_ID time_wait;
 	extern MUTEX_ID time_wait_mutex;
+	extern void time_callback(const msgs::ConstFloat64Ptr &msg);
     // transport::SubscriberPtr time_sub;
 }}

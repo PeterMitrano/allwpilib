@@ -36,6 +36,10 @@ add_definitions(-DNOMINMAX)
 # Use dynamic linking for boost
 add_definitions(-DBOOST_ALL_DYN_LINK)
 
+
+#temporary until we build dlls
+add_definitions(-DBUILDING_STATIC_LIBS)
+
 # XXX: should be set via CMake variables in configure.bat
 set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
 set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")

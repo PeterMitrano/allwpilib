@@ -203,15 +203,15 @@ extern "C"
 // Internal stuff
 #include "simulation/SimFloatInput.h"
 #include "simulation/MainNode.h"
-namespace wpilib { namespace internal {
-    double simTime = 0;
-    MULTIWAIT_ID time_wait = initializeMultiWait();
-    MUTEX_ID time_wait_mutex = initializeMutexNormal();
+namespace wpilib {
+	namespace internal {
+		double simTime = 0;
+		MULTIWAIT_ID time_wait = initializeMultiWait();
+		MUTEX_ID time_wait_mutex = initializeMutexNormal();
 
-    void time_callback(const msgs::ConstFloat64Ptr &msg) {
-        simTime = msg->data();
-        giveMultiWait(time_wait);
-    }
-
-    transport::SubscriberPtr time_pub = MainNode::Subscribe("time", &time_callback);
-}}
+		void time_callback(const msgs::ConstFloat64Ptr &msg) {
+			simTime = msg->data();
+			giveMultiWait(time_wait);
+		}
+	}
+}
