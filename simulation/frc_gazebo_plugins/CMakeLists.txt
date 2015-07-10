@@ -20,11 +20,17 @@ find_package(gazebo REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(gz_msgs REQUIRED)
 
-# defines things like M_PI
-add_definitions(-D_USE_MATH_DEFINES)
+if (WIN32)
 
-# get rid of min max macros on windows 
-add_definitions(-DNOMINMAX)
+	# defines things like M_PI
+	add_definitions(-D_USE_MATH_DEFINES)
+
+	# get rid of min max macros on windows 
+	add_definitions(-DNOMINMAX)
+
+	# aww yea
+	add_definitions(-DWIN32_LEAN_AND_MEAN)
+endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 
@@ -46,7 +52,11 @@ foreach(PLUGIN ${PLUGINS})
 
 	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIRS})
 
-	add_library(${PLUGIN} SHARED ${SRC_FILES})
+	if (WIN32)
+		add_library(${PLUGIN} ${SRC_FILES})
+	else()
+		add_library(${PLUGIN} SHARED ${SRC_FILES})
+	endif()
 
 	target_link_libraries(${PLUGIN} ${GZ_MSGS_LIBRARY} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 

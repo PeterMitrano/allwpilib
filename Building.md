@@ -1,7 +1,17 @@
 Building everything requires Maven
 mvn package -DembeddedJDKHome=/home/patrick/Downloads/arm-jdk1.7.0_45/
-TODO... Explain maven....
-TODO.. how to import into eclipse correctly...
+
+
+To build on FRCSim Branch
+=========================
+go to `wpilibc\wpilibC++Sim\msgs and follow build instructions in ReadMe.md
+go to up to `wpilibC++Sim and follow build instructions
+go to `simulation/frcs_gazebo_plugins` and follow build instructions
+go to main allwpilib directory and run `gradlew eclipsePlugins`
+
+
+TODO: Explain maven....
+TODO: how to import into eclipse correctly...
 
 Building C++ only
 ------------------

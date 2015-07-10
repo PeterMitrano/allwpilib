@@ -29,14 +29,17 @@
 
 @set IGNITION-MATH_PATH=%WS%\ign-math\build\install\Debug
 
-@set gz_msgs_DIR=C:\Program Files\gz_msgs
-@set GZ_MSGS_LIBRARY_DIR=msgs\build
+
+
+@set GAZEBO_PATH=%WS%\gazebo\build\install\Debug\lib\cmake\gazebo
+@set SDFORMAT_PATH=%WS%\sdformat\build\install\Debug\lib\cmake\sdformat
+@set IGNITION-MATH_PATH=%WS%\ign-math\build\install\Debug\lib\cmake\ignition-math2
 
 @set INCLUDE=%PROTOBUF_INCLUDE_DIR%;%TINY_XML_INCLUDE_DIR%;%FREEIMAGE_INCLUDE_DIR%;%TBB_INCLUDEDIR%;%DLFCN_WIN32_INCLUDE_DIR%;%INCLUDE%
 @set LIB=%LIB%
 
 cmake -G "NMake Makefiles"^
-    -DCMAKE_PREFIX_PATH="../../wpilibc/wpilibC++Sim/msgs/build/"^
+    -DCMAKE_PREFIX_PATH="%GZ_MSGS_PATH%;%GAZEBO_PATH%;%SDFORMAT_PATH%;%IGNITION-MATH_PATH%"^
     -DOGRE_SOURCE="%OGRE_SOURCE%"^
     -DOGRE_BUILD="%OGRE_BUILD%"^
     -DPROTOBUF_SRC_ROOT_FOLDER="%PROTOBUF_PATH%"^

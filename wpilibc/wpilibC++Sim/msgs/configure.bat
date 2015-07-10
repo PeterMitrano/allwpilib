@@ -6,6 +6,6 @@
 @set PROTOBUF_PATH=%WS%\protobuf-2.6.0-win64-vc12
 
 cmake -G "NMake Makefiles"^
-    -DCMAKE_INSTALL_PREFIX=build
+    -DCMAKE_INSTALL_PREFIX=build ^
     -DPROTOBUF_SRC_ROOT_FOLDER="%PROTOBUF_PATH%"^
     ..

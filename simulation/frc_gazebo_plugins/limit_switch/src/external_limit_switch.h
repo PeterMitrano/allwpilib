@@ -2,6 +2,10 @@
 
 #include "switch.h"
 
+#ifdef _WIN32
+	#include <Winsock2.h>
+#endif
+
 #include <gazebo/sensors/sensors.hh>
 #include <boost/pointer_cast.hpp>
 #include <gazebo/gazebo.hh>

@@ -3,6 +3,13 @@
 #ifndef _FRC_MSGS_H_
 #define _FRC_MSGS_H_
 
+#ifdef _WIN32
+  //include this before anything else includes windows.h
+  //putting this here saves putting it in more files
+  #include <Winsock2.h>
+#endif
+
+
 ${message_headers}
 
 #include <gazebo/msgs/msgs.hh>
