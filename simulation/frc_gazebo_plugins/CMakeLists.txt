@@ -48,7 +48,6 @@ foreach(PLUGIN ${PLUGINS})
 
 	add_library(${PLUGIN} SHARED ${SRC_FILES})
 
-	MESSAGE("${GZ_MSGS_LIBRARY_DIRS}")
 	target_link_libraries(${PLUGIN} ${GZ_MSGS_LIBRARY} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
   install(TARGETS ${PLUGIN} DESTINATION $ENV{HOME}/wpilib/simulation/plugins)

@@ -85,7 +85,7 @@ endif()
 
 file(GLOB_RECURSE COM_SRC_FILES ../wpilibC++/src/*.cpp)
 
-set (INCLUDE_FOLDERS include/
+set (INCLUDE_FOLDERS include
   ../../wpilibc/wpilibC++/include
   ../../networktables/cpp/include
   ../../hal/include
@@ -103,9 +103,8 @@ if (WIN32)
     ${PTHREAD_INCLUDE_DIR})
 endif()
 
-MESSAGE("includes = ${INCLUDE_FOLDERS}")
-
 include_directories(${INCLUDE_FOLDERS})
+link_directories(${GAZEBO_LIBRARY_DIRS} ${GZ_MSGS_LIBRARY_DIRS})
 
 if (WIN32)
   add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
@@ -113,7 +112,7 @@ else()
   add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
 endif()
 
-target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
+target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${GZ_MSGS_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
 
 if (WIN32)
   set_target_properties(${project}  PROPERTIES LINK_FLAGS "/DEBUG")

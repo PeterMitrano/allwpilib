@@ -103,5 +103,9 @@ set (CONF_LIBRARY ${PROJECT_NAME})
 
 #fill in all the variables in the cmake file 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
+
 #install gz_msgs.cmake
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
+
+#install gz_msgs to wpilib folder as well
+install(TARGETS ${PROJECT_NAME} DESTINATION $ENV{HOME}/wpilib/simulation/plugins/)
