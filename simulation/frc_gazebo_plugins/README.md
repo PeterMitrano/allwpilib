@@ -16,3 +16,7 @@ In that directory, run the following
     ..\configure.bat
     nmake
 
+
+#installing
+
+you can run `make install` (or nmake on windows) to install locally. The plugins will be copied to HOME/wpilib/simulation/plugins. it **WILL** overwrite anything there, so be careful!
