@@ -3,7 +3,7 @@ project(WPILibSim)
 
 include(CheckCXXCompilerFlag)
 
- macro(filter_valid_compiler_flags) 
+ macro(filter_valid_compiler_flags)
   foreach(flag ${ARGN})
     CHECK_CXX_COMPILER_FLAG(${flag} R${flag})
     if(${R${flag}})
@@ -30,7 +30,7 @@ add_definitions(-DWIN32_LEAN_AND_MEAN)
 # defines things like M_PI
 add_definitions(-D_USE_MATH_DEFINES)
 
-# get rid of min max macros on windows 
+# get rid of min max macros on windows
 add_definitions(-DNOMINMAX)
 
 # Use dynamic linking for boost
@@ -75,7 +75,7 @@ if (WIN32)
     ../../hal/lib/Athena/cpp/Synchronized.cpp
   )
 else()
-  file(GLOB_RECURSE SRC_FILES src/*.cpp 
+  file(GLOB_RECURSE SRC_FILES src/*.cpp
     ../../networktables/cpp/lib/share/*.cpp
     ../../networktables/cpp/lib/Athena/*.cpp
     ../../hal/lib/Athena/Task.cpp

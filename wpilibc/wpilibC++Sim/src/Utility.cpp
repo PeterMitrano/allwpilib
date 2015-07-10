@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------------------*/
+
 /* Copyright (c) FIRST 2008. All Rights Reserved.							  */
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in $(WIND_BASE)/WPILib.  */
@@ -173,7 +173,7 @@ uint32_t GetFPGATime()
 	return wpilib::internal::simTime * 1e6;
 }
 
-//TODO: implement symbol demangling on windows
+//TODO: implement symbol demangling and backtrace on windows
 #if defined(UNIX)
 
 /**
@@ -229,6 +229,7 @@ std::string GetStackTrace(uint32_t offset)
 
 	return trace.str();
 }
+
 #else
 static std::string demangle(char const *mangledSymbol)
 {

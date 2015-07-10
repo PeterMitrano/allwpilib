@@ -9,7 +9,6 @@
   #include <Winsock2.h>
 #endif
 
-
 #include <gazebo/transport/transport.hh>
 #include "SpeedController.h"
 

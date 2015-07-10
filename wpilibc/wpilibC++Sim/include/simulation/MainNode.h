@@ -2,16 +2,16 @@
 #ifndef _SIM_MAIN_NODE_H
 #define _SIM_MAIN_NODE_H
 
+#include "msgs/msgs.h"
+
 #ifdef _WIN32
   // Ensure that Winsock2.h is included before Windows.h, which can get
   // pulled in by anybody (e.g., Boost).
   #include <Winsock2.h>
 #endif
 
-
 #include <gazebo/transport/transport.hh>
 #include <gazebo/gazebo_client.hh>
-#include "msgs/msgs.h"
 
 using namespace gazebo;
 
@@ -50,7 +50,6 @@ private:
   	static MainNode* instance;
 
 	MainNode() {
-//		gazebo::transport::init();
 		gazebo::client::setup();
 		main = transport::NodePtr(new transport::Node());
 		main->Init("frc");

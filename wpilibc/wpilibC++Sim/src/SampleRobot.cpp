@@ -11,12 +11,12 @@
 #include "SmartDashboard/SmartDashboard.h"
 #include "LiveWindow/LiveWindow.h"
 #include "networktables/NetworkTable.h"
-//not sure what this is used for, so I'm ignoring it for now
+
 #if defined(_UNIX)
 	#include <unistd.h>
 #elif defined(_WIN32)
-    #include <windows.h>
-	void sleep(unsigned milliseconds)
+  #include <windows.h>
+  void sleep(unsigned milliseconds)
 	    {
 	        Sleep(milliseconds);
 	    }
