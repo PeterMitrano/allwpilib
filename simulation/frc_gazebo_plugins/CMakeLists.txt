@@ -49,8 +49,8 @@ foreach(PLUGIN ${PLUGINS})
 
   add_library(${PLUGIN} SHARED ${SRC_FILES})
 
-	link_directories(${GAZEBO_LIBRARY_DIRS} msgs/build)
+	link_directories(${GAZEBO_LIBRARY_DIRS} ${GZ_MSGS_LIBRARY_DIR})
 
-	target_link_libraries(${PLUGIN} gz_msgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+	target_link_libraries(${PLUGIN} ${GZ_MSGS_LIBRARY} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
 endforeach()

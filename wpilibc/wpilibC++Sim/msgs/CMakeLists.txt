@@ -98,7 +98,8 @@ include(GNUInstallDirs)
 
 set (CONF_INCLUDE_DIRS ${PROJECT_BINARY_DIR})
 get_filename_component(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} ABSOLUTE)
-set (CONF_LIB_DIRS ${LIB_INSTALL_DIR})
+set (CONF_LIBRARY_DIR ${LIB_INSTALL_DIR})
+set (CONF_LIBRARY ${PROJECT_NAME})
 
 #fill in all the variables in the cmake file 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
