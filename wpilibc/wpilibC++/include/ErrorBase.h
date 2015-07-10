@@ -3,8 +3,7 @@
 /* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in $(WIND_BASE)/WPILib.  */
 /*----------------------------------------------------------------------------*/
-#ifndef _ERROR_BASE_H
-#define _ERROR_BASE_H
+#pragma once
 
 #include "Base.h"
 #include "Error.h"
@@ -63,5 +62,3 @@ protected:
 private:
 	DISALLOW_COPY_AND_ASSIGN(ErrorBase);
 };
-
-#endif

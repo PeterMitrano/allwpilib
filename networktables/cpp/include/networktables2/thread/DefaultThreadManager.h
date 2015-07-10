@@ -17,7 +17,7 @@ class PeriodicNTThread;
 #include "networktables2/thread/NTThreadManager.h"
 #include "networktables2/thread/NTThread.h"
 
-#if defined(__vxworks) 
+#if defined(__vxworks)
 #include "OSAL/Task.h"
 #else
 #include <pthread.h>
@@ -30,7 +30,7 @@ public:
 
 class PeriodicNTThread : public NTThread {
 private:
-#if defined(__vxworks) 
+#if defined(__vxworks)
 	const char* name;
 	NTTask* thread;
 #else

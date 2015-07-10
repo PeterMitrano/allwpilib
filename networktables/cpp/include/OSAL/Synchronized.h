@@ -10,7 +10,7 @@
 #define NT_CRITICAL_REGION(s) { NTSynchronized _sync(s);
 #define NT_END_REGION }
 
-// TODO: remove all vxworks bullshit.
+// vxworks support will be removed soon
 // Windows currently using pthread so we don't use semlib
 // but new network tables will use C++11 threading
 #if defined(__vxworks)
@@ -42,7 +42,6 @@ private:
 #else
 
 #include <pthread.h>
-
 
 class NTReentrantSemaphore
 {

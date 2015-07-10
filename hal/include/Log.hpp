@@ -6,7 +6,7 @@
 #include <stdio.h>
 #ifdef _WIN32
     #include <Windows.h>
-#else    
+#else
     #include <sys/time.h>
 #endif
 
@@ -94,15 +94,15 @@ typedef Log FILELog;
 
 
 #ifdef _WIN32
-inline std::string NowTime()    
+inline std::string NowTime()
 {
     SYSTEMTIME st;
-    GetLocalTime(&st);   
+    GetLocalTime(&st);
     char result[100] = {0};
     sprintf(result, "%d:%d:%d.%d", st.wHour , st.wMinute , st.wSecond , st.wMilliseconds);
     return result;
-}    
-#else        
+}
+#else
 inline std::string NowTime()
 {
     char buffer[11];

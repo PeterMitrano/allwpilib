@@ -46,4 +46,3 @@ private:
 	MUTEX_ID m_semaphore;
 	DISALLOW_COPY_AND_ASSIGN(Timer);
 };
-
