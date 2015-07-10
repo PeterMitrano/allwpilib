@@ -28,6 +28,8 @@ add_definitions(-D_USE_MATH_DEFINES)
 # get rid of min max macros on windows 
 add_definitions(-DNOMINMAX)
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
+
 foreach(PLUGIN ${PLUGINS})
 	MESSAGE("configuring ${PLUGIN}")
 
@@ -51,5 +53,4 @@ foreach(PLUGIN ${PLUGINS})
 
 	target_link_libraries(${PLUGIN} gz_msgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 endforeach()
