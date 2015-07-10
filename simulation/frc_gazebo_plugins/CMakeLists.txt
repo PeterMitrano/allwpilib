@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(frc_gazebo_plugins)
 
-MESSAGE("\nCMAKE PREFIX = ${CMAKE_PREFIX_PATH}\n")
-
 if (UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
@@ -30,6 +28,8 @@ add_definitions(-DNOMINMAX)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 
+link_directories(${GAZEBO_LIBRARY_DIRS} ${GZ_MSGS_LIBRARY_DIRS})
+
 foreach(PLUGIN ${PLUGINS})
 	MESSAGE("configuring ${PLUGIN}")
 
@@ -46,11 +46,9 @@ foreach(PLUGIN ${PLUGINS})
 
 	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIRS})
 
+	add_library(${PLUGIN} SHARED ${SRC_FILES})
 
-  add_library(${PLUGIN} SHARED ${SRC_FILES})
-
-	link_directories(${GAZEBO_LIBRARY_DIRS} ${GZ_MSGS_LIBRARY_DIR})
-
+	MESSAGE("${GZ_MSGS_LIBRARY_DIRS}")
 	target_link_libraries(${PLUGIN} ${GZ_MSGS_LIBRARY} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
 endforeach()

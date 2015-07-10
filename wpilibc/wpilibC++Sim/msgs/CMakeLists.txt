@@ -87,21 +87,21 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
-#install
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
-install(FILES ${MSGS_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
-install(FILES ${PROTO_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
 
 #we want msgs to be used by the plugins and wpilibC++Sim, so we used a gz_msgs-config.cmake
 #first step is find out where Cmake is installed
 include(GNUInstallDirs)
 
-set (CONF_INCLUDE_DIRS ${PROJECT_BINARY_DIR})
-get_filename_component(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} ABSOLUTE)
-set (CONF_LIBRARY_DIR ${LIB_INSTALL_DIR})
+#install
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
+install(FILES ${MSGS_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
+install(FILES ${PROTO_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
+
+get_filename_component(CONF_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR} ABSOLUTE)
+get_filename_component(CONF_LIBRARY_DIRS ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME} ABSOLUTE)
 set (CONF_LIBRARY ${PROJECT_NAME})
 
 #fill in all the variables in the cmake file 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
 #install gz_msgs.cmake
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/..) #pretty sure this only works on windows, and also it's a hack
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})

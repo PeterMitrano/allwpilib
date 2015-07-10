@@ -36,8 +36,9 @@
 @set LIB=%LIB%
 
 cmake -G "NMake Makefiles"^
-	-DOGRE_SOURCE="%OGRE_SOURCE%"^
-	-DOGRE_BUILD="%OGRE_BUILD%"^
+    -DCMAKE_PREFIX_PATH="../../wpilibc/wpilibC++Sim/msgs/build/"^
+    -DOGRE_SOURCE="%OGRE_SOURCE%"^
+    -DOGRE_BUILD="%OGRE_BUILD%"^
     -DPROTOBUF_SRC_ROOT_FOLDER="%PROTOBUF_PATH%"^
     -DBOOST_ROOT="%BOOST_PATH%"^
     -DBOOST_LIBRARYDIR="%BOOST_LIBRARY_DIR%"^
