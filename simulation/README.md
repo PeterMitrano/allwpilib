@@ -17,7 +17,7 @@ Observe the following directory structure
 |-- frcsim.bat (launches gazebo with model/plugin paths on windows)
 |-- frcsim.sh (launches gazebo with model/plugin paths on linux/mac)
 |-- install.sh (convenient linux script to install Eclipse, Eclipse Plugins, and Gazebo)
-|-- JavaGazebo (java library used by java simulation. Equivelant of gazebo_transport I believe)
+|-- JavaGazebo (java library used by java simulation. Equivelant of the C++ gazebo_transport)
 |-- SimDS (linux driverstation)
 
 The gazbeo plugins are currently built with CMake. 
