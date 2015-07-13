@@ -169,18 +169,17 @@
   	    <condition property="frcsim.executable" value="frcsim.bat" else="frcsim">
           <os family="windows" />
         </condition>
-        <echo>[simulate] Running ${frcsim.executable}</echo>
-        <exec executable="${frcsim.executable}" >
-          <arg value="${simulation.world.file}"/>
+        <!-- TODO: launch gazebo once? -->
+        <echo>[simulate] You may now run Gazebo</echo>
         </exec>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
-	    <echo>[debug-simulate] you may now run your DriverStation.</echo>
+	    <echo>[debug-simulate] You may now run your DriverStation.</echo>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
-	    <echo>[simulate] Running Code.</echo>
+	    <echo>[simulate] Running Code.</echo>i
 	    <java jar="${simulation.dist.jar}" fork="true">
           <jvmarg value="-Djava.library.path=${wpilib.sim.lib}" />
         </java>

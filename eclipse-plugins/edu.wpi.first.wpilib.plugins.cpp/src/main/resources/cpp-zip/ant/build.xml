@@ -100,7 +100,8 @@
 	      <condition property="frcsim.executable" value="frcsim.bat" else="frcsim">
           <os family="windows" />
         </condition>
-        <echo>[simulate] Running ${frcsim.executable}</echo>
+        <!-- TODO: launch gazebo once? -->
+        <echo>[simulate] You may now run Gazebo</echo>
         <exec executable="${frcsim.executable}" >
           <arg value="${simulation.world.file}"/>
         </exec>
