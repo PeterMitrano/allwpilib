@@ -1,0 +1,63 @@
+//imports
+import org.apache.tools.ant.filters.FixCrLfFilter
+import org.apache.tools.ant.filters.ReplaceTokens
+
+//plugins
+// proto files are build by the protobuf plugin
+apply plugin: 'protobuf'
+// used for build the share library gz_msgs.so
+apply plugin: 'cpp'
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath 'com.andrewkroh.gradle:gradle-protobuf-plugin:0.4.0'
+  } 
+}
+
+repositories {
+  mavenCentral()
+}
+
+//describe how to build the gz_msgs library
+model {
+  components {
+    gz_msgs(NativeLibrarySpec){
+      sources {
+        cpp {
+          source  {
+            srcDirs = ['build/generated/cpp']
+            includes = ['build/generated/cpp']
+          }
+          exportedHeaders {
+            srcDirs = ['build/msgs.h']
+            includes = ['build/msgs.h','build/generated/cpp']
+          }
+          lib library: 'gz_msgs'
+        }
+      }
+    }
+  }
+}
+
+//override default proto file location
+protobuf {
+  src = 'src/proto'
+}
+
+// copy msg.h.in and replace token
+// this file is included by all the wpilibC++Sim files
+// example: https://docs.gradle.org/current/userguide/userguide_single.html#filterOnCopy
+task msgs_header(type: Copy) {
+  from 'src/msgs.h.in'
+  into 'build/'
+  // Substitute property tokens in files
+  filter(ReplaceTokens, tokens: [message_headers: '#include <hello.h>'])
+  //rename the file to remove the .in
+  rename { String fileName ->
+    fileName.replace('/.in', '')
+  }
+}

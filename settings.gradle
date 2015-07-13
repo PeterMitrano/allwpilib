@@ -7,4 +7,6 @@ include 'networktables:java',
         'simulation:JavaGazebo',
         'simulation:SimDS',
         'jenkins',
-        'driver-station'
+        'driver-station',
+        'simulation:gz_msgs',
+        'simulation:frc_gazebo_plugins'

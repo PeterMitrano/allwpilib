@@ -1,0 +1,9 @@
+//WPILib C++ Sim build file
+
+dependencies {
+  compile project(':gz_msgs')
+}
+
+task build << {
+  println "building wpilib C++ Sim"
+}

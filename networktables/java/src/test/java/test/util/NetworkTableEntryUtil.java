@@ -49,7 +49,7 @@ public class NetworkTableEntryUtil {
 			}
 
 			@Override
-			protected boolean matchesSafely(NetworkTableEntry item) {
+		  public boolean matchesSafely(NetworkTableEntry item) {
 				if(item.getId()!=id)
 					return false;
 				if(!item.name.equals(name))
