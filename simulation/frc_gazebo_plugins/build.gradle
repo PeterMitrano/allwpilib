@@ -1,0 +1,24 @@
+def plugins = 'clock', 'dc_motor', 'encoder', 'gyro', 'limit_switch', 'plugins', 'pneumatic_piston', 'potentiometer', 'rangefinder', 'servo'
+
+//iterate over each plugin
+plugins.foreach{
+  model {
+    components {
+      it(NativeLibrarySpec){
+        sources {
+          cpp {
+            source {
+              srcDirs "${it}/src"
+              includes "**/.cpp"
+            }
+            exportedHeaders {
+              srcDirs "${it}/src"
+              includes "**/*.h"
+            }
+            lib library: 'gz_msgs'
+          }
+        }  
+      }
+    }
+  }
+}

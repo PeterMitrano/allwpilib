@@ -4,15 +4,8 @@ Observe the following directory structure
 
 .
 |-- frc_gazebo_plugins (contains Gazebo Plugins)
-|   |-- clock
-|   |-- dc_motor
-|   |-- encoder
-|   |-- gyro
-|   |-- plugins
-|   |-- pneumatic_piston
-|   |-- potentiometer
-|   |-- rangefinder
-|   |-- servo
+|
+|-- gz_msgs (contains the gazebo transport messages used to talk between wpilibC++Sim and Gazebo+Plugins
 |   
 |-- frcsim.bat (launches gazebo with model/plugin paths on windows)
 |-- frcsim.sh (launches gazebo with model/plugin paths on linux/mac)
