@@ -42,9 +42,12 @@ model {
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name == 'gz_msgsSharedLibrary') {
-        task.dependsOn 'compileProto','msgs_header'
-    }
+  if (task.name == 'msgs_header'){
+    task.dependsOn 'compileProto'
+  }
+  else if (task.name == 'gz_msgsSharedLibrary') {
+    task.dependsOn 'msgs_header'
+  }
 }
 
 // copy msg.h.in and replace token
@@ -53,8 +56,15 @@ tasks.whenTaskAdded { task ->
 task msgs_header(type: Copy) {
   from 'src/msgs.h.in'
   into 'build/generated/'
-  // Substitute property tokens in files
-  filter(ReplaceTokens, tokens: [message_headers: '#include <hello.h>'])
+  //get all the generated header files and include them in msgs.h
+  def headers = fileTree('build/generated/cpp/').include('*.h')
+  def message_headers = ""
+  headers.each {
+    message_headers += "#include <$it>\n"
+  }
+  println message_headers
+  //place into msgs.h
+  filter(ReplaceTokens, tokens: [message_headers: message_headers])
   //rename the file to remove the .in
   rename( /(.+)\.in/ , '$1')
 }
