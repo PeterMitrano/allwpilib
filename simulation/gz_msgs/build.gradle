@@ -1,5 +1,4 @@
 //imports
-import org.apache.tools.ant.filters.FixCrLfFilter
 import org.apache.tools.ant.filters.ReplaceTokens
 
 //plugins
@@ -29,23 +28,17 @@ model {
       sources {
         cpp {
           source  {
-            srcDirs = ['build/generated/cpp']
-            includes = ['build/generated/cpp']
+            srcDirs 'build/generated/cpp'
+            include 'build/generated/cpp'
           }
           exportedHeaders {
-            srcDirs = ['build/msgs.h']
-            includes = ['build/msgs.h','build/generated/cpp']
+            srcDirs 'build/msgs.h'
+            include 'build/msgs.h','build/generated/cpp'
           }
-          lib library: 'gz_msgs'
         }
       }
     }
   }
-}
-
-//override default proto file location
-protobuf {
-  src = 'src/proto'
 }
 
 // copy msg.h.in and replace token
