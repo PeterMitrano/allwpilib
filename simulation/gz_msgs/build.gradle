@@ -29,11 +29,11 @@ model {
         cpp {
           source  {
             srcDirs 'build/generated/cpp'
-            include 'build/generated/cpp'
+            include '**/*.cc'
           }
           exportedHeaders {
-            srcDirs 'build/msgs.h'
-            include 'build/msgs.h','build/generated/cpp'
+            srcDirs 'build/generated/cpp'
+            include '**/*.h'
           }
         }
       }
@@ -41,16 +41,20 @@ model {
   }
 }
 
+tasks.whenTaskAdded { task ->
+    if (task.name == 'gz_msgsSharedLibrary') {
+        task.dependsOn 'compileProto','msgs_header'
+    }
+}
+
 // copy msg.h.in and replace token
 // this file is included by all the wpilibC++Sim files
 // example: https://docs.gradle.org/current/userguide/userguide_single.html#filterOnCopy
 task msgs_header(type: Copy) {
   from 'src/msgs.h.in'
-  into 'build/'
+  into 'build/generated/'
   // Substitute property tokens in files
   filter(ReplaceTokens, tokens: [message_headers: '#include <hello.h>'])
   //rename the file to remove the .in
-  rename { String fileName ->
-    fileName.replace('/.in', '')
-  }
+  rename( /(.+)\.in/ , '$1')
 }
