@@ -50,7 +50,7 @@
                         <outputDirectory>${simulation-zip}</outputDirectory>
                         <resources>
                           <resource>
-                            <directory>../../simulation/frc_gazebo_plugins/build/plugins/</directory><!-- TODO do this with variables -->
+                            <directory>../../simulation/frc_gazebo_plugins/build/binaries/plugins/</directory><!-- TODO do this with variables -->
                           </resource>
                         </resources>
                       </configuration>

@@ -42,11 +42,8 @@ model {
 }
 
 tasks.whenTaskAdded { task ->
-  if (task.name == 'msgs_header'){
-    task.dependsOn 'compileProto'
-  }
-  else if (task.name == 'gz_msgsSharedLibrary') {
-    task.dependsOn 'msgs_header'
+  if (task.name == "gz_msgsSharedLibrary"){
+    task.finalizedBy "msgs_header"
   }
 }
 
@@ -67,3 +64,4 @@ task msgs_header(type: Copy) {
   //rename the file to remove the .in
   rename( /(.+)\.in/ , '$1')
 }
+msgs_header.dependsOn 'compileProto'

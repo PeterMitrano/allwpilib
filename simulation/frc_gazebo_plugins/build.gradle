@@ -9,20 +9,34 @@ if (OS.contains("windows")){
   define("WIN32_LEAN_AND_MEAN")
 }
 
+def plugins = ['clock', 'dc_motor', 'encoder', 'gyro', 'limit_switch', 'pneumatic_piston', 'potentiometer', 'rangefinder', 'servo']
 
 //iterate over each plugin
 model {
   components {
-    gz_clock(NativeLibrarySpec){
-      sources {
-        cpp {
-          source {
-            srcDirs '../gz_msgs/build/generated'
-            include 'msgs.h'
+    plugins.each {
+      "gz_$it"(NativeLibrarySpec){
+        sources {
+          cpp {
+            source {
+              srcDirs '../gz_msgs/build/generated'
+              include 'msgs.h'
+            }
+            exportedHeaders {
+              srcDirs '/usr/include/gazebo-5.1', '/usr/include/sdformat-2.3'
+              include '**/*.h'
+            }
           }
         }
       }
     }
+  }
+}
+
+task copySharedPlugins(type: Copy){
+  plugins.each {
+    from "build/binaries/gz_${it}SharedLibrary/"
+    into "build/binaries/plugins"
   }
 }
 
@@ -31,5 +45,3 @@ tasks.whenTaskAdded { task ->
         task.dependsOn ':simulation:gz_msgs:build'
     }
 }
-
-
