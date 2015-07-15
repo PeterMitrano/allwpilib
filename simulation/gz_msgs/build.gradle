@@ -57,14 +57,13 @@ task msgs_header(type: Copy) {
   from 'src/msgs.h.in'
   into 'build/generated/'
   //get all the generated header files and include them in msgs.h
-  def headers = fileTree('build/generated/cpp/').include('*.h')
-  def message_headers = ""
-  headers.each {
-    message_headers += "#include <$it>\n"
+  def gz_msgs_headers = fileTree('build/generated/cpp/').include('*.h')
+  def gz_msgs_includes = ""
+  gz_msgs_headers.each {
+    gz_msgs_includes += "#include <$it>\n"
   }
-  println message_headers
   //place into msgs.h
-  filter(ReplaceTokens, tokens: [message_headers: message_headers])
+  filter(ReplaceTokens, tokens: [gz_msgs_includes: gz_msgs_includes])
   //rename the file to remove the .in
   rename( /(.+)\.in/ , '$1')
 }

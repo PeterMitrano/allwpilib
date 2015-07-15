@@ -10,7 +10,7 @@
 #endif
 
 
-@message_headers@
+@gz_msgs_includes@
 
 #include <gazebo/msgs/msgs.hh>
 #include <boost/shared_ptr.hpp>
