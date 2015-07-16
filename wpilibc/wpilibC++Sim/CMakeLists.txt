@@ -24,35 +24,32 @@ if(${HAS_CPP_11})
 endif()
 
 if (WIN32)
-#prevent windows.h from including winsock.h
-add_definitions(-DWIN32_LEAN_AND_MEAN)
+  #prevent windows.h from including winsock.h
+  add_definitions(-DWIN32_LEAN_AND_MEAN)
 
-# defines things like M_PI
-add_definitions(-D_USE_MATH_DEFINES)
+  # defines things like M_PI
+  add_definitions(-D_USE_MATH_DEFINES)
 
-# get rid of min max macros on windows
-add_definitions(-DNOMINMAX)
+  # get rid of min max macros on windows
+  add_definitions(-DNOMINMAX)
 
-# Use dynamic linking for boost
-add_definitions(-DBOOST_ALL_DYN_LINK)
+  # Use dynamic linking for boost
+  add_definitions(-DBOOST_ALL_DYN_LINK)
 
 
-#temporary until we build dlls
-add_definitions(-DBUILDING_STATIC_LIBS)
+  #temporary until we build dlls
+  add_definitions(-DBUILDING_STATIC_LIBS)
 
-# XXX: should be set via CMake variables in configure.bat
-set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
-set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
+  # XXX: should be set via CMake variables in configure.bat
+  set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
+  set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
 endif()
 
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
 
-
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(gazebo REQUIRED)
-find_package(gz_msgs REQUIRED)
-
 
 # on windows we produce .dlls with no prefix
 if(WIN32)
@@ -85,16 +82,17 @@ endif()
 
 file(GLOB_RECURSE COM_SRC_FILES ../wpilibC++/src/*.cpp)
 
+
 set (INCLUDE_FOLDERS include
-  ../../wpilibc/wpilibC++/include
+  ../wpilibC++/include
   ../../networktables/cpp/include
   ../../hal/include
   ../../hal/lib/Athena
   ${Boost_INCLUDE_DIR}
-  ${GAZEBO_INCLUDE_DIRS}
-  ${GZ_MSGS_INCLUDE_DIRS})
+  ${GAZEBO_INCLUDE_DIRS})
 
 if (WIN32)
+  #these paths will be fixed when a more permenant windows development solution is found
   set(INCLUDE_FOLDERS ${INCLUDE_FOLDERS}
     C:/Users/peter/gz-ws/protobuf-2.6.0-win64-vc12/src
     C:/Users/peter/gz-ws/sdformat/src/win/tinyxml
@@ -104,7 +102,8 @@ if (WIN32)
 endif()
 
 include_directories(${INCLUDE_FOLDERS})
-link_directories(${GAZEBO_LIBRARY_DIRS} ${GZ_MSGS_LIBRARY_DIRS})
+
+link_directories(${GAZEBO_LIBRARY_DIRS})
 
 if (WIN32)
   add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
@@ -112,7 +111,7 @@ else()
   add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
 endif()
 
-target_link_libraries(WPILibSim ${PTHREAD_LIBRARY} ${GZ_MSGS_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
+target_link_libraries(WPILibSim gz_msgs ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
 
 if (WIN32)
   set_target_properties(${project}  PROPERTIES LINK_FLAGS "/DEBUG")

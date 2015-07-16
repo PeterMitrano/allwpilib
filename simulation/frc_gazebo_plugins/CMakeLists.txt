@@ -18,7 +18,6 @@ set (PLUGINS
 
 find_package(gazebo REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
-find_package(gz_msgs REQUIRED)
 
 if (WIN32)
 
@@ -34,7 +33,7 @@ endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 
-link_directories(${GAZEBO_LIBRARY_DIRS} ${GZ_MSGS_LIBRARY_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
 
 foreach(PLUGIN ${PLUGINS})
 	MESSAGE("configuring ${PLUGIN}")
@@ -50,7 +49,7 @@ foreach(PLUGIN ${PLUGINS})
 	
 	file(GLOB_RECURSE SRC_FILES ${PLUGIN}/src/*.cpp)
 
-	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS} ${GZ_MSGS_INCLUDE_DIRS})
+	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS})
 
 	if (WIN32)
 		add_library(${PLUGIN} ${SRC_FILES})
@@ -58,7 +57,7 @@ foreach(PLUGIN ${PLUGINS})
 		add_library(${PLUGIN} SHARED ${SRC_FILES})
 	endif()
 
-	target_link_libraries(${PLUGIN} ${GZ_MSGS_LIBRARY} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+	target_link_libraries(${PLUGIN} gz_msgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
   install(TARGETS ${PLUGIN} DESTINATION $ENV{HOME}/wpilib/simulation/plugins)
 

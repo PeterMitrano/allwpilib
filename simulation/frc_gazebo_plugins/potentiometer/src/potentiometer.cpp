@@ -10,7 +10,6 @@
 #include <gazebo/transport/transport.hh>
 #include <boost/algorithm/string.hpp>
 
-#include "msgs/msgs.h"
 
 GZ_REGISTER_MODEL_PLUGIN(Potentiometer)
 

@@ -12,8 +12,6 @@
 
 #include <boost/pointer_cast.hpp>
 
-#include "msgs/msgs.h"
-
 GZ_REGISTER_MODEL_PLUGIN(Rangefinder)
 
 Rangefinder::Rangefinder() {}

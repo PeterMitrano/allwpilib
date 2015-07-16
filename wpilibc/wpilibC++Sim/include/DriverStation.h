@@ -5,7 +5,7 @@
 /*----------------------------------------------------------------------------*/
 #pragma once
 
-#include "msgs/msgs.h"
+#include "simulation/gz_msgs/msgs.h"
 
 #ifdef _WIN32
   // Ensure that Winsock2.h is included before Windows.h, which can get

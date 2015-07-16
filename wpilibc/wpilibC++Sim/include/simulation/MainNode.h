@@ -2,7 +2,7 @@
 #ifndef _SIM_MAIN_NODE_H
 #define _SIM_MAIN_NODE_H
 
-#include "msgs/msgs.h"
+#include "simulation/gz_msgs/msgs.h"
 #include <gazebo/transport/transport.hh>
 #include <gazebo/gazebo_client.hh>
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <simulation/gz_msgs/msgs.h>
+
 #include <gazebo/gazebo.hh>
 
 using namespace gazebo;

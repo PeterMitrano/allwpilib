@@ -1,6 +1,6 @@
 #pragma once
 
-#include "msgs/msgs.h"
+#include "simulation/gz_msgs/msgs.h"
 
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
