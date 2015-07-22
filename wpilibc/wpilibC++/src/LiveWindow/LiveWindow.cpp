@@ -63,9 +63,6 @@ void LiveWindow::AddSensor(const std::string &subsystem, const std::string &name
   m_components[component].isSensor = true;
 }
 
-[[deprecated(
-    "Raw pointers are deprecated; pass the component using shared_ptr "
-    "instead.")]]
 void LiveWindow::AddSensor(const std::string &subsystem, const std::string &name, LiveWindowSendable *component) {
   AddSensor(subsystem, name, ::std::shared_ptr<LiveWindowSendable>(
                                  component, NullDeleter<LiveWindowSendable>()));
@@ -85,9 +82,6 @@ void LiveWindow::AddActuator(const std::string &subsystem, const std::string &na
   m_components[component].isSensor = false;
 }
 
-[[deprecated(
-    "Raw pointers are deprecated; pass the component using shared_ptr "
-    "instead.")]]
 void LiveWindow::AddActuator(const std::string &subsystem, const std::string &name,
                              LiveWindowSendable *component) {
   AddActuator(subsystem, name,
@@ -98,7 +92,6 @@ void LiveWindow::AddActuator(const std::string &subsystem, const std::string &na
 /**
  * INTERNAL
  */
-[[deprecated]]
 void LiveWindow::AddSensor(std::string type, int channel,
                            LiveWindowSendable *component) {
   std::ostringstream oss;

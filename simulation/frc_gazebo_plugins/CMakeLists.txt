@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(frc_gazebo_plugins)
 
-if (UNIX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
-
 set (PLUGINS
 	clock
 	dc_motor
@@ -16,36 +12,11 @@ set (PLUGINS
 	rangefinder
 	servo)
 
-find_package(gazebo REQUIRED)
-find_package(Boost COMPONENTS system REQUIRED)
-
-if (WIN32)
-
-	# defines things like M_PI
-	add_definitions(-D_USE_MATH_DEFINES)
-
-	# get rid of min max macros on windows 
-	add_definitions(-DNOMINMAX)
-
-	# aww yea
-	add_definitions(-DWIN32_LEAN_AND_MEAN)
-endif()
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 foreach(PLUGIN ${PLUGINS})
-	MESSAGE("configuring ${PLUGIN}")
-
-	#on windows we produce .dlls with no prefix
-	if(WIN32)
-		SET(CMAKE_FIND_LIBRARY_PREFIXES "")
-		SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
-	else()
-		SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-		SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
-	endif()
 	
 	file(GLOB_RECURSE SRC_FILES ${PLUGIN}/src/*.cpp)
 

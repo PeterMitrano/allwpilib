@@ -1,42 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(WPILibSim)
 
-include(CheckCXXCompilerFlag)
-
- macro(filter_valid_compiler_flags)
-  foreach(flag ${ARGN})
-    CHECK_CXX_COMPILER_FLAG(${flag} R${flag})
-    if(${R${flag}})
-      set(VALID_CXX_FLAGS "${VALID_CXX_FLAGS} ${flag}")
-    endif()
-  endforeach()
-endmacro()
-
-
-filter_valid_compiler_flags(-Wno-unused-parameter -pthread -fPIC -fpermissive -D_USE_MATH_DEFINES -DFRC_SIMULATOR /MDd /Z7)
-
-
-CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CPP_11)
-
-
-if(${HAS_CPP_11})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-endif()
-
 if (WIN32)
-  #prevent windows.h from including winsock.h
-  add_definitions(-DWIN32_LEAN_AND_MEAN)
-
-  # defines things like M_PI
-  add_definitions(-D_USE_MATH_DEFINES)
-
-  # get rid of min max macros on windows
-  add_definitions(-DNOMINMAX)
-
-  # Use dynamic linking for boost
-  add_definitions(-DBOOST_ALL_DYN_LINK)
-
-
   #temporary until we build dlls
   add_definitions(-DBUILDING_STATIC_LIBS)
 
@@ -48,14 +13,6 @@ endif()
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
 
-find_package(Boost COMPONENTS system filesystem REQUIRED)
-find_package(gazebo REQUIRED)
-
-# on windows we produce .dlls with no prefix
-if(WIN32)
-  SET(CMAKE_FIND_LIBRARY_PREFIXES "")
-  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
-endif()
 
 # also on windows use sprintf_s instead of snprintf
 # TODO: find a more permenenant solution

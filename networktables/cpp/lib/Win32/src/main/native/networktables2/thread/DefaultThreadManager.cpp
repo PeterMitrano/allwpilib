@@ -11,7 +11,6 @@
 // This version was copied from the "Athena" version of network tables.
 // It uses pthread and is much simpler
 #include "networktables2/thread/DefaultThreadManager.h"
-#include "OSAL/Task.h"
 #include <exception>
 #include <stdio.h>
 

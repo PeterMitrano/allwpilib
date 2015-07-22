@@ -1,30 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(gz_msgs)
 
-MESSAGE("\nconfiguring gz_msgs\n")
-
-#copied from GazeboUtils.cmake
-MACRO (APPEND_TO_CACHED_STRING _string _cacheDesc)
-  FOREACH (newItem ${ARGN})
-    SET (${_string} "${${_string}} ${newItem}" CACHE INTERNAL ${_cacheDesc} FORCE)
-  ENDFOREACH (newItem ${ARGN})
-  #STRING(STRIP ${${_string}} ${_string})
-ENDMACRO (APPEND_TO_CACHED_STRING)
-
-include (FindPkgConfig)
-
-#check to see if protobuf is installed correctly
-find_package(Protobuf REQUIRED)
-if (NOT PROTOBUF_FOUND)
-	MESSAGE ("Missing: Google Protobuf (libprotobuf-dev)")
-endif()
-if (NOT PROTOBUF_PROTOC_EXECUTABLE)
-	MESSAGE ( "Missing: Google Protobuf Compiler (protobuf-compiler)")
-endif()
-if (NOT PROTOBUF_PROTOC_LIBRARY)
-	MESSAGE ("Missing: Google Protobuf Compiler Library (libprotoc-dev)")
-endif()
-
 #list all proto files used
 get_filename_component(PROTO_DIR proto ABSOLUTE)
 set(msgs
@@ -33,15 +9,6 @@ set(msgs
   "${PROTO_DIR}/float64.proto"
   "${PROTO_DIR}/frc_joystick.proto"
 )
-
-#on windows we produce .dlls with no prefix
-if(WIN32)
-  SET(CMAKE_FIND_LIBRARY_PREFIXES "")
-  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
-else()
-  SET(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
-endif()
 
 set(PROTO_SRCS)
 set(PROTO_HDRS)
@@ -91,9 +58,6 @@ target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
 
 
 #we want msgs to be used by the plugins and wpilibC++Sim, so we used a gz_msgs-config.cmake
-#first step is find out where Cmake is installed
-include(GNUInstallDirs)
-
 #install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
 install(FILES ${MSGS_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)

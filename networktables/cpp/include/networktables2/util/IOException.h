@@ -8,6 +8,7 @@
 #ifndef IOEXCEPTION_H_
 #define IOEXCEPTION_H_
 
+#include "NTBase.h"
 #include <exception>
 
 /**

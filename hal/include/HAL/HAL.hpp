@@ -164,8 +164,8 @@ enum HALAllianceStationID {
 /* The maximum number of axes that will be stored in a single HALJoystickAxes
 	struct. This is used for allocating buffers, not bounds checking, since
 	there are usually less axes in practice. */
-static const size_t kMaxJoystickAxes = 12;
-static const size_t kMaxJoystickPOVs = 12;
+static constexpr size_t kMaxJoystickAxes = 12;
+static constexpr size_t kMaxJoystickPOVs = 12;
 
 struct HALJoystickAxes {
 	uint16_t count;
