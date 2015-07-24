@@ -40,7 +40,7 @@ void SetDistanceToBox::Interrupted() {
 
 
 SetDistanceToBoxPIDSource::~SetDistanceToBoxPIDSource() {}
-double SetDistanceToBoxPIDSource::PIDGet() cosnt {
+double SetDistanceToBoxPIDSource::PIDGet() const {
     return Robot::drivetrain->GetDistanceToObstacle();
 }
 

@@ -25,9 +25,11 @@ public:
 	static Claw* claw;
 	static OI* oi;
 
+  Robot();
+
 private:
 	Command *autonomousCommand;
-	LiveWindow *lw;
+	LiveWindow &lw = LiveWindow::GetInstance();
 
 	void RobotInit();
 	void AutonomousInit();

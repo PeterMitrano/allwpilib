@@ -20,17 +20,16 @@
 
 class Robot: public IterativeRobot {
 public:
-	static DriveTrain* drivetrain;
-	static Pivot* pivot;
-	static Collector* collector;
-	static Shooter* shooter;
-	static Pneumatics* pneumatics;
-	static OI* oi;
+	static std::shared_ptr<DriveTrain> drivetrain;
+	static std::shared_ptr<Pivot> pivot;
+	static std::shared_ptr<Collector> collector;
+	static std::shared_ptr<Shooter> shooter;
+	static std::shared_ptr<Pneumatics> pneumatics;
+	static std::unique_ptr<OI> oi;
 
 private:
-	Command *autonomousCommand;
-	LiveWindow *lw;
-	SendableChooser* autoChooser;
+	Command* autonomousCommand = nullptr;
+	SendableChooser autoChooser;
 
 	void RobotInit();
 	void AutonomousInit();
@@ -43,6 +42,5 @@ private:
 
 	void Log();
 };
-
 
 #endif /* ROBOT_H_ */

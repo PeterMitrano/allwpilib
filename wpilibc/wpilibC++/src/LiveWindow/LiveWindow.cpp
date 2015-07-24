@@ -50,11 +50,15 @@ void LiveWindow::SetEnabled(bool enabled) {
 }
 
 /**
- * Add a Sensor associated with the subsystem and with call it by the given
- * name.
+ * @name AddSensor(subsystem, name, component)
+ * Add a Sensor associated with the subsystem and call it by the given name.
  * @param subsystem The subsystem this component is part of.
  * @param name The name of this component.
  * @param component A LiveWindowSendable component that represents a sensor.
+ */
+//@{
+/**
+ * @brief Use a STL smart pointer to share ownership of component.
  */
 void LiveWindow::AddSensor(const std::string &subsystem, const std::string &name,
                            ::std::shared_ptr<LiveWindowSendable> component) {
@@ -63,17 +67,38 @@ void LiveWindow::AddSensor(const std::string &subsystem, const std::string &name
   m_components[component].isSensor = true;
 }
 
-void LiveWindow::AddSensor(const std::string &subsystem, const std::string &name, LiveWindowSendable *component) {
+/**
+ * @brief Pass a reference to LiveWindow and retain ownership of the component.
+ */
+void LiveWindow::AddSensor(const std::string &subsystem,
+                           const std::string &name,
+                           LiveWindowSendable &component) {
   AddSensor(subsystem, name, ::std::shared_ptr<LiveWindowSendable>(
-                                 component, NullDeleter<LiveWindowSendable>()));
+                                 &component, [](LiveWindowSendable*){}));
 }
 
 /**
- * Add an Actuator associated with the subsystem and with call it by the given
- * name.
+ * @brief Use a raw pointer to the LiveWindow.
+ * @deprecated Prefer smart pointers or references.
+ */
+void LiveWindow::AddSensor(const std::string &subsystem,
+                           const std::string &name,
+                           LiveWindowSendable *component) {
+  AddSensor(subsystem, name, ::std::shared_ptr<LiveWindowSendable>(
+                                 component, NullDeleter<LiveWindowSendable>()));
+}
+//@}
+
+/**
+ * @name AddActuator(subsystem, name, component)
+ * Add an Actuator associated with the subsystem and call it by the given name.
  * @param subsystem The subsystem this component is part of.
  * @param name The name of this component.
  * @param component A LiveWindowSendable component that represents a actuator.
+ */
+//@{
+/**
+ * @brief Use a STL smart pointer to share ownership of component.
  */
 void LiveWindow::AddActuator(const std::string &subsystem, const std::string &name,
                              ::std::shared_ptr<LiveWindowSendable> component) {
@@ -82,15 +107,30 @@ void LiveWindow::AddActuator(const std::string &subsystem, const std::string &na
   m_components[component].isSensor = false;
 }
 
+/**
+ * @brief Pass a reference to LiveWindow and retain ownership of the component.
+ */
+void LiveWindow::AddActuator(const std::string &subsystem,
+                             const std::string &name,
+                             LiveWindowSendable &component) {
+  AddActuator(subsystem, name, ::std::shared_ptr<LiveWindowSendable>(
+                                 &component, [](LiveWindowSendable*){}));
+}
+
+/**
+ * @brief Use a raw pointer to the LiveWindow.
+ * @deprecated Prefer smart pointers or references.
+ */
 void LiveWindow::AddActuator(const std::string &subsystem, const std::string &name,
                              LiveWindowSendable *component) {
   AddActuator(subsystem, name,
               ::std::shared_ptr<LiveWindowSendable>(
                   component, NullDeleter<LiveWindowSendable>()));
 }
+//@}
 
 /**
- * INTERNAL
+ * Meant for internal use in other WPILib classes.
  */
 void LiveWindow::AddSensor(std::string type, int channel,
                            LiveWindowSendable *component) {
@@ -109,7 +149,7 @@ void LiveWindow::AddSensor(std::string type, int channel,
 }
 
 /**
- * INTERNAL
+ * Meant for internal use in other WPILib classes.
  */
 void LiveWindow::AddActuator(std::string type, int channel,
                              LiveWindowSendable *component) {
@@ -124,7 +164,7 @@ void LiveWindow::AddActuator(std::string type, int channel,
 }
 
 /**
- * INTERNAL
+ * Meant for internal use in other WPILib classes.
  */
 void LiveWindow::AddActuator(std::string type, int module, int channel,
                              LiveWindowSendable *component) {

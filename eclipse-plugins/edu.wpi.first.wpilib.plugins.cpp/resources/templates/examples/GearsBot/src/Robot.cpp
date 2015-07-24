@@ -9,6 +9,8 @@ Claw* Robot::claw = NULL;
 
 OI* Robot::oi = NULL;
 
+Robot::Robot() : IterativeRobot(), lw(LiveWindow::GetInstance()) {}
+
 void Robot::RobotInit() {
 	drivetrain = new DriveTrain();
 	elevator = new Elevator();
@@ -18,7 +20,6 @@ void Robot::RobotInit() {
 	oi = new OI();
 
 	autonomousCommand = new Autonomous();
-	lw = LiveWindow::GetInstance();
 
     // Show what command your subsystem is running on the SmartDashboard
     SmartDashboard::PutData(drivetrain);
@@ -50,7 +51,7 @@ void Robot::TeleopPeriodic() {
 }
 
 void Robot::TestPeriodic() {
-	lw->Run();
+	lw.Run();
 }
 
 START_ROBOT_CLASS(Robot);

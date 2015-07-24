@@ -40,6 +40,8 @@ class LiveWindow {
     void AddSensor(const std::string &subsystem, const std::string &name,
                  LiveWindowSendable *component);
   void AddSensor(const std::string &subsystem, const std::string &name,
+                 LiveWindowSendable &component);
+  void AddSensor(const std::string &subsystem, const std::string &name,
                  ::std::shared_ptr<LiveWindowSendable> component);
 #if !defined(_MSC_VER)
   [[deprecated(
@@ -48,6 +50,8 @@ class LiveWindow {
 #endif
   void AddActuator(const std::string &subsystem, const std::string &name,
                    LiveWindowSendable *component);
+  void AddActuator(const std::string &subsystem, const std::string &name,
+                   LiveWindowSendable &component);
   void AddActuator(const std::string &subsystem, const std::string &name,
                    ::std::shared_ptr<LiveWindowSendable> component);
 #if !defined(_MSC_VER)

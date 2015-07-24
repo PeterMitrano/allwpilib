@@ -27,7 +27,7 @@ void Elevator::Log() {
     // TODO: SmartDashboard::PutData("Wrist Pot", (AnalogPotentiometer) pot);
 }
 
-double Elevator::ReturnPIDInput() {
+double Elevator::ReturnPIDInput() const {
     return pot->Get();
 }
 
