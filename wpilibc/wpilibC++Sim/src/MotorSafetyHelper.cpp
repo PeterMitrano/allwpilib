@@ -102,8 +102,8 @@ bool MotorSafetyHelper::IsAlive() const
  */
 void MotorSafetyHelper::Check()
 {
-	DriverStation *ds = DriverStation::GetInstance();
-	if (!m_enabled || ds->IsDisabled() || ds->IsTest()) return;
+	DriverStation &ds = DriverStation::GetInstance();
+	if (!m_enabled || ds.IsDisabled() || ds.IsTest()) return;
 
 	std::unique_lock<priority_recursive_mutex> sync(m_syncMutex);
 	if (m_stopTime < Timer::GetFPGATimestamp())

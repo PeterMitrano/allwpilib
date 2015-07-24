@@ -32,9 +32,9 @@ RobotBase &RobotBase::getInstance()
  * nice to put this code into it's own task that loads on boot so ensure that it runs.
  */
 RobotBase::RobotBase()
+  : m_ds(DriverStation::GetInstance())
 {
-	m_ds = DriverStation::GetInstance();
-  RobotState::SetImplementation(*DriverStation::GetInstance());
+  RobotState::SetImplementation(DriverStation::GetInstance());
 	transport::SubscriberPtr time_pub = MainNode::Subscribe("time", &wpilib::internal::time_callback);
 }
 
@@ -44,7 +44,7 @@ RobotBase::RobotBase()
  */
 bool RobotBase::IsEnabled() const
 {
-	return m_ds->IsEnabled();
+	return m_ds.IsEnabled();
 }
 
 /**
@@ -53,7 +53,7 @@ bool RobotBase::IsEnabled() const
  */
 bool RobotBase::IsDisabled() const
 {
-	return m_ds->IsDisabled();
+	return m_ds.IsDisabled();
 }
 
 /**
@@ -62,7 +62,7 @@ bool RobotBase::IsDisabled() const
  */
 bool RobotBase::IsAutonomous() const
 {
-	return m_ds->IsAutonomous();
+	return m_ds.IsAutonomous();
 }
 
 /**
@@ -71,7 +71,7 @@ bool RobotBase::IsAutonomous() const
  */
 bool RobotBase::IsOperatorControl() const
 {
-	return m_ds->IsOperatorControl();
+	return m_ds.IsOperatorControl();
 }
 
 /**
@@ -80,7 +80,7 @@ bool RobotBase::IsOperatorControl() const
  */
 bool RobotBase::IsTest() const
 {
-    return m_ds->IsTest();
+    return m_ds.IsTest();
 }
 
 /**
@@ -89,7 +89,7 @@ bool RobotBase::IsTest() const
  */
 // bool RobotBase::IsNewDataAvailable()
 // {
-// 	return m_ds->IsNewControlData();
+// 	return m_ds.IsNewControlData();
 // }
 
 /**

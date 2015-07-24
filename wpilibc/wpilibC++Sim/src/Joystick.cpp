@@ -50,7 +50,8 @@ Joystick::Joystick(uint32_t port)
  * @param numButtonTypes The number of button types in the enum.
  */
 Joystick::Joystick(uint32_t port, uint32_t numAxisTypes, uint32_t numButtonTypes)
-	: m_port (port)
+  : m_ds(DriverStation::GetInstance()),
+	  m_port (port)
 {
 	if ( !joySticksInitialized )
 	{
@@ -60,7 +61,6 @@ Joystick::Joystick(uint32_t port, uint32_t numAxisTypes, uint32_t numButtonTypes
 	}
 	joysticks[m_port] = this;
 
-	m_ds = DriverStation::GetInstance();
 	m_axes = std::make_unique<uint32_t[]>(numAxisTypes);
 	m_buttons = std::make_unique<uint32_t[]>(numButtonTypes);
 }
@@ -129,7 +129,7 @@ float Joystick::GetThrottle() const
  */
 float Joystick::GetRawAxis(uint32_t axis) const
 {
-	return m_ds->GetStickAxis(m_port, axis);
+	return m_ds.GetStickAxis(m_port, axis);
 }
 
 /**
@@ -203,7 +203,7 @@ bool Joystick::GetBumper(JoystickHand hand) const
  **/
 bool Joystick::GetRawButton(uint32_t button) const
 {
-    return m_ds->GetStickButton(m_port, button);
+    return m_ds.GetStickButton(m_port, button);
 }
 
 /**

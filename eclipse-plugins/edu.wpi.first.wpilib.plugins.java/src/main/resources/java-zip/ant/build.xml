@@ -179,7 +179,6 @@
         </condition>
         <!-- TODO: launch gazebo once? -->
         <echo>[simulate] You may now run Gazebo</echo>
-        </exec>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
@@ -187,7 +186,7 @@
       </sequential>
       <sequential>
         <sleep seconds="5"/>
-	    <echo>[simulate] Running Code.</echo>i
+	    <echo>[simulate] Running Code.</echo>
 	    <java jar="${simulation.dist.jar}" fork="true">
           <jvmarg value="-Djava.library.path=${wpilib.sim.lib}" />
         </java>
