@@ -47,7 +47,7 @@ if(WIN32)
 endif()
 
 if (MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFRC_SIMULATOR /MDd /Zi")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFRC_SIMULATOR /EHsc /MDd /Zi")
 else ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -DFRC_SIMULATOR -Wno-unused-parameter -pthread -fPIC -fpermissive")
 endif()
