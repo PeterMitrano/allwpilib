@@ -1,12 +1,14 @@
 #pragma once
 
 #include <stdint.h>
+#include <condition_variable>
 #include <pthread.h>
 #include <semaphore.h>
 
+// TODO: remote pthreads from the rest of HAL
 typedef pthread_mutex_t* MUTEX_ID;
 typedef sem_t* SEMAPHORE_ID;
-typedef pthread_cond_t* MULTIWAIT_ID;
+typedef std::condition_variable::native_handle_type MULTIWAIT_ID;
 
 extern "C"
 {

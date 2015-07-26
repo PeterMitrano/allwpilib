@@ -10,7 +10,7 @@
 #include "LiveWindow/LiveWindow.h"
 #include "networktables/NetworkTable.h"
 
-//not sure what this is used for yet.
+// TODO: not sure what this is used for yet.
 #ifdef _UNIX
 	#include <unistd.h>
 #endif

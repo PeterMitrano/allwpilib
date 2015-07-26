@@ -1,7 +1,7 @@
 #include "networktables2/connection/DataIOStream.h"
 
 //TODO remove this when alloca is solved
-#ifdef WIN32
+#ifdef _WIN32
 #include <malloc.h>
 #endif
 
@@ -75,7 +75,7 @@ std::string* DataIOStream::readString()
 {
 	
 	unsigned int byteLength = read2BytesBE();
-#ifndef WIN32
+#ifndef _WIN32
 	uint8_t bytes[byteLength+1];//FIXME figure out why this doesn't work on windows
 #else
 	uint8_t* bytes = (uint8_t*)alloca(byteLength+1);

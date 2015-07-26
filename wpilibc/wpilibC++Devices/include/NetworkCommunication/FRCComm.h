@@ -15,16 +15,16 @@
 #define __FRC_COMM_H__
 
 #ifdef SIMULATION
-#include <vxWorks_compat.h>
-#ifdef USE_THRIFT
-#define EXPORT_FUNC
+  #include <vxWorks_compat.h>
+  #ifdef USE_THRIFT
+    #define EXPORT_FUNC
+  #else
+    #define EXPORT_FUNC __declspec(dllexport) __cdecl
+  #endif
 #else
-#define EXPORT_FUNC __declspec(dllexport) __cdecl
-#endif
-#else
-#include <stdint.h>
-#include <pthread.h>
-#define EXPORT_FUNC
+  #include <stdint.h>
+  #include <pthread.h>
+  #define EXPORT_FUNC
 #endif
 
 #define ERR_FRCSystem_NetCommNotResponding -44049
