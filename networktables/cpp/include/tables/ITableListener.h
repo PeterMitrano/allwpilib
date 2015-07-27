@@ -7,7 +7,7 @@
 
 #ifndef ITABLELISTENER_H_
 #define ITABLELISTENER_H_
- 
+
 class ITableListener;
 
 #include "NTBase.h"
