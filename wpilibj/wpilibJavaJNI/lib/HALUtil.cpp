@@ -33,9 +33,9 @@ JNIEXPORT jobject JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_initializeMutex
 (JNIEnv * env, jclass)
 {
 	HALUTIL_LOG(logDEBUG) << "Calling HALUtil initializeMutex";
-	MUTEX_ID* mutexPtr = (MUTEX_ID*)new unsigned char[sizeof(MUTEX_ID)];
-	*mutexPtr = initializeMutexNormal();
-	HALUTIL_LOG(logDEBUG) << "Mutex Ptr = " << *mutexPtr;
+	MUTEX_ID mutexPtr = (MUTEX_ID)new unsigned char[sizeof(MUTEX_ID)];
+	mutexPtr = initializeMutexNormal();
+	HALUTIL_LOG(logDEBUG) << "Mutex Ptr = " << mutexPtr;
 	return env->NewDirectByteBuffer(mutexPtr, sizeof(MUTEX_ID));
 }
 
@@ -48,9 +48,9 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_deleteMutex
 (JNIEnv * env, jclass, jobject id )
 {
 	HALUTIL_LOG(logDEBUG) << "Calling HALUtil deleteMutex";
-	MUTEX_ID* javaId = (MUTEX_ID*)env->GetDirectBufferAddress(id);
-	HALUTIL_LOG(logDEBUG) << "Mutex Ptr = " << *javaId;
-	deleteMutex( *javaId );
+	MUTEX_ID javaId = (MUTEX_ID)env->GetDirectBufferAddress(id);
+	HALUTIL_LOG(logDEBUG) << "Mutex Ptr = " << javaId;
+	deleteMutex( javaId );
 	delete[] javaId;
 }
 
@@ -63,11 +63,11 @@ JNIEXPORT jbyte JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_takeMutex
 (JNIEnv * env, jclass, jobject id)
 {
 	//HALUTIL_LOG(logDEBUG) << "Calling HALUtil takeMutex";
-	MUTEX_ID* javaId = (MUTEX_ID*)env->GetDirectBufferAddress(id);
+	MUTEX_ID javaId = (MUTEX_ID)env->GetDirectBufferAddress(id);
 	//HALUTIL_LOG(logDEBUG) << "Mutex Ptr = " << *javaId;
-	jbyte returnValue = takeMutex(*javaId);
+	takeMutex(javaId);
 	//HALUTIL_LOG(logDEBUG) << "Take Result = " << (void*)returnValue;
-	return returnValue;
+	return 0;
 }
 
 /*
@@ -79,9 +79,9 @@ JNIEXPORT jobject JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_initializeMulti
 (JNIEnv * env, jclass)
 {
 	HALUTIL_LOG(logDEBUG) << "Calling HALUtil initializeMultiWait";
-	MULTIWAIT_ID* multiWaitPtr = (MULTIWAIT_ID*)new unsigned char[4];
-	*multiWaitPtr = initializeMultiWait();
-	HALUTIL_LOG(logDEBUG) << "MultiWait Ptr = " << *multiWaitPtr;
+	MULTIWAIT_ID multiWaitPtr = (MULTIWAIT_ID)new unsigned char[4];
+	multiWaitPtr = initializeMultiWait();
+	HALUTIL_LOG(logDEBUG) << "MultiWait Ptr = " << multiWaitPtr;
 	return env->NewDirectByteBuffer( multiWaitPtr, 4);
 }
 
@@ -94,9 +94,9 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_deleteMultiWait
 (JNIEnv * env, jclass, jobject id)
 {
 	HALUTIL_LOG(logDEBUG) << "Calling HALUtil deleteMultiWait";
-	MULTIWAIT_ID* javaId = (MULTIWAIT_ID*)env->GetDirectBufferAddress(id);
-	HALUTIL_LOG(logDEBUG) << "MultiWait Ptr = " << *javaId;
-	deleteMultiWait( *javaId );
+	MULTIWAIT_ID javaId = (MULTIWAIT_ID)env->GetDirectBufferAddress(id);
+	HALUTIL_LOG(logDEBUG) << "MultiWait Ptr = " << javaId;
+	deleteMultiWait( javaId );
 }
 
 /*
@@ -107,10 +107,10 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_deleteMultiWait
 JNIEXPORT jbyte JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_takeMultiWait
   (JNIEnv * env, jclass, jobject multiWaitId, jobject mutexId, jint timeout)
 {
- 	MULTIWAIT_ID* javaMultiWaitId = (MULTIWAIT_ID*)env->GetDirectBufferAddress(multiWaitId);
-	MUTEX_ID* javaMutexId = (MUTEX_ID*)env->GetDirectBufferAddress(mutexId);
-	jbyte returnValue = takeMultiWait(*javaMultiWaitId, *javaMutexId, (int32_t) timeout);
-	return returnValue;
+ 	MULTIWAIT_ID javaMultiWaitId = (MULTIWAIT_ID)env->GetDirectBufferAddress(multiWaitId);
+	MUTEX_ID javaMutexId = (MUTEX_ID)env->GetDirectBufferAddress(mutexId);
+	takeMultiWait(javaMultiWaitId, javaMutexId, (int32_t) timeout);
+	return 0;
 }
 
 /*
