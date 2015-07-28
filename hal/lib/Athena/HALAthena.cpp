@@ -186,10 +186,6 @@ int HALSetErrorData(const char *errors, int errorsLength, int wait_ms)
 	return setErrorData(errors, errorsLength, wait_ms);
 }
 
-void HALSetNewDataSem(NATIVE_MULTIWAIT_ID sem)
-{
-	setNewDataSem(sem);
-}
 
 bool HALGetSystemActive(int32_t *status)
 {
