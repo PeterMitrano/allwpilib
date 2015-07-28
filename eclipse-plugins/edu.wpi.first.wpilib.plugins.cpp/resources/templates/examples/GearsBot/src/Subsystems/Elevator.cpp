@@ -18,9 +18,9 @@ Elevator::Elevator() : PIDSubsystem("Elevator", kP_real, kI_real, 0.0) {
 	#endif
 
 	// Let's show everything on the LiveWindow
-    // TODO: LiveWindow::GetInstance()->AddActuator("Elevator", "Motor", (Victor) motor);
-    // TODO: LiveWindow::GetInstance()->AddSensor("Elevator", "Pot", (AnalogPotentiometer) pot);
-    LiveWindow::GetInstance()->AddActuator("Elevator", "PID", GetPIDController());
+    // TODO: LiveWindow::GetInstance().AddActuator("Elevator", "Motor", (Victor) motor);
+    // TODO: LiveWindow::GetInstance().AddSensor("Elevator", "Pot", (AnalogPotentiometer) pot);
+    LiveWindow::GetInstance().AddActuator("Elevator", "PID", GetPIDController());
 }
 
 void Elevator::Log() {

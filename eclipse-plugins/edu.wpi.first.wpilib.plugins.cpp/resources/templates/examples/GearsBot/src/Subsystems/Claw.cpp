@@ -5,7 +5,7 @@ Claw::Claw() : Subsystem("Claw") {
     contact = new DigitalInput(5);
 
 	// Let's show everything on the LiveWindow
-    // TODO: LiveWindow::GetInstance()->AddActuator("Claw", "Motor", (Victor) motor);
+    // TODO: LiveWindow::GetInstance().AddActuator("Claw", "Motor", (Victor) motor);
     // TODO: contact
 }
 

@@ -40,7 +40,7 @@ void DriveStraight::Interrupted() {
 
 
 DriveStraightPIDSource::~DriveStraightPIDSource() {}
-double DriveStraightPIDSource::PIDGet() {
+double DriveStraightPIDSource::PIDGet() const {
     return Robot::drivetrain->GetDistance();
 }
 
