@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef FRC_SIMULATOR
+
 #include <stdint.h>
 #include <pthread.h>
 
@@ -38,3 +40,5 @@ extern "C" {
   STATUS setTaskPriority(TASK task, int priority); // valid priority [1..99]
   STATUS getTaskPriority(TASK task, int* priority);
 }
+
+#endif

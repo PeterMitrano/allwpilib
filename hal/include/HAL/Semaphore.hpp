@@ -1,14 +1,15 @@
 #pragma once
 
 #include <stdint.h>
-#include <pthread.h>
-#include <semaphore.h>
+#ifndef FRC_SIMULATOR
+  #include <semaphore.h>
+#endif
 #include <mutex>
 #include <condition_variable>
 
 typedef std::mutex* MUTEX_ID;
 typedef std::condition_variable* MULTIWAIT_ID;
-typedef pthread_cond_t* NATIVE_MULTIWAIT_ID;
+typedef std::condition_variable::native_handle_type* NATIVE_MULTIWAIT_ID;
 
 extern "C"
 {

@@ -14,17 +14,16 @@
 #ifndef __FRC_COMM_H__
 #define __FRC_COMM_H__
 
-#ifdef SIMULATION
-#include <vxWorks_compat.h>
-#ifdef USE_THRIFT
-#define EXPORT_FUNC
+#ifdef FRC_SIMULATOR
+  #ifdef USE_THRIFT
+    #define EXPORT_FUNC
+  #else
+  #define EXPORT_FUNC __declspec(dllexport) __cdecl
+  #endif
 #else
-#define EXPORT_FUNC __declspec(dllexport) __cdecl
-#endif
-#else
-#include <stdint.h>
-#include <pthread.h>
-#define EXPORT_FUNC
+  #include <stdint.h>
+  #include <pthread.h>
+  #define EXPORT_FUNC
 #endif
 
 #define ERR_FRCSystem_NetCommNotResponding -44049
@@ -81,7 +80,7 @@ extern "C" {
 #ifdef SIMULATION
 	void EXPORT_FUNC setNewDataSem(HANDLE);
 #else
-	void EXPORT_FUNC setNewDataSem(pthread_cond_t *);
+	void EXPORT_FUNC setNewDataSem(std::condition_variable::native_handle_type *);
 #endif
 
 	// this uint32_t is really a LVRefNum

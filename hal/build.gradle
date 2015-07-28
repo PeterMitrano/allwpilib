@@ -1,6 +1,30 @@
 apply plugin: 'cpp'
 
+binaries.all {
+    if (toolChain in VisualCpp){
+        //allows us to define constexpr and noexcept in macros
+        //since msvc 2013 doesn't support them
+        cppCompiler.define ("_ALLOW_KEYWORD_MACROS")
+        //used in ifdefs to ignore stuff we don't need in simulation
+        cppCompiler.define "FRC_SIMULATOR"
+        cppCompiler.args "/EHsc"
+    }
+}
+
 model {
+    //give gradle explicit info about our platform and compiler
+    platforms {
+        windows_x86_64 {
+            architecture "x86_64"
+            operatingSystem "windows"
+        }
+    }
+    toolChains {
+        visualCpp(VisualCpp) {
+            // Specify the installDir if Visual Studio cannot be located
+            installDir "C:/Program Files (x86)/Microsoft Visual Studio 12.0"
+        }
+    }
     components {
         HALAthena(NativeLibrarySpec) {
             targetPlatform 'arm'
@@ -15,6 +39,23 @@ model {
                     }
                     exportedHeaders {
                         srcDirs = ["include", "lib/Athena", "lib/Athena/FRC_FPGA_ChipObject"]
+                    }
+                }
+            }
+        }
+        DriverStationHALAthena(NativeLibrarySpec) {
+            targetPlatform 'windows_x86_64'
+            tasks.withType(CppCompile) {
+                dependsOn addNiLibraryLinks
+            }
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ["lib/Athena/DriverStation",]
+                        includes = ["**/*.cpp"]
+                    }
+                    exportedHeaders {
+                        srcDirs = ["include", "lib/Athena", "lib/Athena/DriverStation"]
                     }
                 }
             }

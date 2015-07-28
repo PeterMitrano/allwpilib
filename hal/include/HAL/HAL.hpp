@@ -5,6 +5,18 @@
 /*----------------------------------------------------------------------------*/
 #pragma once
 
+//wonderful macros for MSVC compatibility
+#if (__cplusplus < 201103L)
+	#if !defined(_MSC_VER)
+		#define nullptr NULL
+	#endif
+	#define constexpr const
+#endif
+
+#if defined(_MSC_VER)
+  #define noexcept throw()
+#endif
+
 #include <stdint.h>
 #include <cmath>
 

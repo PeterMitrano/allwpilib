@@ -10,6 +10,7 @@ def jdkFolder = 'jdk-linux-arm-vfp-sflt'
 def jdkVersion = 'jdk1.8.0_33'
 def jdkLocation = System.getProperty("user.home") + File.separator + jdkFolder + File.separator + jdkVersion
 def generatedJNIHeaderLoc = 'wpilibJavaJNI/build/include'
+def generatedSimJNIHeaderLoc = 'wpilibJavaSimJNI/build/include'
 
 // Maven publishing configuration
 publishing {
@@ -44,6 +45,7 @@ publishing {
 }
 
 // Configuration for the HAL bindings
+// one for sim, one for devices
 model {
     components {
         wpilibJavaJNI(NativeLibrarySpec) {
@@ -72,6 +74,29 @@ model {
                         }
                     }
                     lib project: ':hal', library: 'HALAthena', linkage: 'static'
+                }
+            }
+        }
+        wpilibJavaSimJNI(NativeLibrarySpec) {
+            binaries.all {
+                tasks.withType(CppCompile) {
+                    dependsOn simjniHeaders
+                    dependsOn addNiLibraryLinks
+                }
+            }
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ['wpilibJavaSimJNI/lib']
+                        includes = ['**/*.cpp']
+                    }
+                    exportedHeaders {
+                        srcDirs = ["wpilibJavaSimJNI/include"]
+                        jniHeaders.outputs.files.each { file ->
+                            srcDirs file.getPath()
+                        }
+                    }
+                    lib project: ':hal', library: 'FRCComm', linkage: 'static'
                 }
             }
         }
@@ -174,6 +199,11 @@ task wpilibjSimJar(type: Jar, dependsOn: simulationClasses) {
     from sourceSets.simulation.output.classesDir
     from sourceSets.shared.output.classesDir
     baseName 'wpilibjSimulation'
+    binaries.withType(SharedLibraryBinarySpec) { // XXX: not sure if this is right
+        from(file(it.sharedLibraryFile)) {
+            into 'sim'
+        }
+    }
 }
 
 task wpilibjSimSources(type: Jar, dependsOn: simulationClasses) {
@@ -187,6 +217,7 @@ task wpilibjSimSources(type: Jar, dependsOn: simulationClasses) {
 task simulationJavadoc(type: Javadoc) {
     description = 'Generates javadoc for the simulation components'
     group = 'WPILib'
+    dependsOn { wpilibJavaSimJNISharedLibrary }
     source sourceSets.simulation.allJava, sourceSets.shared.allJava
     classpath = files([sourceSets.simulation.compileClasspath, sourceSets.shared.compileClasspath])
 }
@@ -258,8 +289,32 @@ task jniHeaders {
     }
 }
 
+/**
+ * Generates the Sim JNI headers from the HAL package
+ */
+task simjniHeaders {
+    description = 'Generates Sim JNI headers from edu.wpi.first.wpilibj.hal.*'
+    group = 'WPILib'
+    def outputFolder = file(generatedSimJNIHeaderLoc)
+    inputs.files sourceSets.simulation.output
+    outputs.file outputFolder
+    doLast {
+        outputFolder.mkdirs()
+        exec {
+            executable org.gradle.internal.jvm.Jvm.current().getExecutable('javah')
+            args '-d', outputFolder
+            args '-classpath', sourceSets.simulation.output.classesDir
+            args 'edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary'
+            args 'edu.wpi.first.wpilibj.hal.HALUtil'
+            args 'edu.wpi.first.wpilibj.hal.JNIWrapper'
+        }
+    }
+}
+
+
 clean {
     delete generatedJNIHeaderLoc
+    delete generatedSimJNIHeaderLoc
 }
 
 // Ensures that the JNI headers have been downloaded and are in the correct location for generating the JNI build
