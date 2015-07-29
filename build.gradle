@@ -7,9 +7,13 @@ def libPattern = /.*((\\/|\\).*)+lib(?<libName>.+).so$/
 def niLibraryArgs = []
 def wpiLibraryArgs = []
 def niLibraryPath = file('ni-libraries').path
+def armNiLibraryPath = niLibraryPath+'/arm'
+def linuxNiLibraryPath = niLibraryPath+'/linux_x64_gcc-4.4'
+def winNiLibraryPath = niLibraryPath+'/win_i836_msvc-9'
+
 
 // The NI Library tree includes all non-wpi libraries, which is everything that doesn't have libwpi in the name
-def niLibraryTree = fileTree(niLibraryPath)
+def niLibraryTree = fileTree(armNiLibraryPath)
 niLibraryTree.include '*.so'
 niLibraryTree.exclude '*libwpi*.so'
 
@@ -118,11 +122,6 @@ subprojects {
                         }
                         staticLibArchiver.executable = compilerPrefix + staticLibArchiver.executable
                     }
-                    target('desktop'){
-                        cppCompiler.withArguments { args ->
-                            args << '-std=c++1y' << '-fPIC' << '-g3' << '-Wno-unused-parameter' << '-pedantic' << '-Werror'
-                        }
-                    }
                 }
                 // Workaround for OS X. Macs for some reason want to use Xcode's gcc
                 // (which just wraps Clang), so we have to explicitly make it so
@@ -157,9 +156,6 @@ subprojects {
                     architecture 'arm'
                     operatingSystem 'linux'
                 }
-                desktop {
-                    architecture 'x86_64'
-                }
             }
         }
 
@@ -170,13 +166,8 @@ subprojects {
             doLast {
                 binaries.all {
                     tasks.withType(CppCompile) {
-                        // desktop version doesn't use all the NI libraries
-                        // so only do this for arm libraries
-                        String platform = targetPlatform.toString()
-                        if (platform.contains('arm')){
-                            linker.args << '-L' + niLibraryPath
-                            linker.args.addAll(niLibraryArgs)
-                        }
+                        linker.args << '-L' + niLibraryPath
+                        linker.args.addAll(niLibraryArgs)
                     }
                 }
                 model {
