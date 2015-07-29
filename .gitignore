@@ -104,7 +104,6 @@ hs_err_pid*
 
 # Compiled Dynamic libraries
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -179,7 +178,7 @@ __pycache__
 # PDT-specific
 .buildpath
 
-# sbteclipse plugin 
+# sbteclipse plugin
 .target
 
 # TeXlipse plugin
