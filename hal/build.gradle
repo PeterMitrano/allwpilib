@@ -5,35 +5,7 @@
 apply plugin: 'cpp'
 
 model {
-    platforms {
-        arm {
-            architecture "arm"
-        }
-        x86_64 {
-            architecture "x86_64"
-        }
-    }
     components {
-        HALShared(NativeLibrarySpec) {
-            targetPlatform 'arm'
-            targetPlatform 'x86_64'
-            binaries.all {
-                if (toolChain in Gcc){
-                    cppCompiler.args "-std=c++1y"
-                }
-            }
-            sources {
-                cpp {
-                    source {
-                        srcDirs = ["lib/Shared"]
-                        includes = ["**/*.cpp"]
-                    }
-                    exportedHeaders {
-                        srcDirs = ["include", "lib/Shared"]
-                    }
-                }
-            }
-        }
         HALAthena(NativeLibrarySpec) {
             targetPlatform 'arm'
             tasks.withType(CppCompile) {
@@ -42,28 +14,31 @@ model {
             sources {
                 cpp {
                     source {
-                        srcDirs = ["lib/Athena", "lib/Athena/FRC_FPGA_ChipObject"]
+                        srcDirs = ["lib/Athena", "lib/Athena/FRC_FPGA_ChipObject", "lib/Shared"]
                         includes = ["**/*.cpp"]
                     }
                     exportedHeaders {
-                        srcDirs = ["include", "lib/Athena", "lib/Athena/FRC_FPGA_ChipObject"]
+                        srcDirs = ["include", "lib/Athena", "lib/Athena/FRC_FPGA_ChipObject", "lib/Shared"]
                     }
-                    lib project: ':hal', library: 'HALShared', linkage: 'static'
                 }
             }
         }
         HALDesktop(NativeLibrarySpec) {
-            targetPlatform 'x86_64'
+            binaries.all {
+                if (toolChain in Gcc){
+                    cppCompiler.args "-std=c++1y"
+                }
+            }
+
             sources {
                 cpp {
                     source {
-                        srcDirs = ["lib/Desktop"]
+                        srcDirs = ["lib/Desktop", "lib/Shared"]
                         includes = ["**/*.cpp"]
                     }
                     exportedHeaders {
-                        srcDirs = ["include", "lib/Desktop"]
+                        srcDirs = ["include", "lib/Desktop", "lib/Shared"]
                     }
-                    lib project: ':hal', library: 'HALShared', linkage: 'static'
                 }
             }
         }
