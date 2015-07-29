@@ -179,7 +179,6 @@
         </condition>
         <!-- TODO: launch gazebo once? -->
         <echo>[simulate] You may now run Gazebo</echo>
-        </exec>
       </sequential>
       <sequential>
         <sleep seconds="5"/>
