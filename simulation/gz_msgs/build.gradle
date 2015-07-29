@@ -1,0 +1,20 @@
+//imports
+import org.apache.tools.ant.filters.ReplaceTokens
+
+//plugins
+// proto files are build by the protobuf plugin
+apply plugin: 'protobuf'
+
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath 'com.andrewkroh.gradle:gradle-protobuf-plugin:0.4.0'
+  }
+}
+
+repositories {
+  mavenCentral()
+}

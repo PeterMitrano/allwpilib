@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(gz_msgs)
 
 #list all proto files used
-get_filename_component(PROTO_DIR proto ABSOLUTE)
+get_filename_component(PROTO_DIR src/main/proto ABSOLUTE)
 set(msgs
   "${PROTO_DIR}/bool.proto"
   "${PROTO_DIR}/driver-station.proto"
@@ -25,7 +25,7 @@ foreach(FIL ${msgs})
       "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
       "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-    ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path=${PROTO_DIR} ${ABS_FIL} 
+    ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path=${PROTO_DIR} ${ABS_FIL}
     COMMENT "compiling ${ABS_FIL}"
     VERBATIM)
 endforeach()
@@ -67,7 +67,7 @@ get_filename_component(CONF_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL
 get_filename_component(CONF_LIBRARY_DIRS ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME} ABSOLUTE)
 set (CONF_LIBRARY ${PROJECT_NAME})
 
-#fill in all the variables in the cmake file 
+#fill in all the variables in the cmake file
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
 
 #install gz_msgs.cmake
