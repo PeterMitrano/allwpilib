@@ -37,7 +37,6 @@ set (INCLUDE_FOLDERS include
   ../wpilibC++/include
   ../../networktables/cpp/include
   ../../hal/include
-  ../../hal/lib/Athena
   ${Boost_INCLUDE_DIR}
   ${GAZEBO_INCLUDE_DIRS})
 
