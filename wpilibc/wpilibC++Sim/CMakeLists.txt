@@ -52,7 +52,11 @@ endif()
 
 include_directories(${INCLUDE_FOLDERS})
 
-link_directories(${GAZEBO_LIBRARY_DIRS})
+get_filename_component(HALDESKTOP_LIBRARY_DIR
+  "../../hal/build/binaries/hALDesktopStaticLibrary"
+  ABSOLUTE)
+
+link_directories(${GAZEBO_LIBRARY_DIRS} ${HALDESKTOP_LIBRARY_DIR})
 
 if (WIN32)
   add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
@@ -60,10 +64,17 @@ else()
   add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
 endif()
 
-target_link_libraries(WPILibSim gz_msgs ${PTHREAD_LIBRARY} ${Boost_LIBRARIES} ${GAZEBO_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}  -fPIC) # NetworkTables
+# gz msgs can be found because it's in the build directory
+# and that was added to link_directories in the global cmake
+target_link_libraries(WPILibSim
+  gz_msgs
+  HALDesktop
+  ${PTHREAD_LIBRARY}
+  ${Boost_LIBRARIES}
+  ${GAZEBO_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
+  -fPIC) # NetworkTables
 
 if (WIN32)
   set_target_properties(${project}  PROPERTIES LINK_FLAGS "/DEBUG")
 endif()
-
-#copy to eclipse plugin

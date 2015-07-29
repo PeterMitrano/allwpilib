@@ -118,6 +118,11 @@ subprojects {
                         }
                         staticLibArchiver.executable = compilerPrefix + staticLibArchiver.executable
                     }
+                    target('desktop'){
+                        cppCompiler.withArguments { args ->
+                            args << '-std=c++1y' << '-fPIC' << '-g3' << '-Wno-unused-parameter' << '-pedantic' << '-Werror'
+                        }
+                    }
                 }
                 // Workaround for OS X. Macs for some reason want to use Xcode's gcc
                 // (which just wraps Clang), so we have to explicitly make it so
@@ -151,6 +156,9 @@ subprojects {
                 arm {
                     architecture 'arm'
                     operatingSystem 'linux'
+                }
+                desktop {
+                    architecture 'x86_64'
                 }
             }
         }

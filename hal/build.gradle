@@ -24,12 +24,7 @@ model {
             }
         }
         HALDesktop(NativeLibrarySpec) {
-            binaries.all {
-                if (toolChain in Gcc){
-                    cppCompiler.args "-std=c++1y"
-                }
-            }
-
+            targetPlatform 'desktop'
             sources {
                 cpp {
                     source {

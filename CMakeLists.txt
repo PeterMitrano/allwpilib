@@ -36,7 +36,7 @@ if(WIN32)
   # defines things like M_PI
   add_definitions(-D_USE_MATH_DEFINES)
 
-  # get rid of min max macros on windows 
+  # get rid of min max macros on windows
   add_definitions(-DNOMINMAX)
 
   # aww yea
@@ -47,7 +47,7 @@ if(WIN32)
 endif()
 
 if (MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFRC_SIMULATOR /MDd /Zi")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -DFRC_SIMULATOR /MDd /Zi")
 else ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -DFRC_SIMULATOR -Wno-unused-parameter -pthread -fPIC -fpermissive")
 endif()
