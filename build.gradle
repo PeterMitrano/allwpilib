@@ -156,6 +156,9 @@ subprojects {
                     architecture 'arm'
                     operatingSystem 'linux'
                 }
+                desktop {
+                    architecture 'x86_amd64'
+                }
             }
         }
 
@@ -166,7 +169,7 @@ subprojects {
             doLast {
                 binaries.all {
                     tasks.withType(CppCompile) {
-                        linker.args << '-L' + niLibraryPath
+                        linker.args << '-L' + armNiLibraryPath
                         linker.args.addAll(niLibraryArgs)
                     }
                 }
