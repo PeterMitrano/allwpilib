@@ -13,6 +13,7 @@ Notifier *Notifier::timerQueueHead = nullptr;
 priority_recursive_mutex Notifier::queueMutex;
 int Notifier::refcount = 0;
 ::std::atomic<bool> Notifier::m_stopped(false);
+::std::thread Notifier::m_task;
 
 /**
  * Create a Notifier for timer event notification.

@@ -103,11 +103,7 @@ void DriverStation::GetData() {
  * @return The battery voltage in Volts.
  */
 float DriverStation::GetBatteryVoltage() const {
-  int32_t status = 0;
-  float voltage = getVinVoltage(&status);
-  wpi_setErrorWithContext(status, "getVinVoltage");
-
-  return voltage;
+  return 12;
 }
 
 /**

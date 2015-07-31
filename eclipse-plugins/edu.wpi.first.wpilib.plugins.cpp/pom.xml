@@ -66,14 +66,22 @@
                                     <artifactId>cpp-root</artifactId>
                                     <version>1.0.0</version>
                                     <type>zip</type>
-                                    <destFileName>cpp-root.jar</destFileName>
+                                    <destFileName>cpp-root.zip</destFileName>
                                 </artifactItem>
                                 <artifactItem>
                                     <groupId>edu.wpi.first.wpilibc.simulation</groupId>
-                                    <artifactId>WPILibCSim</artifactId>
+                                    <!-- artifact ID matches that of the corresponding publish in gradle -->
+                                    <artifactId>wpilibcSim-include</artifactId>
                                     <version>0.1.0</version>
                                     <type>zip</type>
                                     <destFileName>sim-include.zip</destFileName>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>edu.wpi.first.wpilibc.simulation</groupId>
+                                    <artifactId>wpilibcSim-lib</artifactId>
+                                    <version>0.1.0</version>
+                                    <type>zip</type>
+                                    <destFileName>sim-lib.zip</destFileName>
                                 </artifactItem>
                             </artifactItems>
                             <outputDirectory>${project.build.directory}</outputDirectory>
@@ -154,8 +162,9 @@
                             <target>
                                 <unzip dest="${cpp-zip}">
                                     <fileset dir="${project.build.directory}">
-                                        <include name="cpp-root.jar"/>
+                                        <include name="cpp-root.zip"/>
                                         <include name="sim-include.zip"/>
+                                        <include name="sim-lib.zip"/>
                                     </fileset>
                                 </unzip>
                             </target>
@@ -205,7 +214,13 @@
         </dependency>
         <dependency>
             <groupId>edu.wpi.first.wpilibc.simulation</groupId>
-            <artifactId>WPILibCSim</artifactId>
+            <artifactId>wpilibcSim-lib</artifactId>
+            <version>0.1.0</version>
+            <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>edu.wpi.first.wpilibc.simulation</groupId>
+            <artifactId>wpilibcSim-include</artifactId>
             <version>0.1.0</version>
             <type>zip</type>
         </dependency>

@@ -122,7 +122,15 @@ subprojects {
                         }
                         staticLibArchiver.executable = compilerPrefix + staticLibArchiver.executable
                     }
+                    target('desktop') {
+                        cppCompiler.withArguments { args ->
+                            args << '-std=c++1y' << '-Wformat=2' << '-Wall' << '-Wextra' << '-Werror' << '-pedantic'
+                            args << '-Wno-psabi' << '-Wno-unused-parameter' << '-fPIC' << '-O0' << '-g3' << '-rdynamic'
+                            args << '-Wno-error=deprecated-declarations'
+                        }
+                    }
                 }
+
                 // Workaround for OS X. Macs for some reason want to use Xcode's gcc
                 // (which just wraps Clang), so we have to explicitly make it so
                 // that trying to compile with Clang will call gcc instead
@@ -150,14 +158,13 @@ subprojects {
                 }
             }
 
-            // The only platform is arm linux
             platforms {
                 arm {
                     architecture 'arm'
                     operatingSystem 'linux'
                 }
                 desktop {
-                    architecture 'x86_amd64'
+                    architecture 'x86_64'
                 }
             }
         }
@@ -169,8 +176,12 @@ subprojects {
             doLast {
                 binaries.all {
                     tasks.withType(CppCompile) {
-                        linker.args << '-L' + armNiLibraryPath
-                        linker.args.addAll(niLibraryArgs)
+                        //will return "platform 'arm'" or "platform 'desktop'" ect...
+                        String platform = targetPlatform.toString();
+                        if (platform.contains("arm")){
+                            linker.args << '-L' + armNiLibraryPath
+                            linker.args.addAll(niLibraryArgs)
+                        }
                     }
                 }
                 model {

@@ -12,6 +12,11 @@ void HALSetNewDataSem(NATIVE_MULTIWAIT_ID sem)
 	setNewDataSem(sem);
 }
 
+int HALSetErrorData(const char *errors, int errorsLength, int wait_ms)
+{
+	return setErrorData(errors, errorsLength, wait_ms);
+}
+
 int HALGetAllianceStation(enum HALAllianceStationID *allianceStation)
 {
 	return FRC_NetworkCommunication_getAllianceStation((AllianceStationID_t*) allianceStation);

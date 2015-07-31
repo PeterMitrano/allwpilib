@@ -14,7 +14,5 @@
 
 namespace wpilib { namespace internal {
     extern double simTime;
-    extern ::std::condition_variable time_wait;
-    extern ::std::mutex time_wait_mutex;
     extern void time_callback(const msgs::ConstFloat64Ptr &msg);
 }}

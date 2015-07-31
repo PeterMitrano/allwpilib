@@ -24,7 +24,7 @@ class DriverStation : public SensorBase, public RobotStateInterface {
  public:
   enum Alliance { kRed, kBlue, kInvalid };
 
-  virtual ~DriverStation();
+  virtual ~DriverStation() = default;
   static DriverStation &GetInstance();
   static void ReportError(std::string error);
 

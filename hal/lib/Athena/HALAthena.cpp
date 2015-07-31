@@ -181,11 +181,6 @@ bool getFPGAButton(int32_t *status)
 	return global->readUserButton(status);
 }
 
-int HALSetErrorData(const char *errors, int errorsLength, int wait_ms)
-{
-	return setErrorData(errors, errorsLength, wait_ms);
-}
-
 
 bool HALGetSystemActive(int32_t *status)
 {

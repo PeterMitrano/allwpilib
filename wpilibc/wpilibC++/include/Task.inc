@@ -22,5 +22,7 @@ Task::Task(const std::string& name, Function&& function, Args&&... args) {
 
   static std::atomic<int32_t> instances{0};
   instances++;
+#ifndef FRC_SIMULATOR
   HALReport(HALUsageReporting::kResourceType_Task, instances, 0, m_taskName.c_str());
+#endif
 }

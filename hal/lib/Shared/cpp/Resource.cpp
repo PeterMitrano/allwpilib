@@ -59,7 +59,7 @@ uint32_t Resource::Allocate(const char *resourceDesc)
 		}
 	}
 	// TODO: wpi_setWPIErrorWithContext(NoAvailableResources, resourceDesc);
-	return ~0ul;
+	return (uint32_t)~0ul;
 }
 
 /**
@@ -73,12 +73,12 @@ uint32_t Resource::Allocate(uint32_t index, const char *resourceDesc)
 	if (index >= m_isAllocated.size())
 	{
 		// TODO: wpi_setWPIErrorWithContext(ChannelIndexOutOfRange, resourceDesc);
-		return ~0ul;
+		return (uint32_t)~0ul;
 	}
 	if ( m_isAllocated[index] )
 	{
 		// TODO: wpi_setWPIErrorWithContext(ResourceAlreadyAllocated, resourceDesc);
-		return ~0ul;
+		return (uint32_t)~0ul;
 	}
 	m_isAllocated[index] = true;
 	return index;
@@ -93,7 +93,7 @@ uint32_t Resource::Allocate(uint32_t index, const char *resourceDesc)
 void Resource::Free(uint32_t index)
 {
 	std::unique_lock<priority_recursive_mutex> sync(m_allocateLock);
-	if (index == ~0ul) return;
+	if (index == (uint32_t)~0ul) return;
 	if (index >= m_isAllocated.size())
 	{
 		// TODO: wpi_setWPIError(NotAllocated);

@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
-project(WPILibSim)
+project(WPILibC++Sim)
 
 if (WIN32)
+  #used in common headers like Notifier.h
+  add_definitions(-DFRC_SIMULATOR)
+
   #temporary until we build dlls
   add_definitions(-DBUILDING_STATIC_LIBS)
 
@@ -56,19 +59,26 @@ get_filename_component(HALDESKTOP_LIBRARY_DIR
   "../../hal/build/binaries/hALDesktopStaticLibrary"
   ABSOLUTE)
 
-link_directories(${GAZEBO_LIBRARY_DIRS} ${HALDESKTOP_LIBRARY_DIR})
+if (WIN32)
+  get_filename_component(NI_LIBRARY_DIR "../../ni-libraries/win_i386_msvc-9" ABSOLUTE)
+else()
+  get_filename_component(NI_LIBRARY_DIR "../../ni-libraries/linux_x64_gcc-4.4" ABSOLUTE)
+endif()
+
+link_directories(${GAZEBO_LIBRARY_DIRS} ${HALDESKTOP_LIBRARY_DIR} ${NI_LIBRARY_DIR})
 
 if (WIN32)
-  add_library(WPILibSim ${SRC_FILES} ${COM_SRC_FILES})
+  add_library(${PROJECT_NAME} ${SRC_FILES} ${COM_SRC_FILES})
 else()
-  add_library(WPILibSim SHARED ${SRC_FILES} ${COM_SRC_FILES})
+  add_library(${PROJECT_NAME} SHARED ${SRC_FILES} ${COM_SRC_FILES})
 endif()
 
 # gz msgs can be found because it's in the build directory
 # and that was added to link_directories in the global cmake
-target_link_libraries(WPILibSim
+target_link_libraries(${PROJECT_NAME}
   gz_msgs
   HALDesktop
+  FRC_NetworkCommunication
   ${PTHREAD_LIBRARY}
   ${Boost_LIBRARIES}
   ${GAZEBO_LIBRARIES}
@@ -76,5 +86,6 @@ target_link_libraries(WPILibSim
   -fPIC) # NetworkTables
 
 if (WIN32)
-  set_target_properties(${project}  PROPERTIES LINK_FLAGS "/DEBUG")
+  set_target_properties(${PROJECT_NAME}  PROPERTIES LINK_FLAGS "/DEBUG")
 endif()
+

@@ -10,6 +10,9 @@ set(msgs
   "${PROTO_DIR}/frc_joystick.proto"
 )
 
+set (GZ_MSGS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/gz_msgs")
+file(MAKE_DIRECTORY ${GZ_MSGS_INCLUDE_DIR})
+
 set(PROTO_SRCS)
 set(PROTO_HDRS)
 set(MSGS_HEADER "${CMAKE_CURRENT_BINARY_DIR}/msgs.h")
@@ -17,15 +20,15 @@ foreach(FIL ${msgs})
   get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
   get_filename_component(FIL_WE ${FIL} NAME_WE)
 
-  list(APPEND PROTO_SRCS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc")
-  list(APPEND PROTO_HDRS "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h")
+  list(APPEND PROTO_SRCS "${GZ_MSGS_INCLUDE_DIR}/${FIL_WE}.pb.cc")
+  list(APPEND PROTO_HDRS "${GZ_MSGS_INCLUDE_DIR}/${FIL_WE}.pb.h")
 
   add_custom_command(
     OUTPUT
-      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.cc"
-      "${CMAKE_CURRENT_BINARY_DIR}/${FIL_WE}.pb.h"
+    "${GZ_MSGS_INCLUDE_DIR}/${FIL_WE}.pb.cc"
+    "${GZ_MSGS_INCLUDE_DIR}/${FIL_WE}.pb.h"
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
-    ARGS --cpp_out=${CMAKE_CURRENT_BINARY_DIR} --proto_path=${PROTO_DIR} ${ABS_FIL}
+    ARGS --cpp_out=${GZ_MSGS_INCLUDE_DIR} --proto_path=${PROTO_DIR} ${ABS_FIL}
     COMMENT "compiling ${ABS_FIL}"
     VERBATIM)
 endforeach()
@@ -55,23 +58,3 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${PROTOBUF_LIBRARIES})
-
-
-#we want msgs to be used by the plugins and wpilibC++Sim, so we used a gz_msgs-config.cmake
-#install
-install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
-install(FILES ${MSGS_HEADER} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
-install(FILES ${PROTO_HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/msgs)
-
-get_filename_component(CONF_INCLUDE_DIRS ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR} ABSOLUTE)
-get_filename_component(CONF_LIBRARY_DIRS ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME} ABSOLUTE)
-set (CONF_LIBRARY ${PROJECT_NAME})
-
-#fill in all the variables in the cmake file
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/gz_msgs-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake @ONLY)
-
-#install gz_msgs.cmake
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/gz_msgs-config.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME})
-
-#install gz_msgs to wpilib folder as well
-install(TARGETS ${PROJECT_NAME} DESTINATION $ENV{HOME}/wpilib/simulation/plugins/)

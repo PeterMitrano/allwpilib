@@ -28,10 +28,18 @@ publishing {
             artifactId 'cpp-root'
             version '1.0.0'
         }
-        mavenSim(MavenPublication) {
-            artifact wpilibcSimZip
+        mavenSimInclude(MavenPublication) {
+            //the related gradle task
+            artifact wpilibcSimIncludeZip
             groupId 'edu.wpi.first.wpilibc.simulation'
-            artifactId 'WPILibCSim'
+            artifactId 'wpilibcSim-include'
+            version '0.1.0'
+        }
+        mavenSimLib(MavenPublication) {
+            //the related gradle task
+            artifact wpilibcSimLibZip
+            groupId 'edu.wpi.first.wpilibc.simulation'
+            artifactId 'wpilibcSim-lib'
             version '0.1.0'
         }
     }
@@ -116,7 +124,7 @@ doxygen {
 task wpilibcZip(type: Zip) {
     description = 'Zips all of the libraries for wpilibc'
     group = 'WPILib'
-    baseName = 'wpilibc'
+    baseName = 'wpilibC++'
     destinationDir = project.buildDir
 
     // If doxygen is available on this computer, then include the output zip
@@ -125,7 +133,6 @@ task wpilibcZip(type: Zip) {
             into 'docs'
         }
     }
-
     // Include the static library file and header files from this project
     binaries.withType(StaticLibraryBinarySpec) { spec ->
         spec.headerDirs.each {
@@ -134,7 +141,13 @@ task wpilibcZip(type: Zip) {
             }
         }
         from(spec.staticLibraryFile) {
-            into 'lib'
+            String platform = targetPlatform.toString();
+            if (platform.contains("arm")){
+              into 'lib/arm'
+            }
+            else if (platform.conatins("desktop")){
+              into 'lib/desktop'
+            }
         }
     }
 
@@ -147,7 +160,7 @@ task wpilibcZip(type: Zip) {
             }
         }
         from(spec.staticLibraryFile) {
-            into 'lib'
+            into 'lib/arm'
         }
     }
 
@@ -162,12 +175,12 @@ task wpilibcZip(type: Zip) {
             }
         }
         from(spec.staticLibraryFile) {
-            into 'lib'
+            into 'lib/arm'
         }
     }
     hal.binaries.withType(SharedLibraryBinarySpec) { spec ->
         from(spec.sharedLibraryFile) {
-            into 'lib'
+            into 'lib/arm'
         }
     }
 
@@ -181,18 +194,29 @@ task wpilibcZip(type: Zip) {
     }
 }
 
-task wpilibcSimZip(type: Zip) {
-    description 'Creates the include zip file for wpilibc'
+task wpilibcSimIncludeZip(type: Zip) {
+    description 'Creates the include zip file for wpilibc++sim'
     group 'wpilib'
-    baseName 'WPILibCSim'
+    baseName 'sim-includes'
     destinationDir = project.buildDir
     into 'sim/include'
     from "${sim}/include"
     from "${shared}/include"
+    from "../build/simulation/gz_msgs/generated"
     from '../networktables/cpp/include'
     from '../hal/include'
 }
 
+task wpilibcSimLibZip(type: Zip) {
+    description 'Creates the lib zip file for wpilibc++sim'
+    group 'wpilib'
+    baseName 'sim-lib'
+    destinationDir = project.buildDir
+    into 'sim/lib'
+    from "../build/wpilibc/wpilibC++Sim"
+    from "../build/simulation/gz_msgs"
+    include "*.so"
+}
 // Add the dependency on the wpilib_nonsharedStaticLibrary task to the wpilibc task. Because of the gradle lifecycle,
 // this cannot be done purely with dependsOn in the task, as the static library task doesn't exist yet. Same goes for
 // the networkTablesStaticLibrary task and the two HAL tasks below
@@ -213,6 +237,9 @@ project(':networktables:cpp').tasks.whenTaskAdded { task ->
 project(':hal').tasks.whenTaskAdded { task ->
     if (task.name == 'hALAthenaStaticLibrary' || task.name == 'hALAthenaSharedLibrary') {
         wpilibcZip.dependsOn task
+    }
+    if (task.name == 'hALDesktopStaticLibrary' || task.name == 'hALDesktopSharedLibrary') {
+        wpilibcSimLibZip.dependsOn task
     }
 }
 

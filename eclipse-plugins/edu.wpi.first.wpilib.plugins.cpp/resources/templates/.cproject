@@ -33,8 +33,8 @@
 								<option id="gnu.cpp.compiler.option.optimization.level.1204256582" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.969129918" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.394786621" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${WPILIB}/cpp/current/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
+									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/include"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/src}"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.dialect.std.1060340803" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++1y" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1033680971" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -45,7 +45,7 @@
 									<listOptionValue builtIn="false" value="wpi"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1566479969" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;${WPILIB}/cpp/current/lib&quot;"/>
+                                    <listOptionValue builtIn="false" value="${WPILIB}/cpp/current/lib/arm"/>
 								</option>
 								<option id="gnu.cpp.link.option.flags.675338432" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-rpath,/opt/GenICam_v2_3/bin/Linux_armv7-a" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.132949138" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
@@ -85,11 +85,12 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.158466008" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.compiler.base.2105416021" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.1645322059" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/src&quot;"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}}/src"/>
 									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/sim/include"/>
 									<listOptionValue builtIn="false" value="/usr/include"/>
-									<listOptionValue builtIn="false" value="/usr/include/gazebo-5.0"/>
-									<listOptionValue builtIn="false" value="/usr/include/sdformat-2.3"/>
+									<listOptionValue builtIn="false" value="/usr/include/gazebo-6.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/sdformat-3.0"/>
+                  <listOptionValue builtIn="false" value="/usr/include/ignition/math2"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.1648211502" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.937474733" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
@@ -107,7 +108,8 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.66697269" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.2094820582" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
 								<option id="gnu.cpp.link.option.libs.1563598353" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" value="WPILibSim"/>
+									<listOptionValue builtIn="false" value="WPILibC++Sim"/>
+									<listOptionValue builtIn="false" value="gz_msgs"/>
 									<listOptionValue builtIn="false" value="gazebo"/>
 									<listOptionValue builtIn="false" value="gazebo_transport"/>
 									<listOptionValue builtIn="false" value="gazebo_msgs"/>
@@ -119,7 +121,10 @@
 								</option>
 								<option id="gnu.cpp.link.option.paths.1677933356" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu"/>
-									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/gazebo-5.0/plugins"/>
+									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/gazebo-6.0/plugins"/>
+									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/lib/linux_x64_gcc-4.4"/>
+									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/lib/win_i386_msvc-9"/>
+									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/sim/lib"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.152327207" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
@@ -164,25 +169,24 @@
 								<option id="gnu.c.compiler.option.misc.other.1387357347" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1953150292" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
-							<tool command="&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\cl&quot;" commandLinePattern="${COMMAND} ${FLAGS} /Fo${OUTPUT_PREFIX}${OUTPUT} ${INPUTS} /wd4068 /EHsc" errorParsers="" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.809153465" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
+							<tool command="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\amd64\cl" commandLinePattern="${COMMAND} ${FLAGS} /Fo${OUTPUT_PREFIX}${OUTPUT} ${INPUTS} /wd4068 /EHsc" errorParsers="" id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.809153465" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler">
 								<option id="gnu.cpp.compiler.option.include.paths.599803694" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\wpilib\cpp\current\sim\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\allwpilib\wpilibc\wpilibC++Sim\msgs\build&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Windows Kits\8.1\Include\um&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Windows Kits\8.1\Include\winrt&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Windows Kits\8.1\Include\shared&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\gazebo\build\install\Debug\include\gazebo-6.0&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\sdformat\build\install\Debug\include\sdformat-3.0&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\ign-math\build\install\Debug\include\ignition\math2&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\FreeImage-vc12-x64-release-debug\Source&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\protobuf-2.6.0-win64-vc12\src&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\dlfcn-win32-vc12-x64-release-debug\build\install\Debug\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\tbb43_20141023oss\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\sdformat\src\win\tinyxml&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\pthread-w32\include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\Users\peter\gz-ws\boost_1_56_0&quot;"/>
+									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/src}"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\wpilib\cpp\current\sim\include"/>
+									<listOptionValue builtIn="false" value="C:\Program Files (x86)\Windows Kits\8.1\Include\um"/>
+									<listOptionValue builtIn="false" value="C:\Program Files (x86)\Windows Kits\8.1\Include\winrt"/>
+									<listOptionValue builtIn="false" value="C:\Program Files (x86)\Windows Kits\8.1\Include\shared"/>
+									<listOptionValue builtIn="false" value="C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\gazebo\build\install\Debug\include\gazebo-6.0"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\sdformat\build\install\Debug\include\sdformat-3.0"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\ign-math\build\install\Debug\include\ignition\math2"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\FreeImage-vc12-x64-release-debug\Source"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\protobuf-2.6.0-win64-vc12\src"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\dlfcn-win32-vc12-x64-release-debug\build\install\Debug\include"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\tbb43_20141023oss\include"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\sdformat\src\win\tinyxml"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\pthread-w32\include"/>
+									<listOptionValue builtIn="false" value="C:\Users\peter\gz-ws\boost_1_56_0"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.1265709272" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1058836115" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
@@ -199,7 +203,8 @@
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1150869869" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1090661906" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker"/>
-							<tool command="&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\vc\bin\link&quot;" commandLinePattern="${COMMAND} /LIBPATH:&quot;C:\Users\peter\gz-ws\FreeImage-vc12-x64-release-debug\x64\Debug\DLL&quot; /LIBPATH:&quot;C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\boost_1_56_0\lib64-msvc-12.0&quot;  /LIBPATH:&quot;C:\Users\peter\allwpilib\wpilibc\wpilibC++Sim\msgs\build&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\pthread-w32\lib\x64&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\ign-math\build\install\Debug\lib&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\libcurl-vc12-x64-release-debug-static-ipv6-sspi-winssl\Debug\lib&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\sdformat\build\install\Debug\lib&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\protobuf-2.6.0-win64-vc12\vsprojects\Debug&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\gazebo\build\install\Debug\lib&quot;  /LIBPATH:&quot;C:\Users\peter\allwpilib\wpilibc\wpilibC++Sim\build&quot; /LIBPATH:&quot;C:\Users\peter\gz-ws\tbb43_20141023oss\lib\intel64\vc12&quot;   /LIBPATH:&quot;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\lib\amd64&quot; /LIBPATH:&quot;C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64&quot; ${FLAGS} /OUT:${OUTPUT_PREFIX}${OUTPUT} ${INPUTS} /DEBUG WPILibSim.lib gazebo.lib gazebo_transport.lib gazebo_msgs.lib  gazebo_common.lib gazebo_math.lib libprotobuf.lib sdformat.lib libcurl_a_debug.lib ignition-math2.lib pthreadVC2.lib gz_msgs.lib IPHlpApi.lib /NODEFAULTLIB:libboost_system-vc120-mt-gd-1_56.lib /NODEFAULTLIB:libboost_thread-vc120-mt-gd-1_56.lib FreeImaged.lib" errorParsers="" id="cdt.managedbuild.tool.gnu.cross.cpp.linker.680547965" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+              <tool command="C:\Program Files (x86)\Microsoft Visual Studio 12.0\vc\bin\link" commandLinePattern="${COMMAND} /LIBPATH:C:\Users\peter\gz-ws\FreeImage-vc12-x64-release-debug\x64\Debug\DLL /LIBPATH:C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64 /LIBPATH:C:\Users\peter\gz-ws\boost_1_56_0\lib64-msvc-12.0  /LIBPATH:${WPILIB}\cpp\current\lib\win_i386_msvc-9 /LIBPATH:${WPILIB}\cpp\current\sim\lib /LIBPATH:C:\Users\peter\gz-ws\pthread-w32\lib\x64 /LIBPATH:C:\Users\peter\gz-ws\ign-math\build\install\Debug\lib /LIBPATH:C:\Users\peter\gz-ws\libcurl-vc12-x64-release-debug-static-ipv6-sspi-winssl\Debug\lib /LIBPATH:C:\Users\peter\gz-ws\sdformat\build\install\Debug\lib /LIBPATH:C:\Users\peter\gz-ws\protobuf-2.6.0-win64-vc12\vsprojects\Debug /LIBPATH:C:\Users\peter\gz-ws\gazebo\build\install\Debug\lib /LIBPATH:C:\Users\peter\gz-ws\tbb43_20141023oss\lib\intel64\vc12   /LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\lib\amd64 /LIBPATH:C:\Program Files (x86)\Windows Kits\8.1\Lib\winv6.3\um\x64 ${FLAGS} /OUT:${OUTPUT_PREFIX}${OUTPUT} ${INPUTS} /DEBUG WPILibSim.lib gazebo.lib gazebo_transport.lib gazebo_msgs.lib  gazebo_common.lib gazebo_math.lib libprotobuf.lib sdformat.lib libcurl_a_debug.lib ignition-math2.lib pthreadVC2.lib gz_msgs.lib IPHlpApi.lib /NODEFAULTLIB:libboost_system-vc120-mt-gd-1_56.lib /NODEFAULTLIB:libboost_thread-vc120-mt-gd-1_56.lib FreeImaged.lib" errorParsers="" id="cdt.managedbuild.tool.gnu.cross.cpp.linker.680547965" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker">
+
 								<option id="gnu.cpp.link.option.libs.231732731" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs"/>
 								<option id="gnu.cpp.link.option.paths.122555745" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths"/>
 								<option id="gnu.cpp.link.option.shared.1816604740" name="Shared (-shared)" superClass="gnu.cpp.link.option.shared" value="false" valueType="boolean"/>
