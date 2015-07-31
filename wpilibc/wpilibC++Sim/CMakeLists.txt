@@ -59,11 +59,7 @@ get_filename_component(HALDESKTOP_LIBRARY_DIR
   "../../hal/build/binaries/hALDesktopStaticLibrary"
   ABSOLUTE)
 
-if (WIN32)
-  get_filename_component(NI_LIBRARY_DIR "../../ni-libraries/win_i386_msvc-9" ABSOLUTE)
-else()
-  get_filename_component(NI_LIBRARY_DIR "../../ni-libraries/linux_x64_gcc-4.4" ABSOLUTE)
-endif()
+get_filename_component(NI_LIBRARY_DIR "../../ni-libraries/desktop" ABSOLUTE)
 
 link_directories(${GAZEBO_LIBRARY_DIRS} ${HALDESKTOP_LIBRARY_DIR} ${NI_LIBRARY_DIR})
 

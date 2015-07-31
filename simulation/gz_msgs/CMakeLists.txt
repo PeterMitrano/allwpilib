@@ -10,12 +10,12 @@ set(msgs
   "${PROTO_DIR}/frc_joystick.proto"
 )
 
-set (GZ_MSGS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/gz_msgs")
+set (GZ_MSGS_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated/simulation/gz_msgs")
 file(MAKE_DIRECTORY ${GZ_MSGS_INCLUDE_DIR})
 
 set(PROTO_SRCS)
 set(PROTO_HDRS)
-set(MSGS_HEADER "${CMAKE_CURRENT_BINARY_DIR}/msgs.h")
+set(MSGS_HEADER "${GZ_MSGS_INCLUDE_DIR}/msgs.h")
 foreach(FIL ${msgs})
   get_filename_component(ABS_FIL ${FIL} ABSOLUTE)
   get_filename_component(FIL_WE ${FIL} NAME_WE)
@@ -43,7 +43,7 @@ set (message_headers "" CACHE INTERNAL "Include dirs description")
 
 #add includes to the msgs.h file
 foreach (hdr ${PROTO_HDRS})
-  string (REPLACE "${CMAKE_CURRENT_BINARY_DIR}/" "" hdr ${hdr})
+  string (REPLACE "${CMAKE_CURRENT_BINARY_DIR}/generated/" "" hdr ${hdr})
   APPEND_TO_CACHED_STRING(message_headers
     "Message Types" "#include \"${hdr}\"\n")
 endforeach()
