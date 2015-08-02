@@ -3,7 +3,8 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 //plugins
 // proto files are build by the protobuf plugin
-apply plugin: 'protobuf'
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
 
 buildscript {
   repositories {
@@ -11,7 +12,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.andrewkroh.gradle:gradle-protobuf-plugin:0.4.0'
+    classpath 'com.google.protobuf:protobuf-gradle-plugin:0.6.1'
   }
 }
 
