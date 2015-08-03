@@ -9,7 +9,7 @@ model {
         HALAthena(NativeLibrarySpec) {
             targetPlatform 'arm'
             tasks.withType(CppCompile) {
-                dependsOn addNiLibraryLinks
+                dependsOn addArmNiLibraryLinks
             }
             sources {
                 cpp {
@@ -25,6 +25,15 @@ model {
         }
         HALDesktop(NativeLibrarySpec) {
             targetPlatform 'desktop'
+            binaries.all {
+                if (toolChain in VisualCpp){
+                    cppCompiler.define "FRC_SIMULATOR"
+                    cppCompiler.args "/EHsc"
+                }
+            }
+            tasks.withType(CppCompile) {
+                dependsOn addDesktopNiLibraryLinks
+            }
             sources {
                 cpp {
                     source {

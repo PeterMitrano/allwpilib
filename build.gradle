@@ -4,30 +4,44 @@ import org.apache.tools.ant.taskdefs.condition.Os
 // then the name of the library itself, and finally the .so extension at the end. The name of the library
 // is in the libName capture group, which is extracted and used for the linker flags
 def libPattern = /.*((\\/|\\).*)+lib(?<libName>.+).so$/
-def niLibraryArgs = []
+def armNiLibraryArgs = []
+def desktopNiLibraryArgs = []
 def wpiLibraryArgs = []
 def niLibraryPath = file('ni-libraries').path
 def armNiLibraryPath = niLibraryPath+'/arm'
-def linuxNiLibraryPath = niLibraryPath+'/linux_x64_gcc-4.4'
-def winNiLibraryPath = niLibraryPath+'/win_i836_msvc-9'
+def desktopNiLibraryPath = niLibraryPath+'/desktop'
 
 
 // The NI Library tree includes all non-wpi libraries, which is everything that doesn't have libwpi in the name
-def niLibraryTree = fileTree(armNiLibraryPath)
-niLibraryTree.include '*.so'
-niLibraryTree.exclude '*libwpi*.so'
+def armNiLibraryTree = fileTree(armNiLibraryPath)
+armNiLibraryTree.include '*.so'
+armNiLibraryTree.exclude '*libwpi*.so'
+
+def desktopNiLibraryTree = fileTree(desktopNiLibraryPath)
+desktopNiLibraryTree.include '*.so'
+desktopNiLibraryTree.exclude '*libwpi*.so'
 
 // This adds all linker flags to the list of ni library linker flags
-niLibraryTree.each { lib ->
+armNiLibraryTree.each { lib ->
     def nameMatcher = (lib.path =~ libPattern)
     if (nameMatcher[0].size() > 1) {
         def name = nameMatcher.group('libName')
-        niLibraryArgs << '-l' + name
+        armNiLibraryArgs << '-l' + name
     }
 }
 
+// This adds all linker flags to the list of ni library linker flags
+desktopNiLibraryTree.each { lib ->
+    def nameMatcher = (lib.path =~ libPattern)
+    if (nameMatcher[0].size() > 1) {
+        def name = nameMatcher.group('libName')
+        desktopNiLibraryArgs << '-l' + name
+    }
+}
+
+
 // The WPI libraries are libraries in the ni-libraries folder that have libwpi in their names
-def wpiLibraryTree = fileTree(niLibraryPath)
+def wpiLibraryTree = fileTree(armNiLibraryPath)
 wpiLibraryTree.include '*libwpi*.so'
 
 // This adds all linker flags to the list of wpi library linker flags
@@ -97,6 +111,9 @@ subprojects {
             }
             // Adds a custom toolchain for our compiler prefix and options
             toolChains {
+                visualCpp(VisualCpp) {
+                }
+                
                 gcc(Gcc) {
                     target('arm') {
                         // We use a custom-built cross compiler with the prefix arm-frc-linux-gnueabi-<util name>
@@ -170,8 +187,8 @@ subprojects {
         }
 
         // This task adds the appropriate linker flags for the NI libraries
-        task addNiLibraryLinks() {
-            description = 'Adds the linker flags for the NI libraries in the ni-library folders'
+        task addArmNiLibraryLinks() {
+            description = 'Adds the linker flags for the NI libraries in the ni-library/arm folders'
             group = 'WPILib'
             doLast {
                 binaries.all {
@@ -180,7 +197,7 @@ subprojects {
                         String platform = targetPlatform.toString();
                         if (platform.contains("arm")){
                             linker.args << '-L' + armNiLibraryPath
-                            linker.args.addAll(niLibraryArgs)
+                            linker.args.addAll(armNiLibraryArgs)
                         }
                     }
                 }
@@ -189,7 +206,40 @@ subprojects {
                         libs(PrebuiltLibraries) { libs ->
                             // Loops through all .so files (except files matching *libwpi*.so) in ../ni-libraries
                             // and includes them for linking
-                            niLibraryTree.each { niLib ->
+                            arnNiLibraryTree.each { niLib ->
+                                libs.create(niLib) {
+                                    binaries.withType(SharedLibraryBinary) {
+                                        sharedLibraryFile = file(niLib.path)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // This task adds the appropriate linker flags for the NI libraries
+        task addDesktopNiLibraryLinks() {
+            description = 'Adds the linker flags for the NI libraries in the ni-library/desktop folders'
+            group = 'WPILib'
+            doLast {
+                binaries.all {
+                    tasks.withType(CppCompile) {
+                        //will return "platform 'arm'" or "platform 'desktop'" ect...
+                        String platform = targetPlatform.toString();
+                        if (platform.contains("desktop")){
+                            linker.args << '/LIBPATH:' + desktopNiLibraryPath
+                            linker.args.addAll(desktopNiLibraryArgs)
+                        }
+                    }
+                }
+                model {
+                    repositories {
+                        libs(PrebuiltLibraries) { libs ->
+                            // Loops through all .so files (except files matching *libwpi*.so) in ../ni-libraries
+                            // and includes them for linking
+                            desktopNiLibraryTree.each { niLib ->
                                 libs.create(niLib) {
                                     binaries.withType(SharedLibraryBinary) {
                                         sharedLibraryFile = file(niLib.path)
@@ -228,7 +278,7 @@ subprojects {
         }
 
         // Whenever we add the WPI library links, we'll also need the ni libraries, so set up that dependency
-        addWpiLibraryLinks.dependsOn addNiLibraryLinks
+        addWpiLibraryLinks.dependsOn addArmNiLibraryLinks
     }
 }
 
