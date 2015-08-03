@@ -134,7 +134,7 @@ extern "C" {
 #elif defined (__vxworks)
 	void EXPORT_FUNC setNewDataSem(SEM_ID);
 #else
-	void EXPORT_FUNC setNewDataSem(pthread_cond_t *);
+	void EXPORT_FUNC setNewDataSem(::std::condition_variable::native_handle_type);
 #endif
 
 	// this uint32_t is really a LVRefNum

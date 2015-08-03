@@ -5,6 +5,14 @@
 /*----------------------------------------------------------------------------*/
 #pragma once
 
+#if (__cplusplus < 201103L)
+	#if !defined(_MSC_VER)
+		#define nullptr NULL
+	#endif
+	#define _ALLOW_KEYWORD_MACROS
+	#define constexpr const
+#endif
+
 #include <stdint.h>
 #include <cmath>
 
@@ -22,7 +30,10 @@
 
 #include "Utilities.hpp"
 #include "Semaphore.hpp"
-#include "Task.hpp"
+
+#ifndef FRC_SIMULATOR
+  #include "Task.hpp"
+#endif
 
 #define HAL_IO_CONFIG_DATA_SIZE 32
 #define HAL_SYS_STATUS_DATA_SIZE 44
