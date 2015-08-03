@@ -1,333 +1,668 @@
 /*----------------------------------------------------------------------------*/
-/* Copyright (c) FIRST 2008-2012. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
+/* Copyright (c) FIRST 2008-2012. All Rights Reserved. */
+/* Open Source Software - may be modified and shared by FRC teams. The code */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
+/* the project. */
 /*----------------------------------------------------------------------------*/
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.simulation.MainNode;
-import gazebo.msgs.GzDriverStation;
-import gazebo.msgs.GzDriverStation.DriverStation.State;
-import gazebo.msgs.GzJoystick.Joystick;
+import java.nio.IntBuffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
-import org.gazebosim.transport.SubscriberCallback;
+import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
+import edu.wpi.first.wpilibj.communication.HALControlWord;
+import edu.wpi.first.wpilibj.communication.HALAllianceStationID;
+import edu.wpi.first.wpilibj.hal.HALUtil;
 
 /**
- * Provide access to the network communication data to / from the Driver Station.
+ * Provide access to the network communication data to / from the Driver
+ * Station.
  */
 public class DriverStation implements RobotState.Interface {
-    /**
-     * Slot for the analog module to read the battery
-     */
-    public static final int kBatterySlot = 1;
-    /**
-     * Analog channel to read the battery
-     */
-    public static final int kBatteryChannel = 7;
-    /**
-     * Number of Joystick Ports
-     */
-    public static final int kJoystickPorts = 6;
-    /**
-     * Number of Joystick Axes
-     */
-    public static final int kJoystickAxes = 6;
-    /**
-     * Convert from raw values to volts
-     */
-    public static final double kDSAnalogInScaling = 5.0 / 1023.0;
 
-    /**
-     * The robot alliance that the robot is a part of
-     */
-    public static class Alliance {
+  /**
+   * Number of Joystick Ports
+   */
+  public static final int kJoystickPorts = 6;
 
-        /** The integer value representing this enumeration. */
-        public final int value;
-        /** The Alliance name. */
-        public final String name;
-        public static final int kRed_val = 0;
-        public static final int kBlue_val = 1;
-        public static final int kInvalid_val = 2;
-        /** alliance: Red */
-        public static final Alliance kRed = new Alliance(kRed_val, "Red");
-        /** alliance: Blue */
-        public static final Alliance kBlue = new Alliance(kBlue_val, "Blue");
-        /** alliance: Invalid */
-        public static final Alliance kInvalid = new Alliance(kInvalid_val, "invalid");
+  private class HALJoystickButtons {
+    public int buttons;
+    public byte count;
+  }
 
-        private Alliance(int value, String name) {
-            this.value = value;
-            this.name = name;
-        }
-    } /* Alliance */
+  /**
+   * The robot alliance that the robot is a part of
+   */
+  public enum Alliance {
+    Red, Blue, Invalid
+  }
 
+  private static final double JOYSTICK_UNPLUGGED_MESSAGE_INTERVAL = 1.0;
+  private double m_nextMessageTime = 0.0;
 
-    private static DriverStation instance = new DriverStation();
-    private final Object m_dataSem;
-    private boolean m_userInDisabled = false;
-    private boolean m_userInAutonomous = false;
-    private boolean m_userInTeleop = false;
-    private boolean m_userInTest = false;
-    private boolean m_newControlData;
-    private GzDriverStation.DriverStation state;
-    private Joystick joysticks[] = new Joystick[6];
+  private static class DriverStationTask implements Runnable {
 
-    /**
-     * Gets an instance of the DriverStation
-     *
-     * @return The DriverStation.
-     */
-    public static DriverStation getInstance() {
-        return DriverStation.instance;
+    private DriverStation m_ds;
+
+    DriverStationTask(DriverStation ds) {
+      m_ds = ds;
     }
 
-    /**
-     * DriverStation constructor.
-     *
-     * The single DriverStation instance is created statically with the
-     * instance static member variable.
-     */
-    protected DriverStation() {
-        m_dataSem = new Object();
+    public void run() {
+      m_ds.task();
+    }
+  } /* DriverStationTask */
 
-        MainNode.subscribe("ds/state", GzDriverStation.DriverStation.getDefaultInstance(),
-    		new SubscriberCallback<GzDriverStation.DriverStation>() {
-				@Override public void callback(GzDriverStation.DriverStation msg) {
-					state = msg;
-					m_newControlData = true;
-					synchronized (m_dataSem) {
-						m_dataSem.notifyAll();
-					}
-				}
-			}
-        );
+  private static DriverStation instance = new DriverStation();
 
-        for (int i = 0; i < 6; i++) {
-        	final int j = i;
-        	MainNode.subscribe("ds/joysticks/"+i, Joystick.getDefaultInstance(),
-        		new SubscriberCallback<Joystick>() {
-					@Override public void callback(Joystick msg) {
-						synchronized (m_dataSem) {
-							joysticks[j] = msg;
-						}
-					}
-				}
-			);
-        }
+  private short[][] m_joystickAxes =
+      new short[kJoystickPorts][FRCNetworkCommunicationsLibrary.kMaxJoystickAxes];
+  private short[][] m_joystickPOVs =
+      new short[kJoystickPorts][FRCNetworkCommunicationsLibrary.kMaxJoystickPOVs];
+  private HALJoystickButtons[] m_joystickButtons = new HALJoystickButtons[kJoystickPorts];
+  private int[] m_joystickIsXbox = new int[kJoystickPorts];
+  private int[] m_joystickType = new int[kJoystickPorts];
+  private String[] m_joystickName = new String[kJoystickPorts];
+  private int[][] m_joystickAxisType =
+      new int[kJoystickPorts][FRCNetworkCommunicationsLibrary.kMaxJoystickAxes];
+
+  private Thread m_thread;
+  private final Object m_dataSem;
+  private volatile boolean m_thread_keepalive = true;
+  private boolean m_userInDisabled = false;
+  private boolean m_userInAutonomous = false;
+  private boolean m_userInTeleop = false;
+  private boolean m_userInTest = false;
+  private boolean m_newControlData;
+  private final ByteBuffer m_packetDataAvailableMutex;
+  private final ByteBuffer m_packetDataAvailableSem;
+
+  /**
+   * Gets an instance of the DriverStation
+   *
+   * @return The DriverStation.
+   */
+  public static DriverStation getInstance() {
+    return DriverStation.instance;
+  }
+
+  /**
+   * DriverStation constructor.
+   *
+   * The single DriverStation instance is created statically with the instance
+   * static member variable.
+   */
+  protected DriverStation() {
+    m_dataSem = new Object();
+    for (int i = 0; i < kJoystickPorts; i++) {
+      m_joystickButtons[i] = new HALJoystickButtons();
     }
 
-    /**
-     * Wait for new data from the driver station.
-     */
-    public void waitForData() {
-        waitForData(0);
+    m_packetDataAvailableMutex = HALUtil.initializeMutexNormal();
+    m_packetDataAvailableSem = HALUtil.initializeMultiWait();
+    FRCNetworkCommunicationsLibrary.setNewDataSem(m_packetDataAvailableSem);
+
+    m_thread = new Thread(new DriverStationTask(this), "FRCDriverStation");
+    m_thread.setPriority((Thread.NORM_PRIORITY + Thread.MAX_PRIORITY) / 2);
+
+    m_thread.start();
+  }
+
+  /**
+   * Kill the thread
+   */
+  public void release() {
+    m_thread_keepalive = false;
+  }
+
+  /**
+   * Provides the service routine for the DS polling thread.
+   */
+  private void task() {
+    int safetyCounter = 0;
+    while (m_thread_keepalive) {
+      HALUtil.takeMultiWait(m_packetDataAvailableSem, m_packetDataAvailableMutex, 0);
+      synchronized (this) {
+        getData();
+      }
+      synchronized (m_dataSem) {
+        m_dataSem.notifyAll();
+      }
+      if (++safetyCounter >= 4) {
+        MotorSafetyHelper.checkMotors();
+        safetyCounter = 0;
+      }
+      if (m_userInDisabled) {
+        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramDisabled();
+      }
+      if (m_userInAutonomous) {
+        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramAutonomous();
+      }
+      if (m_userInTeleop) {
+        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramTeleop();
+      }
+      if (m_userInTest) {
+        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramTest();
+      }
+    }
+  }
+
+  /**
+   * Wait for new data from the driver station.
+   */
+  public void waitForData() {
+    waitForData(0);
+  }
+
+  /**
+   * Wait for new data or for timeout, which ever comes first. If timeout is 0,
+   * wait for new data only.
+   *
+   * @param timeout The maximum time in milliseconds to wait.
+   */
+  public void waitForData(long timeout) {
+    synchronized (m_dataSem) {
+      try {
+        m_dataSem.wait(timeout);
+      } catch (InterruptedException ex) {
+      }
+    }
+  }
+
+  /**
+   * Copy data from the DS task for the user. If no new data exists, it will
+   * just be returned, otherwise the data will be copied from the DS polling
+   * loop.
+   */
+  protected synchronized void getData() {
+
+    // Get the status of all of the joysticks
+    for (byte stick = 0; stick < kJoystickPorts; stick++) {
+      m_joystickAxes[stick] = FRCNetworkCommunicationsLibrary.HALGetJoystickAxes(stick);
+      m_joystickPOVs[stick] = FRCNetworkCommunicationsLibrary.HALGetJoystickPOVs(stick);
+      ByteBuffer countBuffer = ByteBuffer.allocateDirect(1);
+      m_joystickButtons[stick].buttons =
+          FRCNetworkCommunicationsLibrary.HALGetJoystickButtons((byte) stick, countBuffer);
+      m_joystickButtons[stick].count = countBuffer.get();
     }
 
-    /**
-     * Wait for new data or for timeout, which ever comes first.  If timeout is
-     * 0, wait for new data only.
-     *
-     * @param timeout The maximum time in milliseconds to wait.
-     */
-    public void waitForData(long timeout) {
-        synchronized (m_dataSem) {
-            try {
-                m_dataSem.wait(timeout);
-            } catch (InterruptedException ex) {
-            }
-        }
+    m_newControlData = true;
+  }
+
+  /**
+   * Read the battery voltage.
+   *
+   * @return The battery voltage in Volts.
+   */
+  public double getBatteryVoltage() {
+    return 12;
+  }
+
+  /**
+   * Reports errors related to unplugged joysticks Throttles the errors so that
+   * they don't overwhelm the DS
+   */
+  private void reportJoystickUnpluggedError(String message) {
+    double currentTime = Timer.getFPGATimestamp();
+    if (currentTime > m_nextMessageTime) {
+      reportError(message, false);
+      m_nextMessageTime = currentTime + JOYSTICK_UNPLUGGED_MESSAGE_INTERVAL;
+    }
+  }
+
+  /**
+   * Get the value of the axis on a joystick. This depends on the mapping of the
+   * joystick connected to the specified port.
+   *
+   * @param stick The joystick to read.
+   * @param axis The analog axis value to read from the joystick.
+   * @return The value of the axis on the joystick.
+   */
+  public synchronized double getStickAxis(int stick, int axis) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
 
-    /**
-     * Read the battery voltage.
-     *
-     * @return The battery voltage.
-     */
-    public double getBatteryVoltage() {
-    	return 12.0; // 12 volts all the time!
+    if (axis < 0 || axis >= FRCNetworkCommunicationsLibrary.kMaxJoystickAxes) {
+      throw new RuntimeException("Joystick axis is out of range");
     }
 
-    /**
-     * Get the value of the axis on a joystick.
-     * This depends on the mapping of the joystick connected to the specified port.
-     *
-     * @param stick The joystick to read.
-     * @param axis The analog axis value to read from the joystick.
-     * @return The value of the axis on the joystick.
-     */
-    public double getStickAxis(int stick, int axis) {
-        if (stick < 0 || stick >= joysticks.length || joysticks[stick] == null) {
-            return 0.0;
-    	}
-        if (axis < 0 || axis >= kJoystickAxes || axis >= joysticks[stick].getAxesCount()) {
-            return 0.0;
-        }
-    	return joysticks[stick].getAxes(axis);
+    if (axis >= m_joystickAxes[stick].length) {
+      reportJoystickUnpluggedError("WARNING: Joystick axis " + axis + " on port " + stick
+          + " not available, check if controller is plugged in\n");
+      return 0.0;
     }
 
-    /**
-     * The state of the buttons on the joystick.
-     * 12 buttons (4 msb are unused) from the joystick.
-     *
-     * @param stick The joystick to read.
-     * @return The state of the buttons on the joystick.
-     */
-    public boolean getStickButton(int stick, int button) {
-    	if (stick < 0 || stick >= joysticks.length || joysticks[stick] == null) {
-            return false;
-    	}
-    	if (button < 1 || button > joysticks[stick].getButtonsCount()) {
-    		return false;
-    	}
-    	return joysticks[stick].getButtons(button - 1);
+    byte value = (byte) m_joystickAxes[stick][axis];
+
+    if (value < 0) {
+      return value / 128.0;
+    } else {
+      return value / 127.0;
+    }
+  }
+
+  /**
+   * Returns the number of axes on a given joystick port
+   *
+   * @param stick The joystick port number
+   * @return The number of axes on the indicated joystick
+   */
+  public synchronized int getStickAxisCount(int stick) {
+
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
 
-    /**
-     * Gets a value indicating whether the Driver Station requires the
-     * robot to be enabled.
-     *
-     * @return True if the robot is enabled, false otherwise.
-     */
-    public boolean isEnabled() {
-    	return state != null ? state.getEnabled() : false;
+    return m_joystickAxes[stick].length;
+  }
+
+  /**
+   * Get the state of a POV on the joystick.
+   *
+   * @return the angle of the POV in degrees, or -1 if the POV is not pressed.
+   */
+  public synchronized int getStickPOV(int stick, int pov) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
 
-    /**
-     * Gets a value indicating whether the Driver Station requires the
-     * robot to be disabled.
-     *
-     * @return True if the robot should be disabled, false otherwise.
-     */
-    public boolean isDisabled() {
-        return !isEnabled();
+    if (pov < 0 || pov >= FRCNetworkCommunicationsLibrary.kMaxJoystickPOVs) {
+      throw new RuntimeException("Joystick POV is out of range");
     }
 
-    /**
-     * Gets a value indicating whether the Driver Station requires the
-     * robot to be running in autonomous mode.
-     *
-     * @return True if autonomous mode should be enabled, false otherwise.
-     */
-    public boolean isAutonomous() {
-    	return state != null ? state.getState() == State.AUTO : false;
+    if (pov >= m_joystickPOVs[stick].length) {
+      reportJoystickUnpluggedError("WARNING: Joystick POV " + pov + " on port " + stick
+          + " not available, check if controller is plugged in\n");
+      return -1;
     }
 
-    /**
-     * Gets a value indicating whether the Driver Station requires the
-     * robot to be running in test mode.
-     * @return True if test mode should be enabled, false otherwise.
-     */
-    public boolean isTest() {
-    	return state != null ? state.getState() == State.TEST : false;
+    return m_joystickPOVs[stick][pov];
+  }
+
+  /**
+   * Returns the number of POVs on a given joystick port
+   *
+   * @param stick The joystick port number
+   * @return The number of POVs on the indicated joystick
+   */
+  public synchronized int getStickPOVCount(int stick) {
+
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
 
-    /**
-     * Gets a value indicating whether the Driver Station requires the
-     * robot to be running in operator-controlled mode.
-     *
-     * @return True if operator-controlled mode should be enabled, false otherwise.
-     */
-    public boolean isOperatorControl() {
-        return !(isAutonomous() || isTest());
+    return m_joystickPOVs[stick].length;
+  }
+
+  /**
+   * The state of the buttons on the joystick.
+   *
+   * @param stick The joystick to read.
+   * @return The state of the buttons on the joystick.
+   */
+  public synchronized int getStickButtons(final int stick) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-3");
     }
 
-    /**
-     * Has a new control packet from the driver station arrived since the last time this function was called?
-     * @return True if the control data has been updated since the last call.
-     */
-    public synchronized boolean isNewControlData() {
-        boolean result = m_newControlData;
-        m_newControlData = false;
-        return result;
+    return m_joystickButtons[stick].buttons;
+  }
+
+  /**
+   * The state of one joystick button. Button indexes begin at 1.
+   *
+   * @param stick The joystick to read.
+   * @param button The button index, beginning at 1.
+   * @return The state of the joystick button.
+   */
+  public synchronized boolean getStickButton(final int stick, byte button) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-3");
     }
 
-    /**
-     * Get the current alliance from the FMS
-     * @return the current alliance
-     */
-    public Alliance getAlliance() {
-        switch ('I') { // TODO: Always invalid
-        case 'R':
-            return Alliance.kRed;
-        case 'B':
-            return Alliance.kBlue;
-        default:
-            return Alliance.kInvalid;
-        }
+
+    if (button > m_joystickButtons[stick].count) {
+      reportJoystickUnpluggedError("WARNING: Joystick Button " + button + " on port " + stick
+          + " not available, check if controller is plugged in\n");
+      return false;
+    }
+    if (button <= 0) {
+      reportJoystickUnpluggedError("ERROR: Button indexes begin at 1 in WPILib for C++ and Java\n");
+      return false;
+    }
+    return ((0x1 << (button - 1)) & m_joystickButtons[stick].buttons) != 0;
+  }
+
+  /**
+   * Gets the number of buttons on a joystick
+   *
+   * @param stick The joystick port number
+   * @return The number of buttons on the indicated joystick
+   */
+  public synchronized int getStickButtonCount(int stick) {
+
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
 
-    /**
-     * Gets the location of the team's driver station controls.
-     *
-     * @return the location of the team's driver station controls: 1, 2, or 3
-     */
-    public int getLocation() {
-        return -1; // TODO: always -1
+
+    return m_joystickButtons[stick].count;
+  }
+
+  /**
+   * Gets the value of isXbox on a joystick
+   *
+   * @param stick The joystick port number
+   * @return A boolean that returns the value of isXbox
+   */
+  public synchronized boolean getJoystickIsXbox(int stick) {
+
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
+    }
+    // TODO: Remove this when calling for descriptor on empty stick no longer
+    // crashes
+    if (1 > m_joystickButtons[stick].count && 1 > m_joystickAxes[stick].length) {
+      reportJoystickUnpluggedError("WARNING: Joystick on port " + stick
+          + " not available, check if controller is plugged in\n");
+      return false;
+    }
+    boolean retVal = false;
+    if (FRCNetworkCommunicationsLibrary.HALGetJoystickIsXbox((byte) stick) == 1) {
+      retVal = true;
+    }
+    return retVal;
+  }
+
+  /**
+   * Gets the value of type on a joystick
+   *
+   * @param stick The joystick port number
+   * @return The value of type
+   */
+  public synchronized int getJoystickType(int stick) {
+
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
+    }
+    // TODO: Remove this when calling for descriptor on empty stick no longer
+    // crashes
+    if (1 > m_joystickButtons[stick].count && 1 > m_joystickAxes[stick].length) {
+      reportJoystickUnpluggedError("WARNING: Joystick on port " + stick
+          + " not available, check if controller is plugged in\n");
+      return -1;
+    }
+    return FRCNetworkCommunicationsLibrary.HALGetJoystickType((byte) stick);
+  }
+
+  /**
+   * Gets the name of the joystick at a port
+   *
+   * @param stick The joystick port number
+   * @return The value of name
+   */
+  public synchronized String getJoystickName(int stick) {
+
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
+    }
+    // TODO: Remove this when calling for descriptor on empty stick no longer
+    // crashes
+    if (1 > m_joystickButtons[stick].count && 1 > m_joystickAxes[stick].length) {
+      reportJoystickUnpluggedError("WARNING: Joystick on port " + stick
+          + " not available, check if controller is plugged in\n");
+      return "";
+    }
+    return FRCNetworkCommunicationsLibrary.HALGetJoystickName((byte) stick);
+  }
+
+  /**
+   * Gets a value indicating whether the Driver Station requires the robot to be
+   * enabled.
+   *
+   * @return True if the robot is enabled, false otherwise.
+   */
+  public boolean isEnabled() {
+    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
+    return controlWord.getEnabled() && controlWord.getDSAttached();
+  }
+
+  /**
+   * Gets a value indicating whether the Driver Station requires the robot to be
+   * disabled.
+   *
+   * @return True if the robot should be disabled, false otherwise.
+   */
+  public boolean isDisabled() {
+    return !isEnabled();
+  }
+
+  /**
+   * Gets a value indicating whether the Driver Station requires the robot to be
+   * running in autonomous mode.
+   *
+   * @return True if autonomous mode should be enabled, false otherwise.
+   */
+  public boolean isAutonomous() {
+    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
+    return controlWord.getAutonomous();
+  }
+
+  /**
+   * Gets a value indicating whether the Driver Station requires the robot to be
+   * running in test mode.
+   *$
+   * @return True if test mode should be enabled, false otherwise.
+   */
+  public boolean isTest() {
+    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
+    return controlWord.getTest();
+  }
+
+  /**
+   * Gets a value indicating whether the Driver Station requires the robot to be
+   * running in operator-controlled mode.
+   *
+   * @return True if operator-controlled mode should be enabled, false
+   *         otherwise.
+   */
+  public boolean isOperatorControl() {
+    return !(isAutonomous() || isTest());
+  }
+
+  /**
+   * Gets a value indicating whether the FPGA outputs are enabled. The outputs
+   * may be disabled if the robot is disabled or e-stopped, the watdhog has
+   * expired, or if the roboRIO browns out.
+   *
+   * @return True if the FPGA outputs are enabled.
+   */
+  public boolean isSysActive() {
+    ByteBuffer status = ByteBuffer.allocateDirect(4);
+    status.order(ByteOrder.LITTLE_ENDIAN);
+    boolean retVal = FRCNetworkCommunicationsLibrary.HALGetSystemActive(status.asIntBuffer());
+    HALUtil.checkStatus(status.asIntBuffer());
+    return retVal;
+  }
+
+  /**
+   * Check if the system is browned out.
+   *$
+   * @return True if the system is browned out
+   */
+  public boolean isBrownedOut() {
+    ByteBuffer status = ByteBuffer.allocateDirect(4);
+    status.order(ByteOrder.LITTLE_ENDIAN);
+    boolean retVal = FRCNetworkCommunicationsLibrary.HALGetBrownedOut(status.asIntBuffer());
+    HALUtil.checkStatus(status.asIntBuffer());
+    return retVal;
+  }
+
+  /**
+   * Has a new control packet from the driver station arrived since the last
+   * time this function was called?
+   *$
+   * @return True if the control data has been updated since the last call.
+   */
+  public synchronized boolean isNewControlData() {
+    boolean result = m_newControlData;
+    m_newControlData = false;
+    return result;
+  }
+
+  /**
+   * Get the current alliance from the FMS
+   *$
+   * @return the current alliance
+   */
+  public Alliance getAlliance() {
+    HALAllianceStationID allianceStationID =
+        FRCNetworkCommunicationsLibrary.HALGetAllianceStation();
+    if (allianceStationID == null) {
+      return Alliance.Invalid;
     }
 
-    /**
-     * Return the team number that the Driver Station is configured for
-     * @return The team number
-     */
-    public int getTeamNumber() {
-        return 348; // TODO
-    }
+    switch (allianceStationID) {
+      case Red1:
+      case Red2:
+      case Red3:
+        return Alliance.Red;
 
-    /**
-     * Is the driver station attached to a Field Management System?
-     * Note: This does not work with the Blue DS.
-     * @return True if the robot is competing on a field being controlled by a Field Management System
-     */
-    public boolean isFMSAttached() {
-        return false;
-    }
-	
-	/**
-	 * Report error to Driver Station.
-	 * Also prints error to System.err
-	 * Optionally appends Stack trace to error message
-	 * @param printTrace If true, append stack trace to error string
-	 */
-	public static void reportError(String error, boolean printTrace) {
-		String errorString = error;
-		if(printTrace) {
-			errorString += " at ";
-			StackTraceElement[] traces = Thread.currentThread().getStackTrace();
-			for (int i=2; i<traces.length; i++)
-			{
-				errorString += traces[i].toString() + "\n";
-			}
-		}
-		System.err.println(errorString);
-	}
+      case Blue1:
+      case Blue2:
+      case Blue3:
+        return Alliance.Blue;
 
-    /** Only to be used to tell the Driver Station what code you claim to be executing
-     *   for diagnostic purposes only
-     * @param entering If true, starting disabled code; if false, leaving disabled code */
-    public void InDisabled(boolean entering) {
-        m_userInDisabled=entering;
+      default:
+        return Alliance.Invalid;
     }
+  }
 
-    /** Only to be used to tell the Driver Station what code you claim to be executing
-    *   for diagnostic purposes only
-     * @param entering If true, starting autonomous code; if false, leaving autonomous code */
-    public void InAutonomous(boolean entering) {
-        m_userInAutonomous=entering;
+  /**
+   * Gets the location of the team's driver station controls.
+   *
+   * @return the location of the team's driver station controls: 1, 2, or 3
+   */
+  public int getLocation() {
+    HALAllianceStationID allianceStationID =
+        FRCNetworkCommunicationsLibrary.HALGetAllianceStation();
+    if (allianceStationID == null) {
+      return 0;
     }
+    switch (allianceStationID) {
+      case Red1:
+      case Blue1:
+        return 1;
 
-    /** Only to be used to tell the Driver Station what code you claim to be executing
-    *   for diagnostic purposes only
-     * @param entering If true, starting teleop code; if false, leaving teleop code */
-    public void InOperatorControl(boolean entering) {
-        m_userInTeleop=entering;
-    }
+      case Red2:
+      case Blue2:
+        return 2;
 
-    /** Only to be used to tell the Driver Station what code you claim to be executing
-     *   for diagnostic purposes only
-     * @param entering If true, starting test code; if false, leaving test code */
-    public void InTest(boolean entering) {
-        m_userInTeleop = entering;
+      case Blue3:
+      case Red3:
+        return 3;
+
+      default:
+        return 0;
     }
+  }
+
+  /**
+   * Is the driver station attached to a Field Management System? Note: This
+   * does not work with the Blue DS.
+   *$
+   * @return True if the robot is competing on a field being controlled by a
+   *         Field Management System
+   */
+  public boolean isFMSAttached() {
+    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
+    return controlWord.getFMSAttached();
+  }
+
+  public boolean isDSAttached() {
+    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
+    return controlWord.getDSAttached();
+  }
+
+  /**
+   * Return the approximate match time The FMS does not send an official match
+   * time to the robots, but does send an approximate match time. The value will
+   * count down the time remaining in the current period (auto or teleop).
+   * Warning: This is not an official time (so it cannot be used to dispute ref
+   * calls or guarantee that a function will trigger before the match ends) The
+   * Practice Match function of the DS approximates the behaviour seen on the
+   * field.
+   *$
+   * @return Time remaining in current match period (auto or teleop) in seconds
+   */
+  public double getMatchTime() {
+    return FRCNetworkCommunicationsLibrary.HALGetMatchTime();
+  }
+
+  /**
+   * Report error to Driver Station. Also prints error to System.err Optionally
+   * appends Stack trace to error message
+   *$
+   * @param printTrace If true, append stack trace to error string
+   */
+  public static void reportError(String error, boolean printTrace) {
+    String errorString = error;
+    if (printTrace) {
+      errorString += " at ";
+      StackTraceElement[] traces = Thread.currentThread().getStackTrace();
+      for (int i = 2; i < traces.length; i++) {
+        errorString += traces[i].toString() + "\n";
+      }
+    }
+    System.err.println(errorString);
+    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
+    if (controlWord.getDSAttached()) {
+      FRCNetworkCommunicationsLibrary.HALSetErrorData(errorString);
+    }
+  }
+
+  /**
+   * Only to be used to tell the Driver Station what code you claim to be
+   * executing for diagnostic purposes only
+   *$
+   * @param entering If true, starting disabled code; if false, leaving disabled
+   *        code
+   */
+  public void InDisabled(boolean entering) {
+    m_userInDisabled = entering;
+  }
+
+  /**
+   * Only to be used to tell the Driver Station what code you claim to be
+   * executing for diagnostic purposes only
+   *$
+   * @param entering If true, starting autonomous code; if false, leaving
+   *        autonomous code
+   */
+  public void InAutonomous(boolean entering) {
+    m_userInAutonomous = entering;
+  }
+
+  /**
+   * Only to be used to tell the Driver Station what code you claim to be
+   * executing for diagnostic purposes only
+   *$
+   * @param entering If true, starting teleop code; if false, leaving teleop
+   *        code
+   */
+  public void InOperatorControl(boolean entering) {
+    m_userInTeleop = entering;
+  }
+
+  /**
+   * Only to be used to tell the Driver Station what code you claim to be
+   * executing for diagnostic purposes only
+   *$
+   * @param entering If true, starting test code; if false, leaving test code
+   */
+  public void InTest(boolean entering) {
+    m_userInTest = entering;
+  }
 }

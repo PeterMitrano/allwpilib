@@ -186,8 +186,8 @@
       </sequential>
       <sequential>
         <sleep seconds="5"/>
-	    <echo>[simulate] Running Code.</echo>i
-	    <java jar="${simulation.dist.jar}" fork="true">
+	      <echo>[simulate] Running Code.</echo>
+	      <java jar="${simulation.dist.jar}" fork="true">
           <jvmarg value="-Djava.library.path=${wpilib.sim.lib}" />
         </java>
       </sequential>
