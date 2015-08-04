@@ -8,8 +8,11 @@ evaluationDependsOn(':networktables:java')
 def jdkDownloadSite = 'http://www.oracle.com/technetwork/java/javase/downloads/jdk8-arm-downloads-2187472.html'
 def jdkFolder = 'jdk-linux-arm-vfp-sflt'
 def jdkVersion = 'jdk1.8.0_33'
-def jdkLocation = System.getProperty("user.home") + File.separator + jdkFolder + File.separator + jdkVersion
+def armJDKLocation = System.getProperty("user.home") + File.separator + jdkFolder + File.separator + jdkVersion
 def generatedJNIHeaderLoc = 'wpilibJavaJNI/build/include'
+def generatedArmJNIHeaderLoc = generatedJNIHeaderLoc + '/arm'
+def generatedDesktopJNIHeaderLoc = generatedJNIHeaderLoc + '/desktop'
+def desktopJDKLocation = System.properties.'java.home' + '/..' //XXX this is evil
 
 // Maven publishing configuration
 publishing {
@@ -46,32 +49,58 @@ publishing {
 // Configuration for the HAL bindings
 model {
     components {
-        wpilibJavaJNI(NativeLibrarySpec) {
+        wpilibAthenaJavaJNI(NativeLibrarySpec) {
             targetPlatform 'arm'
             binaries.all {
                 tasks.withType(CppCompile) {
                     dependsOn verifyJre
-                    dependsOn jniHeaders
-                    dependsOn addNiLibraryLinks
+                    dependsOn armJNIHeaders
+                    dependsOn addArmNiLibraryLinks
                 }
             }
             sources {
                 cpp {
                     source {
-                        srcDirs = ['wpilibJavaJNI/lib']
+                        srcDirs = ['wpilibJavaJNI/lib/Athena', 'wpilibJavaJNI/lib/Shared']
                         includes = ['**/*.cpp']
                     }
                     exportedHeaders {
                         // JDK is included for jni.h. We also need the arm-linux specific headers. This does not need to change
                         // when compiling on Windows
-                        // The JNI headers are put into the build/include directory by the jniHeaders task on wpilibJavaDevices
-                        def includeLocation = jdkLocation + File.separator + 'include'
+                        // The JNI headers are put into the build/include directory by the armJNIHeaders task on wpilibJavaDevices
+                        def includeLocation = armJDKLocation + File.separator + 'include'
                         srcDirs = ["wpilibJavaJNI/include", includeLocation, includeLocation + File.separator + "linux"]
-                        jniHeaders.outputs.files.each { file ->
+                        armJNIHeaders.outputs.files.each { file ->
                             srcDirs file.getPath()
                         }
                     }
                     lib project: ':hal', library: 'HALAthena', linkage: 'static'
+                }
+            }
+        }
+        wpilibDesktopJavaJNI(NativeLibrarySpec) {
+            targetPlatform 'desktop'
+            binaries.all {
+                tasks.withType(CppCompile) {
+                    dependsOn desktopJNIHeaders
+                    dependsOn addDesktopNiLibraryLinks
+                }
+            }
+            sources {
+                cpp {
+                    source {
+                        srcDirs = ['wpilibJavaJNI/lib/Desktop', 'wpilibJavaJNI/lib/Shared']
+                        includes = ['**/*.cpp']
+                    }
+                    exportedHeaders {
+                        def desktopIncludeLocation = desktopJDKLocation + File.separator + 'include'
+                        println "JDK includes = "+desktopIncludeLocation
+                        srcDirs = ["wpilibJavaJNI/include", desktopIncludeLocation, desktopIncludeLocation + File.separator + 'linux']
+                        desktopJNIHeaders.outputs.files.each { file ->
+                            srcDirs file.getPath()
+                        }
+                    }
+                    lib project: ':hal', library: 'HALDesktop', linkage: 'static'
                 }
             }
         }
@@ -136,13 +165,16 @@ dependencies {
 task wpilibjJar(type: Jar) {
     description = 'Creates the WPILib Java jar, with the JNI shared library in the correct place'
     group = 'WPILib'
-    dependsOn { wpilibJavaJNISharedLibrary }
+    dependsOn { wpilibDesktopJavaJNISharedLibrary }
     dependsOn { classes }
     from files(sourceSets.main.output.classesDir)
     from files(sourceSets.shared.output.classesDir)
     binaries.withType(SharedLibraryBinarySpec) {
-        from(file(it.sharedLibraryFile)) {
-            into 'linux-arm'
+        String platform = targetPlatform.toString()
+        if (platform.contains('arm')){
+            from(file(it.sharedLibraryFile)) {
+                into 'linux-arm'
+            }
         }
     }
 }
@@ -171,9 +203,18 @@ task wpilibjJavadoc(type: Jar, dependsOn: javadoc) {
 task wpilibjSimJar(type: Jar, dependsOn: simulationClasses) {
     description = 'Creates the WPILibJSimulation Jar'
     group = 'WPILib'
+    dependsOn { wpilibDesktopJavaJNISharedLibrary}
     from sourceSets.simulation.output.classesDir
     from sourceSets.shared.output.classesDir
     baseName 'wpilibjSimulation'
+    binaries.withType(SharedLibraryBinarySpec){
+        String platform = targetPlatform.toString()
+        if (platform.contains('desktop')){
+            from(file(it.sharedLibraryFile)) {
+                into 'desktop'
+            }
+        }
+    }
 }
 
 task wpilibjSimSources(type: Jar, dependsOn: simulationClasses) {
@@ -201,7 +242,7 @@ task wpilibjSimJavadoc(type: Jar, dependsOn: simulationJavadoc) {
 task wpilibjIntegrationTestJar(type: Jar) {
     description = 'Creates the wpilib integration tests jar'
     group = 'WPILib'
-    dependsOn { wpilibJavaJNISharedLibrary }
+    dependsOn { wpilibAthenaJavaJNISharedLibrary }
     dependsOn { wpilibjJar }
     dependsOn { integrationTestClasses }
     from sourceSets.integrationTest.output.classesDir
@@ -222,10 +263,10 @@ task wpilibjIntegrationTestJar(type: Jar) {
 /**
  * Generates the JNI headers from the HAL package
  */
-task jniHeaders {
+task armJNIHeaders {
     description = 'Generates JNI headers from edu.wpi.first.wpilibj.hal.*'
     group = 'WPILib'
-    def outputFolder = file(generatedJNIHeaderLoc)
+    def outputFolder = file(generatedArmJNIHeaderLoc)
     inputs.files sourceSets.main.output
     outputs.file outputFolder
     doLast {
@@ -258,6 +299,25 @@ task jniHeaders {
     }
 }
 
+task desktopJNIHeaders {
+    description = 'Generates JNI headers from edu.wpi.first.wpilibj.hal.*'
+    group = 'WPILib'
+    def outputFolder = file(generatedDesktopJNIHeaderLoc)
+    inputs.files sourceSets.simulation.output
+    outputs.file outputFolder
+    doLast {
+        outputFolder.mkdirs()
+        exec {
+            executable org.gradle.internal.jvm.Jvm.current().getExecutable('javah')
+            args '-d', outputFolder
+            args '-classpath', sourceSets.simulation.output.classesDir
+            args 'edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary'
+            args 'edu.wpi.first.wpilibj.hal.HALUtil'
+            args 'edu.wpi.first.wpilibj.hal.JNIWrapper'
+        }
+    }
+}
+
 clean {
     delete generatedJNIHeaderLoc
 }
@@ -266,12 +326,12 @@ clean {
 task verifyJre {
     description = 'Verifies that the ARM JDK is downloaded in the user directory'
     group = 'WPILib'
-    def outputFolder = new File(jdkLocation)
+    def outputFolder = new File(armJDKLocation)
     outputs.file outputFolder
     doLast {
         if (!outputFolder.exists() && !outputFolder.isDirectory()) {
             def errorMessage = 'The ARM JDK was not found. Please install the JDK in the following location:' +
-                    System.lineSeparator() + jdkLocation +
+                    System.lineSeparator() + armJDKLocation +
                     System.lineSeparator() + 'You can download the JDK here:' +
                     System.lineSeparator() + jdkDownloadSite
             throw new GradleException(errorMessage)

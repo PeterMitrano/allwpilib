@@ -51,7 +51,7 @@ model {
             targetPlatform 'arm'
             binaries.all {
                 tasks.withType(CppCompile) {
-                    dependsOn addNiLibraryLinks
+                    dependsOn addArmNiLibraryLinks
                 }
             }
             sources {
@@ -73,7 +73,7 @@ model {
             targetPlatform 'arm'
             binaries.all {
                 tasks.withType(CppCompile) {
-                    dependsOn addNiLibraryLinks
+                    dependsOn addArmNiLibraryLinks
                 }
 
                 cppCompiler.args '-pthread'

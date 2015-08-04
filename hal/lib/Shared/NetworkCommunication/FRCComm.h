@@ -71,7 +71,7 @@ struct JoystickPOV_t {
 extern "C" {
 #endif
 	int EXPORT_FUNC FRC_NetworkCommunication_Reserve(void *instance);
-#ifndef SIMULATION
+#ifndef FRC_SIMULATOR
 	void EXPORT_FUNC getFPGAHardwareVersion(uint16_t *fpgaVersion, uint32_t *fpgaRevision);
 #endif
 	int EXPORT_FUNC setStatusData(float battery, uint8_t dsDigitalOut, uint8_t updateNumber,
@@ -79,7 +79,7 @@ extern "C" {
 			const char *userDataLow, int userDataLowLength, int wait_ms);
 	int EXPORT_FUNC setErrorData(const char *errors, int errorsLength, int wait_ms);
 
-#ifdef SIMULATION
+#ifdef FRC_SIMULATOR
 	void EXPORT_FUNC setNewDataSem(HANDLE);
 #else
 	void EXPORT_FUNC setNewDataSem(pthread_cond_t *);

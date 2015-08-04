@@ -113,7 +113,7 @@ subprojects {
             toolChains {
                 visualCpp(VisualCpp) {
                 }
-                
+
                 gcc(Gcc) {
                     target('arm') {
                         // We use a custom-built cross compiler with the prefix arm-frc-linux-gnueabi-<util name>
@@ -193,11 +193,10 @@ subprojects {
             doLast {
                 binaries.all {
                     tasks.withType(CppCompile) {
-                        //will return "platform 'arm'" or "platform 'desktop'" ect...
-                        String platform = targetPlatform.toString();
+                        String platform = targetPlatform.toString()
                         if (platform.contains("arm")){
-                            linker.args << '-L' + armNiLibraryPath
-                            linker.args.addAll(armNiLibraryArgs)
+                          linker.args << '-L' + armNiLibraryPath
+                          linker.args.addAll(armNiLibraryArgs)
                         }
                     }
                 }
@@ -226,12 +225,17 @@ subprojects {
             doLast {
                 binaries.all {
                     tasks.withType(CppCompile) {
-                        //will return "platform 'arm'" or "platform 'desktop'" ect...
-                        String platform = targetPlatform.toString();
+                        String platform = targetPlatform.toString()
                         if (platform.contains("desktop")){
-                            linker.args << '/LIBPATH:' + desktopNiLibraryPath
-                            linker.args.addAll(desktopNiLibraryArgs)
-                        }
+                          if (toolChain in VisualCpp){
+                              linker.args << '/LIBPATH:' + desktopNiLibraryPath
+                              linker.args.addAll(desktopNiLibraryArgs)
+                          }
+                          else if (toolChain in Gcc){
+                              linker.args << '-L' + desktopNiLibraryPath
+                              linker.args.addAll(desktopNiLibraryArgs)
+                          }
+                      }
                     }
                 }
                 model {
