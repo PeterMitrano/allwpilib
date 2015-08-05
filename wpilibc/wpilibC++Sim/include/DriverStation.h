@@ -12,6 +12,8 @@
 #include "HAL/cpp/priority_mutex.h"
 #include "HAL/cpp/priority_condition_variable.h"
 #include <condition_variable>
+#include <atomic>
+#include <thread>
 
 struct HALControlWord;
 class AnalogInput;
@@ -24,7 +26,7 @@ class DriverStation : public SensorBase, public RobotStateInterface {
  public:
   enum Alliance { kRed, kBlue, kInvalid };
 
-  virtual ~DriverStation() = default;
+  virtual ~DriverStation();
   static DriverStation &GetInstance();
   static void ReportError(std::string error);
 
@@ -51,7 +53,6 @@ class DriverStation : public SensorBase, public RobotStateInterface {
   bool IsTest() const override;
   bool IsDSAttached() const;
   bool IsNewControlData() const;
-  bool IsFMSAttached() const;
   bool IsSysActive() const;
   bool IsSysBrownedOut() const;
 
@@ -99,6 +100,8 @@ class DriverStation : public SensorBase, public RobotStateInterface {
   HALJoystickPOVs m_joystickPOVs[kJoystickPorts];
   HALJoystickButtons m_joystickButtons[kJoystickPorts];
   HALJoystickDescriptor m_joystickDescriptor[kJoystickPorts];
+  std::thread ds_thread;
+  std::atomic<bool> m_isRunning{false};
   mutable Semaphore m_newControlData{Semaphore::kEmpty};
   mutable priority_condition_variable m_packetDataAvailableCond;
   priority_mutex m_packetDataAvailableMutex;

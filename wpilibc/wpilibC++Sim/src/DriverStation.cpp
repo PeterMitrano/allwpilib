@@ -49,11 +49,24 @@ DriverStation::DriverStation() {
 
   AddToSingletonList();
 
+  //in devices this uses a m_task, not sure if I need that
+  ds_thread = ::std::thread(&DriverStation::Run, this);
+  ds_thread.detach();
 }
 
+
+DriverStation::~DriverStation() {
+  m_isRunning = false;
+
+  // Unregister our semaphore.
+  HALSetNewDataSem(nullptr);
+}
+
+
 void DriverStation::Run() {
+  m_isRunning = true;
   int period = 0;
-  while (true) {
+  while (m_isRunning) {
     {
       std::unique_lock<priority_mutex> lock(m_packetDataAvailableMutex);
       m_packetDataAvailableCond.wait(lock);
@@ -409,17 +422,6 @@ bool DriverStation::IsSysBrownedOut() const {
  */
 bool DriverStation::IsNewControlData() const {
   return m_newControlData.tryTake() == false;
-}
-
-/**
- * Is the driver station attached to a Field Management System?
- * @return True if the robot is competing on a field being controlled by a Field
- * Management System
- */
-bool DriverStation::IsFMSAttached() const {
-  HALControlWord controlWord;
-  HALGetControlWord(&controlWord);
-  return controlWord.fmsAttached;
 }
 
 /**

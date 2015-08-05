@@ -126,6 +126,7 @@
 									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/lib/desktop"/>
 									<listOptionValue builtIn="false" value="${WPILIB}/cpp/current/sim/lib"/>
 								</option>
+                <option id="gnu.cpp.link.option.flags.89899001" name="Linker flags" superClass="gnu.cpp.link.option.flags" value="-Wl,-rpath,${WPILIB}/cpp/current/sim/lib,${WPILIB}/cpp/current/lib/desktop" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.152327207" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
