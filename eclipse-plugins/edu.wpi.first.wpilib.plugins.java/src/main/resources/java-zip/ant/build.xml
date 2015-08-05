@@ -184,7 +184,7 @@
         <sequential>
           <sleep seconds="5"/>
           <echo>[simulate] Running Code.</echo>
-          <condition property="robot.executable" value="FRCUserProgram.bat" else="FRCUserProgram.sh">
+          <condition property="robot.executable" value="FRCUserProgram.bat" else="sh FRCUserProgram.sh">
             <os family="windows" />
           </condition>
           <!-- because environment variables are needed, the jar file is run via a shell script-->
