@@ -47,10 +47,10 @@
                         <goal>copy-resources</goal>
                       </goals>
                       <configuration>
-                        <outputDirectory>${simulation-zip}</outputDirectory>
+                        <outputDirectory>${simulation-zip}/plugins</outputDirectory>
                         <resources>
                           <resource>
-                            <directory>../../build/simulation/frc_gazebo_plugins/</directory><!-- TODO do this with variables -->
+                            <directory>../../build/simulation/frc_gazebo_plugins/plugins/</directory><!-- TODO do this with variables -->
                           </resource>
                         </resources>
                       </configuration>
