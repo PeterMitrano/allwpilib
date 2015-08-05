@@ -5,7 +5,8 @@ import org.apache.tools.ant.taskdefs.condition.Os
 // is in the libName capture group, which is extracted and used for the linker flags
 def libPattern = /.*((\\/|\\).*)+lib(?<libName>.+).so$/
 def armNiLibraryArgs = []
-def desktopNiLibraryArgs = []
+def linuxDesktopNiLibraryArgs = []
+def windowsDesktopNiLibraryArgs = []
 def wpiLibraryArgs = []
 def niLibraryPath = file('ni-libraries').path
 def armNiLibraryPath = niLibraryPath+'/arm'
@@ -35,7 +36,8 @@ desktopNiLibraryTree.each { lib ->
     def nameMatcher = (lib.path =~ libPattern)
     if (nameMatcher[0].size() > 1) {
         def name = nameMatcher.group('libName')
-        desktopNiLibraryArgs << '-l' + name
+        linuxDesktopNiLibraryArgs << '-l' + name
+        windowsDesktopNiLibraryArgs << name + '.lib'
     }
 }
 
@@ -227,15 +229,15 @@ subprojects {
                     tasks.withType(CppCompile) {
                         String platform = targetPlatform.toString()
                         if (platform.contains("desktop")){
-                          if (toolChain in VisualCpp){
-                              linker.args << '/LIBPATH:' + desktopNiLibraryPath
-                              linker.args.addAll(desktopNiLibraryArgs)
-                          }
-                          else if (toolChain in Gcc){
-                              linker.args << '-L' + desktopNiLibraryPath
-                              linker.args.addAll(desktopNiLibraryArgs)
-                          }
-                      }
+                            if (toolChain in VisualCpp){
+                                linker.args << '/LIBPATH:' + desktopNiLibraryPath
+                                linker.args.addAll(windowsDesktopNiLibraryArgs)
+                            }
+                            else if (toolChain in Gcc){
+                                linker.args << '-L' + desktopNiLibraryPath
+                                linker.args.addAll(linuxDesktopNiLibraryArgs)
+                            }
+                        }
                     }
                 }
                 model {
