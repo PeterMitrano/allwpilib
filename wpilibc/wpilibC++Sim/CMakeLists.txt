@@ -36,10 +36,13 @@ endif()
 file(GLOB_RECURSE COM_SRC_FILES ../wpilibC++/src/*.cpp)
 
 
+MESSAGE("include dir = ${GZ_MSGS_INCLUDE_DIR}")
+
 set (INCLUDE_FOLDERS include
   ../wpilibC++/include
   ../../networktables/cpp/include
   ../../hal/include
+  ${GZ_MSGS_INCLUDE_DIR}
   ${Boost_INCLUDE_DIR}
   ${GAZEBO_INCLUDE_DIRS})
 

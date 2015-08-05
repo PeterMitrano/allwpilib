@@ -17,10 +17,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
 foreach(PLUGIN ${PLUGINS})
-	
+
 	file(GLOB_RECURSE SRC_FILES ${PLUGIN}/src/*.cpp)
 
-	include_directories(src ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS})
+  include_directories(src ${GZ_MSGS_INCLUDE_DIR} ${Boost_INCLUDE_DIR} ${GAZEBO_INCLUDE_DIRS})
 
 	if (WIN32)
 		add_library(${PLUGIN} ${SRC_FILES})
