@@ -1,5 +1,5 @@
 :: This file is a helper for allC++Sim
-:: 
+::
 :: Usage: cd /build && ../configure
 ::
 :: WARNING -- this is only temporary, and only meant for debug, and only works on my computer
@@ -7,9 +7,8 @@
 @set BOOST_PATH=%WS%\boost_1_56_0
 @set BOOST_LIBRARY_DIR=%BOOST_PATH%\lib64-msvc-12.0
 
-@set PROTOBUF_PATH=%WS%\protobuf-2.6.0-win64-vc12
+@set PROTOBUF_PATH=B:\protobuf
 @set PROTOBUF_INCLUDE_DIR=%PROTOBUF_PATH%\src
-
 
 @set OGRE_PATH=%WS%\ogre_src_v1-8-1-vc12-x64-release-debug\build\install\Debug
 @set OGRE_INCLUDE_DIR=%OGRE_PATH%\include;%OGRE_PATH%\include\OGRE;%OGRE_PATH%\include\OGRE\RTShaderSystem;%OGRE_PATH%\include\OGRE\Terrain;%OGRE_PATH%\include\OGRE\Paging
@@ -37,7 +36,7 @@ set OGRE_LIB_SUFFIX=_d.lib
 @set LIB=%LIB%
 
 cmake -G "NMake Makefiles"^
-	-DCMAKE_INSTALL_PREFIX=build^
+    -DCMAKE_INSTALL_PREFIX=build^
     -DCMAKE_PREFIX_PATH="%GAZEBO_PATH%;%SDFORMAT_PATH%;%IGNITION-MATH_PATH%"^
     -DOGRE_FOUND=1^
     -DOGRE_INCLUDE_DIRS="%OGRE_INCLUDE_DIR%"^
