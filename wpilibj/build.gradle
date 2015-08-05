@@ -94,7 +94,6 @@ model {
                     }
                     exportedHeaders {
                         def desktopIncludeLocation = desktopJDKLocation + File.separator + 'include'
-                        println "JDK includes = "+desktopIncludeLocation
                         srcDirs = ["wpilibJavaJNI/include", desktopIncludeLocation, desktopIncludeLocation + File.separator + 'linux']
                         desktopJNIHeaders.outputs.files.each { file ->
                             srcDirs file.getPath()

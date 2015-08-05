@@ -105,11 +105,11 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_deleteMultiWait
  * Signature: (Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;I)B
  */
 JNIEXPORT jbyte JNICALL Java_edu_wpi_first_wpilibj_hal_HALUtil_takeMultiWait
-  (JNIEnv * env, jclass, jobject multiWaitId, jobject mutexId, jint timeout)
+  (JNIEnv * env, jclass, jobject multiWaitId, jobject mutexId)
 {
  	MULTIWAIT_ID javaMultiWaitId = (MULTIWAIT_ID)env->GetDirectBufferAddress(multiWaitId);
 	MUTEX_ID javaMutexId = (MUTEX_ID)env->GetDirectBufferAddress(mutexId);
-	takeMultiWait(javaMultiWaitId, javaMutexId, (int32_t) timeout);
+	takeMultiWait(javaMultiWaitId, javaMutexId);
 	return 0;
 }
 
