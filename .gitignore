@@ -113,6 +113,8 @@ hs_err_pid*
 *.la
 *.a
 *.lib
+!ni-libraries/desktop/*.lib
+!ni-libraries/desktop/*.dll
 
 # Executables
 *.exe
