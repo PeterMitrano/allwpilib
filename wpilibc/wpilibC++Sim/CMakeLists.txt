@@ -8,13 +8,16 @@ if (WIN32)
   #temporary until we build dlls
   add_definitions(-DBUILDING_STATIC_LIBS)
 
-  # XXX: should be set via CMake variables in configure.bat
+  # XXX: remove this once network tables is replaced
   set(PTHREAD_INCLUDE_DIR "C:/Users/peter/gz-ws/pthread-w32/include")
   set(PTHREAD_LIBRARY "C:/Users/peter/gz-ws/pthread-w32/libs/x64/pthreadVC2.lib")
+
 endif()
 
 get_filename_component(HAL_API_INCLUDES ../../hal/include REALPATH)
 get_filename_component(NWT_API_INCLUDES ../../networktables/cpp/include REALPATH)
+
+
 
 
 # also on windows use sprintf_s instead of snprintf
@@ -83,8 +86,3 @@ target_link_libraries(${PROJECT_NAME}
   ${GAZEBO_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
   -fPIC) # NetworkTables
-
-if (WIN32)
-  set_target_properties(${PROJECT_NAME}  PROPERTIES LINK_FLAGS "/DEBUG")
-endif()
-

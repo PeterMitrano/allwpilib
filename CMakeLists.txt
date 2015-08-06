@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(AllC++Sim)
 
+find_package(Protobuf REQUIRED)
+
 include(CheckCXXCompilerFlag)
 include (FindPkgConfig)
 include(GNUInstallDirs)
@@ -15,7 +17,6 @@ endmacro (APPEND_TO_CACHED_STRING)
 #check for depenedencies
 find_package(gazebo REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
-find_package(Protobuf REQUIRED)
 
 if (NOT PROTOBUF_FOUND)
 	MESSAGE ("Missing: Google Protobuf (libprotobuf-dev)")
@@ -47,7 +48,7 @@ if(WIN32)
 endif()
 
 if (MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -DFRC_SIMULATOR /MDd /Zi")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DFRC_SIMULATOR /MDd /Zi")
 else ()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -DFRC_SIMULATOR -Wno-unused-parameter -pthread -fPIC -fpermissive")
 endif()

@@ -14,8 +14,7 @@
 #ifndef __FRC_COMM_H__
 #define __FRC_COMM_H__
 
-#ifdef WIN32
-# include <vxWorks_compat.h>
+#ifdef _WIN32
 #ifdef USE_THRIFT
 #  define EXPORT_FUNC
 # else
@@ -33,7 +32,7 @@
 #define ERR_FRCSystem_NetCommNotResponding -44049
 #define ERR_FRCSystem_NoDSConnection -44018
 
-#ifdef WIN32
+#ifdef _WIN32
 # define __DEPRECATED__ __declspec(deprecated)
 #else
 # define __DEPRECATED__ __attribute__((__deprecated__))
@@ -129,13 +128,8 @@ extern "C" {
 	int EXPORT_FUNC FRC_NetworkCommunication_sendError(bool isError, int32_t errorCode, bool lvCode,
 		const char *details, const char *location, const char *callStack);
 
-#ifdef WIN32
-	void EXPORT_FUNC setNewDataSem(HANDLE);
-#elif defined (__vxworks)
-	void EXPORT_FUNC setNewDataSem(SEM_ID);
-#else
+
 	void EXPORT_FUNC setNewDataSem(::std::condition_variable::native_handle_type);
-#endif
 
 	// this uint32_t is really a LVRefNum
 	int EXPORT_FUNC setNewDataOccurRef(uint32_t refnum);

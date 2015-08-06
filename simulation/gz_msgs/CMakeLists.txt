@@ -28,6 +28,7 @@ foreach(FIL ${msgs})
     OUTPUT
     "${GZ_MSGS_INCLUDE_SUBDIR}/${FIL_WE}.pb.cc"
     "${GZ_MSGS_INCLUDE_SUBDIR}/${FIL_WE}.pb.h"
+
     COMMAND  ${PROTOBUF_PROTOC_EXECUTABLE}
     ARGS --cpp_out=${GZ_MSGS_INCLUDE_SUBDIR} --proto_path=${PROTO_DIR} ${ABS_FIL}
     COMMENT "compiling ${ABS_FIL}"
@@ -39,6 +40,7 @@ set_source_files_properties(${PROTO_SRCS} ${PROTO_HDRS} PROPERTIES GENERATED TRU
 
 ###############################################
 #Generating msgs.h
+
 #create the message_headers and keep it in cache
 set (message_headers "" CACHE INTERNAL "Include dirs description")
 
@@ -48,6 +50,7 @@ foreach (hdr ${PROTO_HDRS})
   APPEND_TO_CACHED_STRING(message_headers
     "Message Types" "#include \"${hdr}\"\n")
 endforeach()
+
 configure_file(msgs.h.in ${MSGS_HEADER})
 
 file(GLOB_RECURSE COM_SRC_FILES msgs/*.cc)

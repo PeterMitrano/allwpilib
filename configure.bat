@@ -7,7 +7,7 @@
 @set BOOST_PATH=%WS%\boost_1_56_0
 @set BOOST_LIBRARY_DIR=%BOOST_PATH%\lib64-msvc-12.0
 
-@set PROTOBUF_PATH=B:\protobuf
+@set PROTOBUF_PATH=%WS%\protobuf-2.6.0-win64-vc12
 @set PROTOBUF_INCLUDE_DIR=%PROTOBUF_PATH%\src
 
 @set OGRE_PATH=%WS%\ogre_src_v1-8-1-vc12-x64-release-debug\build\install\Debug

@@ -13,7 +13,7 @@
 #include "LiveWindow/LiveWindow.h"
 #include "networktables/NetworkTable.h"
 
-constexpr double IterativeRobot::kDefaultPeriod;
+const double IterativeRobot::kDefaultPeriod = 0.0;
 
 void IterativeRobot::Prestart() {
   // Don't immediately say that the robot's ready to be enabled.
