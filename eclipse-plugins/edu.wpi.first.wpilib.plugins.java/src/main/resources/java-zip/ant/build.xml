@@ -189,9 +189,11 @@
           </condition>
           <!-- because environment variables are needed, the jar file is run via a shell script-->
           <exec executable="${user.home}/wpilib/simulation/${robot.executable}" failonerror="true">
-            <arg value="${simulation.dist.jar}" />
-            <arg value="${wpilib.sim.lib}" />
-            <arg value="${user.home}/wpilib/cpp/current/lib/desktop:${user.home}/wpilib/cpp/current/sim/lib"/>
+            <arg value=${simulation.dist.jar} />
+            <arg value=${wpilib.sim.lib} />
+            <arg value=${user.home}/wpilib/cpp/current/lib/desktop:${user.home}/wpilib/cpp/current/sim/lib/>
+            <arg value=${gazebo_master_uri} />
+            <arg value=${gazebo_ip} />
           </exec>
         </sequential>
       </parallel>
