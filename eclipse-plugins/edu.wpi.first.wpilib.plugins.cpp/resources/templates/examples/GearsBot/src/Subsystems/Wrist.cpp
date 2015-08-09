@@ -2,6 +2,8 @@
 #include "SmartDashboard/SmartDashboard.h"
 #include "LiveWindow/LiveWindow.h"
 
+const double Wrist::kP_real = 1, Wrist::kP_simulation = 0.05;
+
 Wrist::Wrist() : PIDSubsystem("Wrist", kP_real, 0.0, 0.0) {
 	#ifdef SIMULATION // Check for simulation and update PID values
         GetPIDController()->SetPID(kP_simulation, 0, 0, 0);

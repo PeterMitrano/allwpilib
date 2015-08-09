@@ -2,6 +2,10 @@
 #include "SmartDashboard/SmartDashboard.h"
 #include "LiveWindow/LiveWindow.h"
 
+const double Elevator::kP_real = 4, Elevator::kI_real = 0.07,
+                        Elevator::kP_simulation = 18, Elevator::kI_simulation = 0.2;
+
+
 Elevator::Elevator() : PIDSubsystem("Elevator", kP_real, kI_real, 0.0) {
     #ifdef SIMULATION // Check for simulation and update PID values
         GetPIDController()->SetPID(kP_simulation, kI_simulation, 0, 0);

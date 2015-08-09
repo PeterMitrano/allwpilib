@@ -13,7 +13,7 @@ private:
 	SpeedController* motor;
     Potentiometer* pot; // TODO: Make Potentiometer
 
-    static constexpr double kP_real = 1, kP_simulation = 0.05;
+    static const double kP_real, kP_simulation;
 
 public:
     Wrist();

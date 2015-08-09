@@ -13,8 +13,8 @@ private:
     SpeedController* motor;
     Potentiometer* pot;
 
-    static constexpr double kP_real = 4, kI_real = 0.07,
-            			kP_simulation = 18, kI_simulation = 0.2;
+    static const double kP_real, kI_real ,
+            			kP_simulation, kI_simulation;
 
 public:
     Elevator();
