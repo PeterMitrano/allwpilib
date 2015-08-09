@@ -80,7 +80,20 @@ model {
         }
         wpilibDesktopJavaJNI(NativeLibrarySpec) {
             targetPlatform 'desktop'
+            def JDKSubdir = "linux"
+            if (System.properties['os.name'].toLowerCase().contains("windows")){
+              JDKSubdir = "win32"
+            }
             binaries.all {
+                cppCompiler.define "FRC_SIMULATOR"
+                if (toolChain in VisualCpp){
+                    cppCompiler.define "FRC_SIMULATOR"
+                    cppCompiler.args "/EHsc"
+                    // FIXME: have proper release/debug modes
+                    cppCompiler.args "/Zi"
+                    cppCompiler.args "/MDd"
+                    cppCompiler.args "/FS"
+                }
                 tasks.withType(CppCompile) {
                     dependsOn desktopJNIHeaders
                     dependsOn addDesktopNiLibraryLinks
@@ -94,7 +107,7 @@ model {
                     }
                     exportedHeaders {
                         def desktopIncludeLocation = desktopJDKLocation + File.separator + 'include'
-                        srcDirs = ["wpilibJavaJNI/include", desktopIncludeLocation, desktopIncludeLocation + File.separator + 'linux']
+                        srcDirs = ["wpilibJavaJNI/include", desktopIncludeLocation, desktopIncludeLocation + File.separator + JDKSubdir]
                         desktopJNIHeaders.outputs.files.each { file ->
                             srcDirs file.getPath()
                         }

@@ -8,6 +8,10 @@
 #if (__cplusplus < 201103L)
 	#if !defined(_MSC_VER)
 		#define nullptr NULL
+	#else
+		//this is a windows flag
+		//can be found in xkeycheck.h
+		#define _ALLOW_KEYWORD_MACROS
 	#endif
 	#define constexpr const
 #endif

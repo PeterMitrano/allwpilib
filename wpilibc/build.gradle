@@ -145,7 +145,7 @@ task wpilibcZip(type: Zip) {
             if (platform.contains("arm")){
               into 'lib/arm'
             }
-            else if (platform.conatins("desktop")){
+            else if (platform.contains("desktop")){
               into 'lib/desktop'
             }
         }
@@ -175,7 +175,13 @@ task wpilibcZip(type: Zip) {
             }
         }
         from(spec.staticLibraryFile) {
-            into 'lib/arm'
+            String platform = targetPlatform.toString();
+            if (platform.contains("arm")){
+              into 'lib/arm'
+            }
+            else if (platform.contains("desktop")){
+              into 'lib/desktop'
+            }
         }
     }
     hal.binaries.withType(SharedLibraryBinarySpec) { spec ->
@@ -215,7 +221,13 @@ task wpilibcSimLibZip(type: Zip) {
     into 'sim/lib'
     from "../build/wpilibc/wpilibC++Sim"
     from "../build/simulation/gz_msgs"
-    include "*.so"
+    if (System.properties['os.name'].toLowerCase().contains("windows")){
+      include "*.dll"
+      include "*.lib"
+    }
+    else {
+      include "*.so"
+    }
 }
 // Add the dependency on the wpilib_nonsharedStaticLibrary task to the wpilibc task. Because of the gradle lifecycle,
 // this cannot be done purely with dependsOn in the task, as the static library task doesn't exist yet. Same goes for

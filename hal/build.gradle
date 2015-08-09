@@ -29,6 +29,10 @@ model {
                 if (toolChain in VisualCpp){
                     cppCompiler.define "FRC_SIMULATOR"
                     cppCompiler.args "/EHsc"
+                    // FIXME: have proper release/debug modes
+                    cppCompiler.args "/Zi"
+                    cppCompiler.args "/MDd"
+                    cppCompiler.args "/FS"
                 }
             }
             tasks.withType(CppCompile) {

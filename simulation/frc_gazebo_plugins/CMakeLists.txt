@@ -13,6 +13,7 @@ set (PLUGINS
 	servo)
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/plugins)
 
 link_directories(${GAZEBO_LIBRARY_DIRS})
 
@@ -29,7 +30,5 @@ foreach(PLUGIN ${PLUGINS})
 	endif()
 
 	target_link_libraries(${PLUGIN} gz_msgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-
-  install(TARGETS ${PLUGIN} DESTINATION $ENV{HOME}/wpilib/simulation/plugins)
 
 endforeach()

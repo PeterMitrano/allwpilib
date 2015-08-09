@@ -4,7 +4,10 @@
 #define NT_BASE_H_
 
 #if defined(_MSC_VER)
-  #define noexcept throw()
+	//this is a windows flag
+	//can be found in xkeycheck.h
+	#define _ALLOW_KEYWORD_MACROS
+	#define noexcept throw()
 #endif
 
 #endif

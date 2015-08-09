@@ -30,9 +30,6 @@ endif()
 
 #on windows we produce .dlls with no prefix
 if(WIN32)
-  #allows us to define constexpr and noexcept in macros
-  #since msvc 2013 doesn't support them
-  add_definitions(-D_ALLOW_KEYWORD_MACROS)
 
   # defines things like M_PI
   add_definitions(-D_USE_MATH_DEFINES)
