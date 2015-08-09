@@ -178,13 +178,11 @@
           <echo>[simulate] You may now run Gazebo</echo>
         </sequential>
         <sequential>
-          <sleep seconds="5"/>
-          <echo>[debug-simulate] You may now run your DriverStation.</echo>
+          <echo>[simulate] You may now run your DriverStation.</echo>
         </sequential>
         <sequential>
-          <sleep seconds="5"/>
           <echo>[simulate] Running Code.</echo>
-          <condition property="robot.executable" value="FRCUserProgram.bat" else="sh FRCUserProgram.sh">
+          <condition property="robot.executable" value="FRCUserProgram.jar.bat" else="sh FRCUserProgram.jar.sh">
             <os family="windows" />
           </condition>
           <!-- because environment variables are needed, the jar file is run via a shell script-->
