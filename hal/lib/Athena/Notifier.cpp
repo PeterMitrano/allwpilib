@@ -25,6 +25,7 @@ struct Notifier {
 	void *param;
 	void (*process)(uint64_t, void*);
 	uint64_t triggerTime = UINT64_MAX;
+	uint8_t threaded = 0;
 };
 static Notifier *notifiers = nullptr;
 static std::atomic_flag notifierAtexitRegistered = ATOMIC_FLAG_INIT;
@@ -66,6 +67,80 @@ static void cleanupNotifierAtExit() {
 	notifierManager = nullptr;
 }
 
+class NotifierThread : public SafeThread {
+ public:
+  void Main();
+
+  bool m_notify = false;
+  void* m_initParam = nullptr;
+  void* m_processParam = nullptr;
+  void* m_exitParam = nullptr;
+  void (*process)(uint64_t, void*);
+  uint8_t (*threadInit)(void*);
+  void (*threadEnd)(void*);
+  uint64_t m_currentTime;
+};
+
+class ThreadedNotifier : public SafeThreadOwner<NotifierThread> {
+ public:
+  void SetInitThreadFunc(void (*threadInit)(void*), void* param);
+  void SetEndThreadFunc(void (*threadEnd)(void*), void* param);
+  void SetFunc(void (*process)(uint64_t, void*));
+
+  void Notify(uint64_t currentTime) {
+    auto thr = GetThread();
+    if (!thr) return;
+    thr->m_currentTime = currentTime;
+    thr->m_notify = true;
+    thr->m_cond.notify_one();
+  }
+};
+
+void ThreadedNotifier::SetInitThreadFunc(void (*threadInit)(void*), void* param)
+{
+  auto thr = GetThread();
+  if (!thr) return;
+  thr->m_initParam = param;
+  thr->threadInit = threadInit;
+}
+
+void ThreadedNotifier::SetEndThreadFunc(void (*threadEnd)(void*), void* param)
+{
+  auto thr = GetThread();
+  if (!thr) return;
+  thr->m_exitParam = param;
+  thr->threadEnd = threadEnd;
+}
+
+void ThreadedNotifier::SetFunc(void (*process)(uint64_t, void*), void* param) {
+  auto thr = GetThread();
+  if (!thr) return;
+  thr->m_processParam = param;
+  thr->process = process;
+}
+
+void NotifierThread::Main() {
+	
+  if(threadInit(m_initParam)) return;
+
+  std::unique_lock<std::mutex> lock(m_mutex);
+  while (m_active) {
+    m_cond.wait(lock, [&] { return !m_active || m_notify; });
+    if (!m_active) break;
+    m_notify = false;
+    uint64_t currentTime = m_currentTime;
+    lock.unlock();  // don't hold mutex during callback execution
+	process(currentTime, m_processParam);
+    lock.lock();
+  }
+  
+  threadEnd(m_exitParam);
+}
+
+void notifierHandler(uint64_t currentTimeInt, void* param) {
+  ((ThreadedNotifier*)param)->Notify(currentTimeInt);
+}
+
 extern "C" {
 
 void* initializeNotifier(void (*process)(uint64_t, void*), void *param, int32_t *status)
@@ -95,15 +170,41 @@ void* initializeNotifier(void (*process)(uint64_t, void*), void *param, int32_t 
 	if (notifier->next) notifier->next->prev = notifier;
 	notifier->param = param;
 	notifier->process = process;
+	notifier->threaded = 0;
 	notifiers = notifier;
 	return notifier;
 }
 
+void* initializeNotifierThreaded(NotifierHandlerFunction, void* callbackParam, 
+									 void (*threadInit)(void*), void (*threadEnd)(void*),
+									 void* initParam, void* endParam, int32_t *status)
+{
+	ThreadedNotifier* notify = new ThreadedNotifier;
+	notify->Start();
+	notify->SetInitThreadFunc(threadInit, initParam);
+	notify->SetEndThreadFunc(threadEnd, endParam);
+	notify->SetFunc(process, callbackParam);
+	
+	void *notifierPtr = initializeNotifier(notifierHandler, notify, status);
+	
+	if (!notifierPtr || *status != 0)
+	{
+		delete notify;
+	}
+	((Notifier*)notifier_pointer)->threaded = 1;
+	
+	return notifierPtr;
+}
+
 void cleanNotifier(void* notifier_pointer, int32_t *status)
 {
+	Notifier* notifier = (Notifier*)notifier_pointer;
+	ThreadedNotifier* notify = NULL;
+	if (notifier->threaded)
+		notify = notifier->param;
+	
 	{
 		std::lock_guard<priority_recursive_mutex> sync(notifierMutex);
-		Notifier* notifier = (Notifier*)notifier_pointer;
 
 		// remove from list and delete
 		if (notifier->prev) notifier->prev->next = notifier->next;
@@ -126,6 +227,8 @@ void cleanNotifier(void* notifier_pointer, int32_t *status)
 			notifierManager = nullptr;
 		}
 	}
+	
+	if (notify) delete notify;
 }
 
 void* getNotifierParam(void* notifier_pointer, int32_t *status)
