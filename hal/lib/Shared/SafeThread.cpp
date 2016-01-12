@@ -5,7 +5,7 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include "SafeThread.h"
+#include "HAL/SafeThread.h"
 
 //using namespace nt;
 

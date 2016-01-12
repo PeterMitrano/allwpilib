@@ -16,7 +16,7 @@
 #include "edu_wpi_first_wpilibj_hal_InterruptJNI.h"
 #include "HAL/Interrupts.hpp"
 #include "HALUtil.h"
-#include "SafeThread.h"
+#include "HAL/SafeThread.h"
 
 TLogLevel interruptJNILogLevel = logERROR;
 

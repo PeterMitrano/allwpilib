@@ -17,10 +17,10 @@
 #include "edu_wpi_first_wpilibj_hal_NotifierJNI.h"
 #include "HAL/Notifier.hpp"
 #include "HALUtil.h"
-#include "SafeThread.h"
+#include <iostream>
 
 // set the logging level
-TLogLevel notifierJNILogLevel = logWARNING;
+TLogLevel notifierJNILogLevel = logERROR;
 
 #define NOTIFIERJNI_LOG(level) \
     if (level > notifierJNILogLevel) ; \
@@ -49,10 +49,11 @@ struct JVMData
   jmethodID m_mid;
   JNIEnv *env;
   
-}
+};
 
 uint8_t ThreadInit(void *param)
 {
+  std::cout << "Thread Init" << std::endl;
   JVMData* data = (JVMData*)param;
   JavaVMAttachArgs args;
   args.version = JNI_VERSION_1_2;
@@ -66,19 +67,21 @@ uint8_t ThreadInit(void *param)
 
 void ThreadProcess(uint64_t currentTime, void *param)
 {
+	std::cout << "Thread Process" << std::endl;
 	JVMData* data = (JVMData*)param;
 	if (!data->m_func) return;
 	jobject func = data->m_func;
     jmethodID mid = data->m_mid;
-	env->CallVoidMethod(func, mid, (jlong)currentTime);
-    if (env->ExceptionCheck()) {
-      env->ExceptionDescribe();
-      env->ExceptionClear();
+	data->env->CallVoidMethod(func, mid, (jlong)currentTime);
+    if (data->env->ExceptionCheck()) {
+      data->env->ExceptionDescribe();
+      data->env->ExceptionClear();
     }
 }
 
 void ThreadEnd(void *param)
 {
+	std::cout << "Thread End" << std::endl;
   JVMData* data = (JVMData*)param;
 	// free global reference
   if (data->m_func) data->env->DeleteGlobalRef(data->m_func);
@@ -95,6 +98,7 @@ JNIEXPORT jlong JNICALL Java_edu_wpi_first_wpilibj_hal_NotifierJNI_initializeNot
 {
   NOTIFIERJNI_LOG(logDEBUG) << "Calling NOTIFIERJNI initializeNotifier";
 
+  std::cout << "initializeNotifier" << std::endl;
   jclass cls = env->GetObjectClass(func);
   if (cls == 0) {
     NOTIFIERJNI_LOG(logERROR) << "Error getting java class";
@@ -115,14 +119,17 @@ JNIEXPORT jlong JNICALL Java_edu_wpi_first_wpilibj_hal_NotifierJNI_initializeNot
   notify->Start();
   notify->SetFunc(env, func, mid);
   */
+  std::cout << "Setting Data Pointer" << std::endl;
   JVMData* data = new JVMData;
-  data->m_func = env->NewGlobalRef(func);
-  data->m_mid = mid;
+  
   
   
   int32_t status = 0;
-  void *notifierPtr = initializeNotifierThreaded(ThreadProcess, data,
-  ThreadInit, data, ThreadEnd, data, &status);
+  std::cout << "Starting Notifier" << std::endl;
+  void *notifierPtr = initializeNotifierThreaded(ThreadProcess, ThreadInit, ThreadEnd, data, &status);
+  
+  data->m_func = env->NewGlobalRef(func);
+  data->m_mid = mid;
 
   NOTIFIERJNI_LOG(logDEBUG) << "Notifier Ptr = " << notifierPtr;
   NOTIFIERJNI_LOG(logDEBUG) << "Status = " << status;
@@ -148,12 +155,12 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_NotifierJNI_cleanNotifier
   NOTIFIERJNI_LOG(logDEBUG) << "Notifier Ptr = " << (void *)notifierPtr;
 
   int32_t status = 0;
-  NotifierJNI* notify =
-      (NotifierJNI*)getNotifierParam((void*)notifierPtr, &status);
+  JVMData* data = (JVMData*)getThreadedNotifierParam((void*)notifierPtr, &status);
   cleanNotifier((void*)notifierPtr, &status);
   NOTIFIERJNI_LOG(logDEBUG) << "Status = " << status;
   CheckStatus(env, status);
-  delete notify;
+  
+  delete data;
 }
 
 /*
