@@ -9,11 +9,7 @@
 
 #include <cxxabi.h>
 #include <execinfo.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include <iostream>
 #include <sstream>
 
 #include "HAL/HAL.h"
@@ -49,7 +45,7 @@ bool wpi_assert_impl(bool conditionValue, const char* conditionText,
     std::string error = errorStream.str();
 
     // Print the error and send it to the DriverStation
-    HALSendError(1, 1, 0, error.c_str(), location.c_str(), stack.c_str(), 1);
+    HAL_SendError(1, 1, 0, error.c_str(), location.c_str(), stack.c_str(), 1);
   }
 
   return conditionValue;
@@ -84,7 +80,7 @@ void wpi_assertEqual_common_impl(const char* valueA, const char* valueB,
   std::string error = errorStream.str();
 
   // Print the error and send it to the DriverStation
-  HALSendError(1, 1, 0, error.c_str(), location.c_str(), trace.c_str(), 1);
+  HAL_SendError(1, 1, 0, error.c_str(), location.c_str(), trace.c_str(), 1);
 }
 
 /**
@@ -129,10 +125,10 @@ bool wpi_assertNotEqual_impl(int valueA, int valueB, const char* valueAString,
  * For now, expect this to be competition year.
  * @return FPGA Version number.
  */
-uint16_t GetFPGAVersion() {
+int32_t GetFPGAVersion() {
   int32_t status = 0;
-  uint16_t version = getFPGAVersion(&status);
-  wpi_setGlobalErrorWithContext(status, getHALErrorMessage(status));
+  int32_t version = HAL_GetFPGAVersion(&status);
+  wpi_setGlobalErrorWithContext(status, HAL_GetErrorMessage(status));
   return version;
 }
 
@@ -144,10 +140,10 @@ uint16_t GetFPGAVersion() {
  * The 12 least significant bits are the Build Number.
  * @return FPGA Revision number.
  */
-uint32_t GetFPGARevision() {
+int64_t GetFPGARevision() {
   int32_t status = 0;
-  uint32_t revision = getFPGARevision(&status);
-  wpi_setGlobalErrorWithContext(status, getHALErrorMessage(status));
+  int64_t revision = HAL_GetFPGARevision(&status);
+  wpi_setGlobalErrorWithContext(status, HAL_GetErrorMessage(status));
   return revision;
 }
 
@@ -159,20 +155,20 @@ uint32_t GetFPGARevision() {
  */
 uint64_t GetFPGATime() {
   int32_t status = 0;
-  uint64_t time = getFPGATime(&status);
-  wpi_setGlobalErrorWithContext(status, getHALErrorMessage(status));
+  uint64_t time = HAL_GetFPGATime(&status);
+  wpi_setGlobalErrorWithContext(status, HAL_GetErrorMessage(status));
   return time;
 }
 
 /**
- * Get the state of the "USER" button on the RoboRIO.
+ * Get the state of the "USER" button on the roboRIO.
  *
  * @return True if the button is currently pressed down
  */
 bool GetUserButton() {
   int32_t status = 0;
 
-  bool value = getFPGAButton(&status);
+  bool value = HAL_GetFPGAButton(&status);
   wpi_setGlobalError(status);
 
   return value;

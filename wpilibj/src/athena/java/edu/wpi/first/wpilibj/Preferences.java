@@ -9,18 +9,18 @@ package edu.wpi.first.wpilibj;
 
 import java.util.Vector;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import edu.wpi.first.wpilibj.tables.ITableListener;
 import edu.wpi.first.wpilibj.tables.TableKeyNotDefinedException;
 
 /**
- * The preferences class provides a relatively simple way to save important values to the RoboRIO to
- * access the next time the RoboRIO is booted.
+ * The preferences class provides a relatively simple way to save important values to the roboRIO to
+ * access the next time the roboRIO is booted.
  *
- * <p> This class loads and saves from a file inside the RoboRIO. The user can not access the file
+ * <p> This class loads and saves from a file inside the roboRIO. The user can not access the file
  * directly, but may modify values at specific fields which will then be automatically saved to the
  * file by the NetworkTables server. </p>
  *
@@ -28,8 +28,6 @@ import edu.wpi.first.wpilibj.tables.TableKeyNotDefinedException;
  *
  * <p> This will also interact with {@link NetworkTable} by creating a table called "Preferences"
  * with all the key-value pairs. </p>
- *
- * @author Joe Grinstead
  */
 public class Preferences {
 
@@ -79,7 +77,7 @@ public class Preferences {
   private Preferences() {
     m_table = NetworkTable.getTable(TABLE_NAME);
     m_table.addTableListenerEx(m_listener, ITable.NOTIFY_NEW | ITable.NOTIFY_IMMEDIATE);
-    UsageReporting.report(tResourceType.kResourceType_Preferences, 0);
+    HAL.report(tResourceType.kResourceType_Preferences, 0);
   }
 
   /**

@@ -9,8 +9,6 @@ package edu.wpi.first.wpilibj;
 
 /**
  * Manages a PWM object.
- *
- * @author brad
  */
 public class SafePWM extends PWM implements MotorSafety {
 
@@ -24,6 +22,7 @@ public class SafePWM extends PWM implements MotorSafety {
    */
   public SafePWM(final int channel) {
     super(channel);
+
     m_safetyHelper = new MotorSafetyHelper(this);
     m_safetyHelper.setExpiration(0.0);
     m_safetyHelper.setSafetyEnabled(false);
@@ -91,6 +90,6 @@ public class SafePWM extends PWM implements MotorSafety {
   }
 
   public void disable() {
-    setRaw(kPwmDisabled);
+    setDisabled();
   }
 }

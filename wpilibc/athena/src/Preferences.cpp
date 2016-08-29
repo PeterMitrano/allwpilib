@@ -7,11 +7,10 @@
 
 #include "Preferences.h"
 
+#include <algorithm>
+
 #include "HAL/HAL.h"
 #include "WPIErrors.h"
-
-#include <stdio.h>
-#include <algorithm>
 
 /** The Preferences table name */
 static const char* kTableName = "Preferences";
@@ -27,7 +26,7 @@ void Preferences::Listener::ValueChangedEx(ITable* source, llvm::StringRef key,
 
 Preferences::Preferences() : m_table(NetworkTable::GetTable(kTableName)) {
   m_table->AddTableListenerEx(&m_listener, NT_NOTIFY_NEW | NT_NOTIFY_IMMEDIATE);
-  HALReport(HALUsageReporting::kResourceType_Preferences, 0);
+  HAL_Report(HALUsageReporting::kResourceType_Preferences, 0);
 }
 
 /**
@@ -61,8 +60,8 @@ std::string Preferences::GetString(llvm::StringRef key,
 }
 
 /**
- * Returns the int at the given key.  If this table does not have a value
- * for that position, then the given defaultValue value will be returned.
+ * Returns the int at the given key.  If this table does not have a value for
+ * that position, then the given defaultValue value will be returned.
  *
  * @param key          the key
  * @param defaultValue the value to return if none exists in the table

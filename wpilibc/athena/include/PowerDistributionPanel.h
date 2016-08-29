@@ -15,19 +15,18 @@
 /**
  * Class for getting voltage, current, temperature, power and energy from the
  * CAN PDP.
- * @author Thomas Clark
  */
 class PowerDistributionPanel : public SensorBase, public LiveWindowSendable {
  public:
   PowerDistributionPanel();
-  PowerDistributionPanel(uint8_t module);
+  explicit PowerDistributionPanel(uint8_t module);
 
-  double GetVoltage() const;
-  double GetTemperature() const;
-  double GetCurrent(uint8_t channel) const;
-  double GetTotalCurrent() const;
-  double GetTotalPower() const;
-  double GetTotalEnergy() const;
+  float GetVoltage() const;
+  float GetTemperature() const;
+  float GetCurrent(uint8_t channel) const;
+  float GetTotalCurrent() const;
+  float GetTotalPower() const;
+  float GetTotalEnergy() const;
   void ResetTotalEnergy();
   void ClearStickyFaults();
 

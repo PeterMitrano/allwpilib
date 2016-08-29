@@ -7,9 +7,9 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.DIOJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
@@ -21,6 +21,8 @@ import edu.wpi.first.wpilibj.tables.ITable;
  * for devices like switches etc. that aren't implemented anywhere else.
  */
 public class DigitalInput extends DigitalSource implements LiveWindowSendable {
+  private int m_channel = 0;
+  private int m_handle = 0;
 
   /**
    * Create an instance of a Digital Input class. Creates a digital input given a channel.
@@ -28,10 +30,24 @@ public class DigitalInput extends DigitalSource implements LiveWindowSendable {
    * @param channel the DIO channel for the digital input 0-9 are on-board, 10-25 are on the MXP
    */
   public DigitalInput(int channel) {
-    initDigitalPort(channel, true);
+    checkDigitalChannel(channel);
+    m_channel = channel;
+
+    m_handle = DIOJNI.initializeDIOPort(DIOJNI.getPort((byte)channel), true);
 
     LiveWindow.addSensor("DigitalInput", channel, this);
-    UsageReporting.report(tResourceType.kResourceType_DigitalInput, channel);
+    HAL.report(tResourceType.kResourceType_DigitalInput, channel);
+  }
+
+  /**
+   * Frees the resources for this output.
+   */
+  public void free() {
+    if (m_interrupt != 0) {
+      cancelInterrupts();
+    }
+
+    DIOJNI.freeDIOPort(m_handle);
   }
 
   /**
@@ -41,7 +57,7 @@ public class DigitalInput extends DigitalSource implements LiveWindowSendable {
    * @return the status of the digital input
    */
   public boolean get() {
-    return DIOJNI.getDIO(super.m_port);
+    return DIOJNI.getDIO(m_handle);
   }
 
   /**
@@ -49,15 +65,40 @@ public class DigitalInput extends DigitalSource implements LiveWindowSendable {
    *
    * @return The GPIO channel number that this object represents.
    */
+  @Override
   public int getChannel() {
-    return super.m_channel;
+    return m_channel;
   }
 
+  /**
+   * Get the analog trigger type.
+   *
+   * @return false
+   */
   @Override
-  public boolean getAnalogTriggerForRouting() {
+  public int getAnalogTriggerTypeForRouting() {
+    return 0;
+  }
+
+  /**
+   * Is this an analog trigger.
+   *
+   * @return true if this is an analog trigger
+   */
+  @Override
+  public boolean isAnalogTrigger() {
     return false;
   }
 
+  /**
+   * Get the HAL Port Handle.
+   *
+   * @return The HAL Handle to the specified source.
+   */
+  @Override
+  public int getPortHandleForRouting() {
+    return m_handle;
+  }
 
   @Override
   public String getSmartDashboardType() {

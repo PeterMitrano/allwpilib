@@ -10,6 +10,7 @@
 #include <memory>
 
 #include "DigitalSource.h"
+#include "HAL/Types.h"
 #include "LiveWindow/LiveWindowSendable.h"
 #include "tables/ITableListener.h"
 
@@ -25,8 +26,9 @@ class DigitalOutput : public DigitalSource,
  public:
   explicit DigitalOutput(uint32_t channel);
   virtual ~DigitalOutput();
-  void Set(uint32_t value);
-  uint32_t GetChannel() const;
+  void Set(bool value);
+  bool Get();
+  uint32_t GetChannel() const override;
   void Pulse(float length);
   bool IsPulsing() const;
   void SetPWMRate(float rate);
@@ -35,12 +37,12 @@ class DigitalOutput : public DigitalSource,
   void UpdateDutyCycle(float dutyCycle);
 
   // Digital Source Interface
-  virtual uint32_t GetChannelForRouting() const;
-  virtual uint32_t GetModuleForRouting() const;
-  virtual bool GetAnalogTriggerForRouting() const;
+  HAL_Handle GetPortHandleForRouting() const override;
+  AnalogTriggerType GetAnalogTriggerTypeForRouting() const override;
+  bool IsAnalogTrigger() const override;
 
-  virtual void ValueChanged(ITable* source, llvm::StringRef key,
-                            std::shared_ptr<nt::Value> value, bool isNew);
+  void ValueChanged(ITable* source, llvm::StringRef key,
+                    std::shared_ptr<nt::Value> value, bool isNew) override;
   void UpdateTable();
   void StartLiveWindowMode();
   void StopLiveWindowMode();
@@ -50,7 +52,8 @@ class DigitalOutput : public DigitalSource,
 
  private:
   uint32_t m_channel;
-  void* m_pwmGenerator;
+  HAL_DigitalHandle m_handle;
+  HAL_DigitalPWMHandle m_pwmGenerator;
 
   std::shared_ptr<ITable> m_table;
 };

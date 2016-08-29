@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <stdio.h>
-
 #include "ErrorBase.h"
 #include "nivision.h"
 
@@ -16,7 +14,7 @@
 
 class ImageBase : public ErrorBase {
  public:
-  ImageBase(ImageType type);
+  explicit ImageBase(ImageType type);
   virtual ~ImageBase();
   virtual void Write(const char* fileName);
   int GetHeight();

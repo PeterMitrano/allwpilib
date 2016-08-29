@@ -67,6 +67,21 @@
 #define PARAMETER_OUT_OF_RANGE_MESSAGE "HAL: A parameter is out of range."
 #define RESOURCE_IS_ALLOCATED -1029
 #define RESOURCE_IS_ALLOCATED_MESSAGE "HAL: Resource already allocated"
+#define RESOURCE_OUT_OF_RANGE -1030
+#define RESOURCE_OUT_OF_RANGE_MESSAGE \
+  "HAL: The requested resource is out of range."
+#define HAL_INVALID_ACCUMULATOR_CHANNEL -1035
+#define HAL_INVALID_ACCUMULATOR_CHANNEL_MESSAGE \
+  "HAL: The requested input is not an accumulator channel"
+#define HAL_COUNTER_NOT_SUPPORTED -1058
+#define HAL_COUNTER_NOT_SUPPORTED_MESSAGE \
+  "HAL: Counter mode not supported for encoder method"
+#define HAL_PWM_SCALE_ERROR -1072
+#define HAL_PWM_SCALE_ERROR_MESSAGE \
+  "HAL: The PWM Scale Factors are out of range"
+#define HAL_HANDLE_ERROR -1098
+#define HAL_HANDLE_ERROR_MESSAGE \
+  "HAL: A handle parameter was passed incorrectly"
 
 #define VI_ERROR_SYSTEM_ERROR_MESSAGE "HAL - VISA: System Error";
 #define VI_ERROR_INV_OBJECT_MESSAGE "HAL - VISA: Invalid Object"

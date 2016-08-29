@@ -15,13 +15,13 @@ class TestEnvironment : public testing::Environment {
   bool m_alreadySetUp = false;
 
  public:
-  virtual void SetUp() override {
+  void SetUp() override {
     /* Only set up once.  This allows gtest_repeat to be used to
             automatically repeat tests. */
     if (m_alreadySetUp) return;
     m_alreadySetUp = true;
 
-    if (!HALInitialize()) {
+    if (!HAL_Initialize(0)) {
       std::cerr << "FATAL ERROR: HAL could not be initialized" << std::endl;
       exit(-1);
     }
@@ -30,7 +30,7 @@ class TestEnvironment : public testing::Environment {
             station. After starting network coms, it will loop until the driver
             station returns that the robot is enabled, to ensure that tests
             will be able to run on the hardware. */
-    HALNetworkCommunicationObserveUserProgramStarting();
+    HAL_ObserveUserProgramStarting();
     LiveWindow::GetInstance()->SetEnabled(false);
 
     std::cout << "Waiting for enable" << std::endl;
@@ -40,7 +40,7 @@ class TestEnvironment : public testing::Environment {
     }
   }
 
-  virtual void TearDown() override {}
+  void TearDown() override {}
 };
 
 testing::Environment* const environment =

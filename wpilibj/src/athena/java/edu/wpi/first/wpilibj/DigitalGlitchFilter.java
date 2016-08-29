@@ -10,9 +10,9 @@ package edu.wpi.first.wpilibj;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.DigitalGlitchFilterJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 
 /**
  * Class to enable glitch filtering on a set of digital inputs. This class will manage adding and
@@ -33,7 +33,7 @@ public class DigitalGlitchFilter extends SensorBase {
       if (index != m_filterAllocated.length) {
         m_channelIndex = index;
         m_filterAllocated[index] = true;
-        UsageReporting.report(tResourceType.kResourceType_DigitalFilter,
+        HAL.report(tResourceType.kResourceType_DigitalFilter,
             m_channelIndex, 0);
       }
     }
@@ -53,9 +53,13 @@ public class DigitalGlitchFilter extends SensorBase {
 
   private static void setFilter(DigitalSource input, int channelIndex) {
     if (input != null) { // Counter might have just one input
-      DigitalGlitchFilterJNI.setFilterSelect(input.m_port, channelIndex);
+      // analog triggers are not supported for DigitalGlitchFilters
+      if (input.isAnalogTrigger()) {
+        throw new IllegalStateException("Analog Triggers not supported for DigitalGlitchFilters");
+      }
+      DigitalGlitchFilterJNI.setFilterSelect(input.getPortHandleForRouting(), channelIndex);
 
-      int selected = DigitalGlitchFilterJNI.getFilterSelect(input.m_port);
+      int selected = DigitalGlitchFilterJNI.getFilterSelect(input.getPortHandleForRouting());
       if (selected != channelIndex) {
         throw new IllegalStateException("DigitalGlitchFilterJNI.setFilterSelect("
             + channelIndex + ") failed -> " + selected);

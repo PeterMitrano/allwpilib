@@ -22,8 +22,8 @@ constexpr double IterativeRobot::kDefaultPeriod;
  * the DS packets
  */
 void IterativeRobot::StartCompetition() {
-  HALReport(HALUsageReporting::kResourceType_Framework,
-            HALUsageReporting::kFramework_Iterative);
+  HAL_Report(HALUsageReporting::kResourceType_Framework,
+             HALUsageReporting::kFramework_Iterative);
 
   LiveWindow* lw = LiveWindow::GetInstance();
   // first and one-time initialization
@@ -34,7 +34,7 @@ void IterativeRobot::StartCompetition() {
   RobotInit();
 
   // Tell the DS that the robot is ready to be enabled
-  HALNetworkCommunicationObserveUserProgramStarting();
+  HAL_ObserveUserProgramStarting();
 
   // loop forever, calling the appropriate mode-dependent function
   lw->SetEnabled(false);
@@ -52,7 +52,7 @@ void IterativeRobot::StartCompetition() {
         m_teleopInitialized = false;
         m_testInitialized = false;
       }
-      HALNetworkCommunicationObserveUserProgramDisabled();
+      HAL_ObserveUserProgramDisabled();
       DisabledPeriodic();
     } else if (IsAutonomous()) {
       // call AutonomousInit() if we are now just entering autonomous mode from
@@ -66,7 +66,7 @@ void IterativeRobot::StartCompetition() {
         m_teleopInitialized = false;
         m_testInitialized = false;
       }
-      HALNetworkCommunicationObserveUserProgramAutonomous();
+      HAL_ObserveUserProgramAutonomous();
       AutonomousPeriodic();
     } else if (IsTest()) {
       // call TestInit() if we are now just entering test mode from
@@ -80,7 +80,7 @@ void IterativeRobot::StartCompetition() {
         m_autonomousInitialized = false;
         m_teleopInitialized = false;
       }
-      HALNetworkCommunicationObserveUserProgramTest();
+      HAL_ObserveUserProgramTest();
       TestPeriodic();
     } else {
       // call TeleopInit() if we are now just entering teleop mode from
@@ -95,7 +95,7 @@ void IterativeRobot::StartCompetition() {
         m_testInitialized = false;
         Scheduler::GetInstance()->SetEnabled(true);
       }
-      HALNetworkCommunicationObserveUserProgramTeleop();
+      HAL_ObserveUserProgramTeleop();
       TeleopPeriodic();
     }
     // wait for driver station data so the loop doesn't hog the CPU
@@ -116,7 +116,7 @@ void IterativeRobot::StartCompetition() {
  * ready, causing the robot to be bypassed in a match.
  */
 void IterativeRobot::RobotInit() {
-  printf("Default %s() method... Overload me!\n", __FUNCTION__);
+  std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
 }
 
 /**
@@ -127,7 +127,7 @@ void IterativeRobot::RobotInit() {
  * the robot enters disabled mode.
  */
 void IterativeRobot::DisabledInit() {
-  printf("Default %s() method... Overload me!\n", __FUNCTION__);
+  std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
 }
 
 /**
@@ -137,7 +137,7 @@ void IterativeRobot::DisabledInit() {
  * called each time the robot enters autonomous mode.
  */
 void IterativeRobot::AutonomousInit() {
-  printf("Default %s() method... Overload me!\n", __FUNCTION__);
+  std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
 }
 
 /**
@@ -147,7 +147,7 @@ void IterativeRobot::AutonomousInit() {
  * called each time the robot enters teleop mode.
  */
 void IterativeRobot::TeleopInit() {
-  printf("Default %s() method... Overload me!\n", __FUNCTION__);
+  std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
 }
 
 /**
@@ -157,7 +157,7 @@ void IterativeRobot::TeleopInit() {
  * called each time the robot enters test mode.
  */
 void IterativeRobot::TestInit() {
-  printf("Default %s() method... Overload me!\n", __FUNCTION__);
+  std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
 }
 
 /**
@@ -169,10 +169,9 @@ void IterativeRobot::TestInit() {
 void IterativeRobot::DisabledPeriodic() {
   static bool firstRun = true;
   if (firstRun) {
-    printf("Default %s() method... Overload me!\n", __FUNCTION__);
+    std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
     firstRun = false;
   }
-  delayTicks(1);
 }
 
 /**
@@ -184,10 +183,9 @@ void IterativeRobot::DisabledPeriodic() {
 void IterativeRobot::AutonomousPeriodic() {
   static bool firstRun = true;
   if (firstRun) {
-    printf("Default %s() method... Overload me!\n", __FUNCTION__);
+    std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
     firstRun = false;
   }
-  delayTicks(1);
 }
 
 /**
@@ -199,10 +197,9 @@ void IterativeRobot::AutonomousPeriodic() {
 void IterativeRobot::TeleopPeriodic() {
   static bool firstRun = true;
   if (firstRun) {
-    printf("Default %s() method... Overload me!\n", __FUNCTION__);
+    std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
     firstRun = false;
   }
-  delayTicks(1);
 }
 
 /**
@@ -214,8 +211,7 @@ void IterativeRobot::TeleopPeriodic() {
 void IterativeRobot::TestPeriodic() {
   static bool firstRun = true;
   if (firstRun) {
-    printf("Default %s() method... Overload me!\n", __FUNCTION__);
+    std::printf("Default %s() method... Overload me!\n", __FUNCTION__);
     firstRun = false;
   }
-  delayTicks(1);
 }

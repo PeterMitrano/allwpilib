@@ -7,8 +7,8 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 public class Talon extends PWMSpeedController {
 
   /**
-   * Common initialization code called by all constructors.
+   * Constructor for a Talon (original or Talon SR).
    *
    * <p>Note that the Talon uses the following bounds for PWM values. These values should work
    * reasonably well for most controllers, but if users experience issues such as asymmetric
@@ -28,25 +28,19 @@ public class Talon extends PWMSpeedController {
    * <p>- 2.037ms = full "forward" - 1.539ms = the "high end" of the deadband range - 1.513ms =
    * center of the deadband range (off) - 1.487ms = the "low end" of the deadband range - .989ms
    * = full "reverse"
-   */
-  private void initTalon() {
-    setBounds(2.037, 1.539, 1.513, 1.487, .989);
-    setPeriodMultiplier(PeriodMultiplier.k1X);
-    setRaw(m_centerPwm);
-    setZeroLatch();
-
-    LiveWindow.addActuator("Talon", getChannel(), this);
-    UsageReporting.report(tResourceType.kResourceType_Talon, getChannel());
-  }
-
-  /**
-   * Constructor for a Talon (original or Talon SR).
    *
    * @param channel The PWM channel that the Talon is attached to. 0-9 are on-board, 10-19 are on
    *                the MXP port
    */
   public Talon(final int channel) {
     super(channel);
-    initTalon();
+
+    setBounds(2.037, 1.539, 1.513, 1.487, .989);
+    setPeriodMultiplier(PeriodMultiplier.k1X);
+    setSpeed(0.0);
+    setZeroLatch();
+
+    LiveWindow.addActuator("Talon", getChannel(), this);
+    HAL.report(tResourceType.kResourceType_Talon, getChannel());
   }
 }

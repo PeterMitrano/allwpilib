@@ -8,6 +8,7 @@
 #pragma once
 
 #include "AnalogTriggerOutput.h"
+#include "HAL/Types.h"
 #include "SensorBase.h"
 
 class AnalogInput;
@@ -24,7 +25,7 @@ class AnalogTrigger : public SensorBase {
   void SetLimitsRaw(int32_t lower, int32_t upper);
   void SetAveraged(bool useAveragedValue);
   void SetFiltered(bool useFilteredValue);
-  uint32_t GetIndex() const;
+  int32_t GetIndex() const;
   bool GetInWindow();
   bool GetTriggerState();
   std::shared_ptr<AnalogTriggerOutput> CreateOutput(
@@ -32,5 +33,7 @@ class AnalogTrigger : public SensorBase {
 
  private:
   uint8_t m_index;
-  void* m_trigger;
+  HAL_AnalogTriggerHandle m_trigger;
+  AnalogInput* m_analogInput = nullptr;
+  bool m_ownsAnalog = false;
 };

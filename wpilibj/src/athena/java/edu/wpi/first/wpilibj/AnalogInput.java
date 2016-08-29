@@ -10,14 +10,13 @@ package edu.wpi.first.wpilibj;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.AnalogJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import edu.wpi.first.wpilibj.util.AllocationException;
-import edu.wpi.first.wpilibj.util.CheckedAllocationException;
 
 /**
  * Analog channel class.
@@ -34,8 +33,7 @@ import edu.wpi.first.wpilibj.util.CheckedAllocationException;
 public class AnalogInput extends SensorBase implements PIDSource, LiveWindowSendable {
 
   private static final int kAccumulatorSlot = 1;
-  private static Resource channels = new Resource(kAnalogInputChannels);
-  private long m_port;
+  int m_port; // explicit no modifier, private and package accessable.
   private int m_channel;
   private static final int[] kAccumulatorChannels = {0, 1};
   private long m_accumulatorOffset;
@@ -49,21 +47,13 @@ public class AnalogInput extends SensorBase implements PIDSource, LiveWindowSend
   public AnalogInput(final int channel) {
     m_channel = channel;
 
-    if (!AnalogJNI.checkAnalogInputChannel(channel)) {
-      throw new AllocationException("Analog input channel " + m_channel
-          + " cannot be allocated. Channel is not present.");
-    }
-    try {
-      channels.allocate(channel);
-    } catch (CheckedAllocationException ex) {
-      throw new AllocationException("Analog input channel " + m_channel + " is already allocated");
-    }
+    SensorBase.checkAnalogInputChannel(channel);
 
-    final long portPointer = AnalogJNI.getPort((byte) channel);
-    m_port = AnalogJNI.initializeAnalogInputPort(portPointer);
+    final int portHandle = AnalogJNI.getPort((byte) channel);
+    m_port = AnalogJNI.initializeAnalogInputPort(portHandle);
 
     LiveWindow.addSensor("AnalogInput", channel, this);
-    UsageReporting.report(tResourceType.kResourceType_AnalogChannel, channel);
+    HAL.report(tResourceType.kResourceType_AnalogChannel, channel);
   }
 
   /**
@@ -72,7 +62,6 @@ public class AnalogInput extends SensorBase implements PIDSource, LiveWindowSend
   public void free() {
     AnalogJNI.freeAnalogInputPort(m_port);
     m_port = 0;
-    channels.free(m_channel);
     m_channel = 0;
     m_accumulatorOffset = 0;
   }
@@ -303,12 +292,12 @@ public class AnalogInput extends SensorBase implements PIDSource, LiveWindowSend
     ByteBuffer value = ByteBuffer.allocateDirect(8);
     // set the byte order
     value.order(ByteOrder.LITTLE_ENDIAN);
-    ByteBuffer count = ByteBuffer.allocateDirect(4);
+    ByteBuffer count = ByteBuffer.allocateDirect(8);
     // set the byte order
     count.order(ByteOrder.LITTLE_ENDIAN);
-    AnalogJNI.getAccumulatorOutput(m_port, value.asLongBuffer(), count.asIntBuffer());
+    AnalogJNI.getAccumulatorOutput(m_port, value.asLongBuffer(), count.asLongBuffer());
     result.value = value.asLongBuffer().get(0) + m_accumulatorOffset;
-    result.count = count.asIntBuffer().get(0);
+    result.count = count.asLongBuffer().get(0);
   }
 
   /**

@@ -7,7 +7,8 @@
 
 #include <jni.h>
 #include "HAL/HAL.h"
-#include "Log.h"
+#include "HAL/handles/HandlesInternal.h"
+#include "HAL/cpp/Log.h"
 
 #include "edu_wpi_first_wpilibj_hal_SolenoidJNI.h"
 
@@ -26,88 +27,93 @@ extern "C" {
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    initializeSolenoidPort
- * Signature: (J)J
+ * Signature: (I)I
  */
-JNIEXPORT jlong JNICALL
+JNIEXPORT jint JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_initializeSolenoidPort(
-    JNIEnv *env, jclass, jlong port_pointer) {
+    JNIEnv *env, jclass, jint id) {
   SOLENOIDJNI_LOG(logDEBUG) << "Calling SolenoidJNI initializeSolenoidPort";
 
-  SOLENOIDJNI_LOG(logDEBUG) << "Port Ptr = " << (void *)port_pointer;
-  char *aschars = (char *)port_pointer;
-  SOLENOIDJNI_LOG(logDEBUG) << '\t' << (int)aschars[0] << '\t'
-                            << (int)aschars[1] << std::endl;
+  SOLENOIDJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_PortHandle)id;
 
   int32_t status = 0;
-  void *solenoid_port_pointer =
-      initializeSolenoidPort((void *)port_pointer, &status);
+  HAL_SolenoidHandle handle =
+      HAL_InitializeSolenoidPort((HAL_PortHandle)id, &status);
 
   SOLENOIDJNI_LOG(logDEBUG) << "Status = " << status;
-  SOLENOIDJNI_LOG(logDEBUG) << "Solenoid Port Pointer = "
-                            << solenoid_port_pointer;
+  SOLENOIDJNI_LOG(logDEBUG) << "Solenoid Port Handle = " << handle;
 
-  int *asints = (int *)solenoid_port_pointer;
-  SOLENOIDJNI_LOG(logDEBUG) << '\t' << asints[0] << '\t' << asints[1]
-                            << std::endl;
+  // Use solenoid channels, as we have to pick one.
+  CheckStatusRange(env, 0, HAL_GetNumSolenoidChannels(),
+                   hal::getPortHandleChannel((HAL_PortHandle)id), status);;
+  return (jint)handle;
+}
 
-  CheckStatus(env, status);
-  return (jlong)solenoid_port_pointer;
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
+ * Method:    checkSolenoidChannel
+ * Signature: (I)Z;
+*/
+JNIEXPORT jboolean JNICALL Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_checkSolenoidChannel(
+    JNIEnv *env, jclass, jint channel) {
+  SOLENOIDJNI_LOG(logDEBUG) << "Calling SolenoidJNI checkSolenoidChannel";
+  SOLENOIDJNI_LOG(logDEBUG) << "Channel = " << channel;
+  return HAL_CheckSolenoidChannel(channel);
+}
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
+ * Method:    checkSolenoidModule
+ * Signature: (I)Z;
+*/
+JNIEXPORT jboolean JNICALL Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_checkSolenoidModule(
+    JNIEnv *env, jclass, jint module) {
+  SOLENOIDJNI_LOG(logDEBUG) << "Calling SolenoidJNI checkSolenoidModule";
+  SOLENOIDJNI_LOG(logDEBUG) << "Module = " << module;
+  return HAL_CheckSolenoidModule(module);
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    freeSolenoidPort
- * Signature: (J)V
+ * Signature: (I)V
  */
 JNIEXPORT void JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_freeSolenoidPort(
-    JNIEnv *env, jclass, jlong id) {
+    JNIEnv *env, jclass, jint id) {
   SOLENOIDJNI_LOG(logDEBUG) << "Calling SolenoidJNI initializeSolenoidPort";
 
-  SOLENOIDJNI_LOG(logDEBUG) << "Port Ptr = " << (void *)id;
-  freeSolenoidPort((void *)id);
-}
-
-/*
- * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
- * Method:    getPortWithModule
- * Signature: (BB)J
- */
-JNIEXPORT jlong JNICALL
-Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getPortWithModule(
-    JNIEnv *env, jclass, jbyte module, jbyte channel) {
-  void *port_pointer = getPortWithModule(module, channel);
-
-  return (jlong)port_pointer;
+  SOLENOIDJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_SolenoidHandle)id;
+  HAL_FreeSolenoidPort((HAL_SolenoidHandle)id);
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    setSolenoid
- * Signature: (JZ)V
+ * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_setSolenoid(
-    JNIEnv *env, jclass, jlong solenoid_port, jboolean value) {
+    JNIEnv *env, jclass, jint solenoid_port, jboolean value) {
   SOLENOIDJNI_LOG(logDEBUG) << "Calling SolenoidJNI SetSolenoid";
 
-  SOLENOIDJNI_LOG(logDEBUG) << "Solenoid Port Pointer = "
-                            << (void *)solenoid_port;
+  SOLENOIDJNI_LOG(logDEBUG) << "Solenoid Port Handle = "
+                            << (HAL_SolenoidHandle)solenoid_port;
 
   int32_t status = 0;
-  setSolenoid((void *)solenoid_port, value, &status);
+  HAL_SetSolenoid((HAL_SolenoidHandle)solenoid_port, value, &status);
   CheckStatus(env, status);
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    getSolenoid
- * Signature: (J)Z
+ * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getSolenoid(
-    JNIEnv *env, jclass, jlong solenoid_port) {
+    JNIEnv *env, jclass, jint solenoid_port) {
   int32_t status = 0;
-  jboolean val = getSolenoid((void *)solenoid_port, &status);
+  jboolean val = HAL_GetSolenoid((HAL_SolenoidHandle)solenoid_port, &status);
   CheckStatus(env, status);
   return val;
 }
@@ -115,13 +121,13 @@ Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getSolenoid(
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    getAllSolenoids
- * Signature: (J)Z
+ * Signature: (B)Z
  */
 JNIEXPORT jbyte JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getAllSolenoids(
-    JNIEnv *env, jclass, jlong solenoid_port) {
+    JNIEnv *env, jclass, jbyte module) {
   int32_t status = 0;
-  jbyte val = getAllSolenoids((void *)solenoid_port, &status);
+  jbyte val = HAL_GetAllSolenoids(module, &status);
   CheckStatus(env, status);
   return val;
 }
@@ -129,52 +135,52 @@ Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getAllSolenoids(
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    getPCMSolenoidBlackList
- * Signature: (J)I
+ * Signature: (B)I
  */
 JNIEXPORT jint JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getPCMSolenoidBlackList(
-    JNIEnv *env, jclass, jlong solenoid_port) {
+    JNIEnv *env, jclass, jbyte module) {
   int32_t status = 0;
-  jint val = getPCMSolenoidBlackList((void *)solenoid_port, &status);
+  jint val = HAL_GetPCMSolenoidBlackList(module, &status);
   CheckStatus(env, status);
   return val;
 }
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    getPCMSolenoidVoltageStickyFault
- * Signature: (J)Z
+ * Signature: (B)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getPCMSolenoidVoltageStickyFault(
-    JNIEnv *env, jclass, jlong solenoid_port) {
+    JNIEnv *env, jclass, jbyte module) {
   int32_t status = 0;
-  bool val = getPCMSolenoidVoltageStickyFault((void *)solenoid_port, &status);
+  bool val = HAL_GetPCMSolenoidVoltageStickyFault(module, &status);
   CheckStatus(env, status);
   return val;
 }
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    getPCMSolenoidVoltageFault
- * Signature: (J)Z
+ * Signature: (B)Z
  */
 JNIEXPORT jboolean JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_getPCMSolenoidVoltageFault(
-    JNIEnv *env, jclass, jlong solenoid_port) {
+    JNIEnv *env, jclass, jbyte module) {
   int32_t status = 0;
-  bool val = getPCMSolenoidVoltageFault((void *)solenoid_port, &status);
+  bool val = HAL_GetPCMSolenoidVoltageFault(module, &status);
   CheckStatus(env, status);
   return val;
 }
 /*
  * Class:     edu_wpi_first_wpilibj_hal_SolenoidJNI
  * Method:    clearAllPCMStickyFaults
- * Signature: (J)V
+ * Signature: (B)V
  */
 JNIEXPORT void JNICALL
 Java_edu_wpi_first_wpilibj_hal_SolenoidJNI_clearAllPCMStickyFaults(
-    JNIEnv *env, jclass, jlong solenoid_port) {
+    JNIEnv *env, jclass, jbyte module) {
   int32_t status = 0;
-  clearAllPCMStickyFaults_sol((void *)solenoid_port, &status);
+  HAL_ClearAllPCMStickyFaults(module, &status);
   CheckStatus(env, status);
 }
 

@@ -12,7 +12,6 @@
 
 #include "HAL/HAL.h"
 #include "LiveWindow/LiveWindow.h"
-#include "Resource.h"
 #include "WPIErrors.h"
 
 /**
@@ -34,11 +33,17 @@ DigitalInput::DigitalInput(uint32_t channel) {
   m_channel = channel;
 
   int32_t status = 0;
-  allocateDIO(m_digital_ports[channel], true, &status);
-  wpi_setErrorWithContext(status, getHALErrorMessage(status));
+  m_handle = HAL_InitializeDIOPort(HAL_GetPort(channel), true, &status);
+  if (status != 0) {
+    wpi_setErrorWithContextRange(status, 0, HAL_GetNumDigitalChannels(),
+                                 channel, HAL_GetErrorMessage(status));
+    m_handle = HAL_kInvalidHandle;
+    m_channel = std::numeric_limits<uint32_t>::max();
+    return;
+  }
 
   LiveWindow::GetInstance()->AddSensor("DigitalInput", channel, this);
-  HALReport(HALUsageReporting::kResourceType_DigitalInput, channel);
+  HAL_Report(HALUsageReporting::kResourceType_DigitalInput, channel);
 }
 
 /**
@@ -46,17 +51,14 @@ DigitalInput::DigitalInput(uint32_t channel) {
  */
 DigitalInput::~DigitalInput() {
   if (StatusIsFatal()) return;
-  if (m_interrupt != nullptr) {
+  if (m_interrupt != HAL_kInvalidHandle) {
     int32_t status = 0;
-    cleanInterrupts(m_interrupt, &status);
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
-    m_interrupt = nullptr;
-    m_interrupts->Free(m_interruptIndex);
+    HAL_CleanInterrupts(m_interrupt, &status);
+    // ignore status, as an invalid handle just needs to be ignored.
+    m_interrupt = HAL_kInvalidHandle;
   }
 
-  int32_t status = 0;
-  freeDIO(m_digital_ports[m_channel], &status);
-  wpi_setErrorWithContext(status, getHALErrorMessage(status));
+  HAL_FreeDIOPort(m_handle);
 }
 
 /**
@@ -67,8 +69,8 @@ DigitalInput::~DigitalInput() {
 bool DigitalInput::Get() const {
   if (StatusIsFatal()) return false;
   int32_t status = 0;
-  bool value = getDIO(m_digital_ports[m_channel], &status);
-  wpi_setErrorWithContext(status, getHALErrorMessage(status));
+  bool value = HAL_GetDIO(m_handle, &status);
+  wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   return value;
 }
 
@@ -78,19 +80,21 @@ bool DigitalInput::Get() const {
 uint32_t DigitalInput::GetChannel() const { return m_channel; }
 
 /**
- * @return The value to be written to the channel field of a routing mux.
+ * @return The HAL Handle to the specified source.
  */
-uint32_t DigitalInput::GetChannelForRouting() const { return GetChannel(); }
+HAL_Handle DigitalInput::GetPortHandleForRouting() const { return m_handle; }
 
 /**
- * @return The value to be written to the module field of a routing mux.
+ * Is source an AnalogTrigger
  */
-uint32_t DigitalInput::GetModuleForRouting() const { return 0; }
+bool DigitalInput::IsAnalogTrigger() const { return false; }
 
 /**
- * @return The value to be written to the analog trigger field of a routing mux.
+ * @return The type of analog trigger output to be used. 0 for Digitals
  */
-bool DigitalInput::GetAnalogTriggerForRouting() const { return false; }
+AnalogTriggerType DigitalInput::GetAnalogTriggerTypeForRouting() const {
+  return (AnalogTriggerType)0;
+}
 
 void DigitalInput::UpdateTable() {
   if (m_table != nullptr) {

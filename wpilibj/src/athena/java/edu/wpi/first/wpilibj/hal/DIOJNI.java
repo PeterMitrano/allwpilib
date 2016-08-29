@@ -9,25 +9,33 @@ package edu.wpi.first.wpilibj.hal;
 
 @SuppressWarnings("AbbreviationAsWordInName")
 public class DIOJNI extends JNIWrapper {
-  public static native long initializeDigitalPort(long portPointer);
+  public static native int initializeDIOPort(int halPortHandle, boolean input);
 
-  public static native void freeDigitalPort(long portPointer);
+  public static native boolean checkDIOChannel(int channel);
 
-  public static native boolean allocateDIO(long digitalPortPointer, boolean input);
+  public static native void freeDIOPort(int dioPortHandle);
 
-  public static native void freeDIO(long digitalPortPointer);
+  public static native void setDIO(int dioPortHandle, short value);
 
-  public static native void setDIO(long digitalPortPointer, short value);
+  public static native boolean getDIO(int dioPortHandle);
 
-  public static native boolean getDIO(long digitalPortPointer);
+  public static native boolean getDIODirection(int dioPortHandle);
 
-  public static native boolean getDIODirection(long digitalPortPointer);
+  public static native void pulse(int dioPortHandle, double pulseLength);
 
-  public static native void pulse(long digitalPortPointer, double pulseLength);
-
-  public static native boolean isPulsing(long digitalPortPointer);
+  public static native boolean isPulsing(int dioPortHandle);
 
   public static native boolean isAnyPulsing();
 
   public static native short getLoopTiming();
+
+  public static native int allocateDigitalPWM();
+
+  public static native void freeDigitalPWM(int pwmGenerator);
+
+  public static native void setDigitalPWMRate(double rate);
+
+  public static native void setDigitalPWMDutyCycle(int pwmGenerator, double dutyCycle);
+
+  public static native void setDigitalPWMOutputChannel(int pwmGenerator, int channel);
 }

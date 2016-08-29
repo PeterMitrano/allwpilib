@@ -16,9 +16,6 @@
  * in an analog voltage that corresponds to a position. The position is
  * in whichever units you choose, by way of the scaling and offset
  * constants passed to the constructor.
- *
- * @author Alex Henning
- * @author Colby Skeggs (rail voltage)
  */
 class AnalogPotentiometer : public Potentiometer, public LiveWindowSendable {
  public:
@@ -56,34 +53,34 @@ class AnalogPotentiometer : public Potentiometer, public LiveWindowSendable {
    *
    * @return The current position of the potentiometer.
    */
-  virtual double Get() const override;
+  double Get() const override;
 
   /**
    * Implement the PIDSource interface.
    *
    * @return The current reading.
    */
-  virtual double PIDGet() override;
+  double PIDGet() override;
 
   /*
    * Live Window code, only does anything if live window is activated.
    */
-  virtual std::string GetSmartDashboardType() const override;
-  virtual void InitTable(std::shared_ptr<ITable> subtable) override;
-  virtual void UpdateTable() override;
-  virtual std::shared_ptr<ITable> GetTable() const override;
+  std::string GetSmartDashboardType() const override;
+  void InitTable(std::shared_ptr<ITable> subtable) override;
+  void UpdateTable() override;
+  std::shared_ptr<ITable> GetTable() const override;
 
   /**
    * AnalogPotentiometers don't have to do anything special when entering the
    * LiveWindow.
    */
-  virtual void StartLiveWindowMode() override {}
+  void StartLiveWindowMode() override {}
 
   /**
    * AnalogPotentiometers don't have to do anything special when exiting the
    * LiveWindow.
    */
-  virtual void StopLiveWindowMode() override {}
+  void StopLiveWindowMode() override {}
 
  private:
   std::shared_ptr<AnalogInput> m_analog_input;

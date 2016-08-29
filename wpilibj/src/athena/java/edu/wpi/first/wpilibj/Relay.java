@@ -7,27 +7,26 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.DIOJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.hal.RelayJNI;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import edu.wpi.first.wpilibj.tables.ITableListener;
 import edu.wpi.first.wpilibj.util.AllocationException;
-import edu.wpi.first.wpilibj.util.CheckedAllocationException;
 
 import static java.util.Objects.requireNonNull;
 
 /**
  * Class for VEX Robotics Spike style relay outputs. Relays are intended to be connected to Spikes
- * or similar relays. The relay channels controls a pair of pins that are either both off, one on,
- * the other on, or both on. This translates into two Spike outputs at 0v, one at 12v and one at 0v,
- * one at 0v and the other at 12v, or two Spike outputs at 12V. This allows off, full forward, or
- * full reverse control of motors without variable speed. It also allows the two channels (forward
- * and reverse) to be used independently for something that does not care about voltage polarity
- * (like a solenoid).
+ * or similar relays. The relay channels controls a pair of channels that are either both off, one
+ * on, the other on, or both on. This translates into two Spike outputs at 0v, one at 12v and one
+ * at 0v, one at 0v and the other at 12v, or two Spike outputs at 12V. This allows off, full
+ * forward, or full reverse control of motors without variable speed. It also allows the two
+ * channels (forward and reverse) to be used independently for something that does not care about
+ * voltage polarity (like a solenoid).
  */
 public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable {
   private MotorSafetyHelper m_safetyHelper;
@@ -52,32 +51,7 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
    * The state to drive a Relay to.
    */
   public enum Value {
-    /**
-     * value: off.
-     */
-    kOff(0),
-    /**
-     * value: on for relays with defined direction.
-     */
-    kOn(1),
-    /**
-     * value: forward.
-     */
-    kForward(2),
-    /**
-     * value: reverse.
-     */
-    kReverse(3);
-
-    /**
-     * The integer value representing this enumeration.
-     */
-    @SuppressWarnings("MemberName")
-    public final int value;
-
-    Value(int value) {
-      this.value = value;
-    }
+    kOff, kOn, kForward, kReverse
   }
 
   /**
@@ -88,33 +62,24 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
      * direction: both directions are valid.
      */
 
-    kBoth(0),
+    kBoth,
     /**
      * direction: Only forward is valid.
      */
-    kForward(1),
+    kForward,
     /**
      * direction: only reverse is valid.
      */
-    kReverse(2);
-
-    /**
-     * The integer value representing this enumeration.
-     */
-    @SuppressWarnings("MemberName")
-    public final int value;
-
-    Direction(int value) {
-      this.value = value;
-    }
-
+    kReverse
   }
 
   private final int m_channel;
+
+  private int m_forwardHandle = 0;
+  private int m_reverseHandle = 0;
   private long m_port;
 
   private Direction m_direction;
-  private static Resource relayChannels = new Resource(kRelayChannels * 2);
 
   /**
    * Common relay initialization method. This code is common to all Relay constructors and
@@ -123,20 +88,16 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
    */
   private void initRelay() {
     SensorBase.checkRelayChannel(m_channel);
-    try {
-      if (m_direction == Direction.kBoth || m_direction == Direction.kForward) {
-        relayChannels.allocate(m_channel * 2);
-        UsageReporting.report(tResourceType.kResourceType_Relay, m_channel);
-      }
-      if (m_direction == Direction.kBoth || m_direction == Direction.kReverse) {
-        relayChannels.allocate(m_channel * 2 + 1);
-        UsageReporting.report(tResourceType.kResourceType_Relay, m_channel + 128);
-      }
-    } catch (CheckedAllocationException ex) {
-      throw new AllocationException("Relay channel " + m_channel + " is already allocated");
-    }
 
-    m_port = DIOJNI.initializeDigitalPort(DIOJNI.getPort((byte) m_channel));
+    int portHandle = RelayJNI.getPort((byte)m_channel);
+    if (m_direction == Direction.kBoth || m_direction == Direction.kForward) {
+      m_forwardHandle = RelayJNI.initializeRelayPort(portHandle, true);
+      HAL.report(tResourceType.kResourceType_Relay, m_channel);
+    }
+    if (m_direction == Direction.kBoth || m_direction == Direction.kReverse) {
+      m_reverseHandle = RelayJNI.initializeRelayPort(portHandle, false);
+      HAL.report(tResourceType.kResourceType_Relay, m_channel + 128);
+    }
 
     m_safetyHelper = new MotorSafetyHelper(this);
     m_safetyHelper.setSafetyEnabled(false);
@@ -168,19 +129,22 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
 
   @Override
   public void free() {
-    if (m_direction == Direction.kBoth || m_direction == Direction.kForward) {
-      relayChannels.free(m_channel * 2);
+    try {
+      RelayJNI.setRelay(m_forwardHandle, false);
+    } catch (RuntimeException ex) {
+      // do nothing. Ignore
     }
-    if (m_direction == Direction.kBoth || m_direction == Direction.kReverse) {
-      relayChannels.free(m_channel * 2 + 1);
+    try {
+      RelayJNI.setRelay(m_reverseHandle, false);
+    } catch (RuntimeException ex) {
+      // do nothing. Ignore
     }
 
-    RelayJNI.setRelayForward(m_port, false);
-    RelayJNI.setRelayReverse(m_port, false);
+    RelayJNI.freeRelayPort(m_forwardHandle);
+    RelayJNI.freeRelayPort(m_reverseHandle);
 
-    DIOJNI.freeDIO(m_port);
-    DIOJNI.freeDigitalPort(m_port);
-    m_port = 0;
+    m_forwardHandle = 0;
+    m_reverseHandle = 0;
   }
 
   /**
@@ -200,18 +164,18 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
     switch (value) {
       case kOff:
         if (m_direction == Direction.kBoth || m_direction == Direction.kForward) {
-          RelayJNI.setRelayForward(m_port, false);
+          RelayJNI.setRelay(m_forwardHandle, false);
         }
         if (m_direction == Direction.kBoth || m_direction == Direction.kReverse) {
-          RelayJNI.setRelayReverse(m_port, false);
+          RelayJNI.setRelay(m_reverseHandle, false);
         }
         break;
       case kOn:
         if (m_direction == Direction.kBoth || m_direction == Direction.kForward) {
-          RelayJNI.setRelayForward(m_port, true);
+          RelayJNI.setRelay(m_forwardHandle, true);
         }
         if (m_direction == Direction.kBoth || m_direction == Direction.kReverse) {
-          RelayJNI.setRelayReverse(m_port, true);
+          RelayJNI.setRelay(m_reverseHandle, true);
         }
         break;
       case kForward:
@@ -220,10 +184,10 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
               + "forward");
         }
         if (m_direction == Direction.kBoth || m_direction == Direction.kForward) {
-          RelayJNI.setRelayForward(m_port, true);
+          RelayJNI.setRelay(m_forwardHandle, true);
         }
         if (m_direction == Direction.kBoth) {
-          RelayJNI.setRelayReverse(m_port, false);
+          RelayJNI.setRelay(m_reverseHandle, false);
         }
         break;
       case kReverse:
@@ -232,10 +196,10 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
               + "reverse");
         }
         if (m_direction == Direction.kBoth) {
-          RelayJNI.setRelayForward(m_port, false);
+          RelayJNI.setRelay(m_forwardHandle, false);
         }
         if (m_direction == Direction.kBoth || m_direction == Direction.kReverse) {
-          RelayJNI.setRelayReverse(m_port, true);
+          RelayJNI.setRelay(m_reverseHandle, true);
         }
         break;
       default:
@@ -254,8 +218,8 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
    * @return The current state of the relay as a Relay::Value
    */
   public Value get() {
-    if (RelayJNI.getRelayForward(m_port)) {
-      if (RelayJNI.getRelayReverse(m_port)) {
+    if (RelayJNI.getRelay(m_forwardHandle)) {
+      if (RelayJNI.getRelay(m_reverseHandle)) {
         return Value.kOn;
       } else {
         if (m_direction == Direction.kForward) {
@@ -265,7 +229,7 @@ public class Relay extends SensorBase implements MotorSafety, LiveWindowSendable
         }
       }
     } else {
-      if (RelayJNI.getRelayReverse(m_port)) {
+      if (RelayJNI.getRelay(m_reverseHandle)) {
         if (m_direction == Direction.kReverse) {
           return Value.kOn;
         } else {

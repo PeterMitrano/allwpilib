@@ -9,71 +9,33 @@
 
 #include "WPIErrors.h"
 
-const uint32_t SensorBase::kDigitalChannels;
-const uint32_t SensorBase::kAnalogInputs;
-const uint32_t SensorBase::kSolenoidChannels;
-const uint32_t SensorBase::kSolenoidModules;
-const uint32_t SensorBase::kPwmChannels;
-const uint32_t SensorBase::kRelayChannels;
-const uint32_t SensorBase::kPDPChannels;
-const uint32_t SensorBase::kChassisSlots;
-SensorBase* SensorBase::m_singletonList = nullptr;
-
-/**
- * Creates an instance of the sensor base and gets an FPGA handle
- */
-SensorBase::SensorBase() {}
-
-/**
- * Add sensor to the singleton list.
- *
- * Add this sensor to the list of singletons that need to be deleted when
- * the robot program exits. Each of the sensors on this list are singletons,
- * that is they aren't allocated directly with new, but instead are allocated
- * by the static GetInstance method. As a result, they are never deleted when
- * the program exits. Consequently these sensors may still be holding onto
- * resources and need to have their destructors called at the end of the
- * program.
- */
-void SensorBase::AddToSingletonList() {
-  m_nextSingleton = m_singletonList;
-  m_singletonList = this;
-}
-
-/**
- * Delete all the singleton classes on the list.
- *
- * All the classes that were allocated as singletons need to be deleted so
- * their resources can be freed.
- */
-void SensorBase::DeleteSingletons() {
-  for (SensorBase* next = m_singletonList; next != nullptr;) {
-    SensorBase* tmp = next;
-    next = next->m_nextSingleton;
-    delete tmp;
-  }
-  m_singletonList = nullptr;
-}
+const int SensorBase::kDigitalChannels;
+const int SensorBase::kAnalogInputs;
+const int SensorBase::kSolenoidChannels;
+const int SensorBase::kSolenoidModules;
+const int SensorBase::kPwmChannels;
+const int SensorBase::kRelayChannels;
+const int SensorBase::kPDPChannels;
 
 /**
  * Check that the solenoid module number is valid.
  *
- * @return Solenoid module is valid and present
+ * @return Solenoid module number is valid
  */
-bool SensorBase::CheckSolenoidModule(uint8_t moduleNumber) {
-  return 1 <= moduleNumber && moduleNumber <= 2;  // TODO: Fix for Athena
+bool SensorBase::CheckSolenoidModule(int moduleNumber) {
+  return moduleNumber >= 0 && moduleNumber < kSolenoidModules;
 }
 
 /**
  * Check that the digital channel number is valid.
  *
  * Verify that the channel number is one of the legal channel numbers. Channel
- * numbers are 1-based.
+ * numbers are 0-based.
  *
  * @return Digital channel is valid
  */
-bool SensorBase::CheckDigitalChannel(uint32_t channel) {
-  if (channel > 0 && channel <= kDigitalChannels) return true;
+bool SensorBase::CheckDigitalChannel(int channel) {
+  if (channel >= 0 && channel < kDigitalChannels) return true;
   return false;
 }
 
@@ -81,12 +43,12 @@ bool SensorBase::CheckDigitalChannel(uint32_t channel) {
  * Check that the digital channel number is valid.
  *
  * Verify that the channel number is one of the legal channel numbers. Channel
- * numbers are 1-based.
+ * numbers are 0-based.
  *
  * @return Relay channel is valid
  */
-bool SensorBase::CheckRelayChannel(uint32_t channel) {
-  if (channel > 0 && channel <= kRelayChannels) return true;
+bool SensorBase::CheckRelayChannel(int channel) {
+  if (channel >= 0 && channel < kRelayChannels) return true;
   return false;
 }
 
@@ -94,12 +56,12 @@ bool SensorBase::CheckRelayChannel(uint32_t channel) {
  * Check that the digital channel number is valid.
  *
  * Verify that the channel number is one of the legal channel numbers. Channel
- * numbers are 1-based.
+ * numbers are 0-based.
  *
  * @return PWM channel is valid
  */
-bool SensorBase::CheckPWMChannel(uint32_t channel) {
-  if (channel > 0 && channel <= kPwmChannels) return true;
+bool SensorBase::CheckPWMChannel(int channel) {
+  if (channel >= 0 && channel < kPwmChannels) return true;
   return false;
 }
 
@@ -107,12 +69,12 @@ bool SensorBase::CheckPWMChannel(uint32_t channel) {
  * Check that the analog input number is valid.
  *
  * Verify that the analog input number is one of the legal channel numbers.
- * Channel numbers are 1-based.
+ * Channel numbers are 0-based.
  *
  * @return Analog channel is valid
  */
-bool SensorBase::CheckAnalogInput(uint32_t channel) {
-  if (channel > 0 && channel <= kAnalogInputs) return true;
+bool SensorBase::CheckAnalogInputChannel(int channel) {
+  if (channel >= 0 && channel < kAnalogInputs) return true;
   return false;
 }
 
@@ -120,12 +82,12 @@ bool SensorBase::CheckAnalogInput(uint32_t channel) {
  * Check that the analog output number is valid.
  *
  * Verify that the analog output number is one of the legal channel numbers.
- * Channel numbers are 1-based.
+ * Channel numbers are 0-based.
  *
  * @return Analog channel is valid
  */
-bool SensorBase::CheckAnalogOutput(uint32_t channel) {
-  if (channel > 0 && channel <= kAnalogOutputs) return true;
+bool SensorBase::CheckAnalogOutputChannel(int channel) {
+  if (channel >= 0 && channel < kAnalogOutputs) return true;
   return false;
 }
 
@@ -134,8 +96,8 @@ bool SensorBase::CheckAnalogOutput(uint32_t channel) {
  *
  * @return Solenoid channel is valid
  */
-bool SensorBase::CheckSolenoidChannel(uint32_t channel) {
-  if (channel > 0 && channel <= kSolenoidChannels) return true;
+bool SensorBase::CheckSolenoidChannel(int channel) {
+  if (channel >= 0 && channel < kSolenoidChannels) return true;
   return false;
 }
 
@@ -144,7 +106,7 @@ bool SensorBase::CheckSolenoidChannel(uint32_t channel) {
  *
  * @return PDP channel is valid
  */
-bool SensorBase::CheckPDPChannel(uint32_t channel) {
-  if (channel > 0 && channel <= kPDPChannels) return true;
+bool SensorBase::CheckPDPChannel(int channel) {
+  if (channel >= 0 && channel < kPDPChannels) return true;
   return false;
 }

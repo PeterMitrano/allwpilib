@@ -19,8 +19,6 @@ import edu.wpi.first.wpilibj.util.CheckedAllocationException;
 
 /**
  * Texas Instruments Jaguar Speed Controller as a CAN device.
- *
- * @author Thomas Clark
  */
 public class CANJaguar implements MotorSafety, PIDOutput, CANSpeedController {
 
@@ -309,7 +307,7 @@ public class CANJaguar implements MotorSafety, PIDOutput, CANSpeedController {
         return;
     }
 
-    CANJNI.FRCNetworkCommunicationCANSessionMuxSendMessage(messageID, null,
+    CANJNI.FRCNetCommCANSessionMuxSendMessage(messageID, null,
         CANJNI.CAN_SEND_PERIOD_STOP_REPEATING);
 
     configMaxOutputVoltage(kApproxBusVoltage);
@@ -1920,7 +1918,7 @@ public class CANJaguar implements MotorSafety, PIDOutput, CANSpeedController {
           trustedBuffer.put(j + 2, data[j]);
         }
 
-        CANJNI.FRCNetworkCommunicationCANSessionMuxSendMessage(messageID, trustedBuffer, period);
+        CANJNI.FRCNetCommCANSessionMuxSendMessage(messageID, trustedBuffer, period);
 
         return;
       }
@@ -1937,7 +1935,7 @@ public class CANJaguar implements MotorSafety, PIDOutput, CANSpeedController {
       buffer = null;
     }
 
-    CANJNI.FRCNetworkCommunicationCANSessionMuxSendMessage(messageID, buffer, period);
+    CANJNI.FRCNetCommCANSessionMuxSendMessage(messageID, buffer, period);
   }
 
   /**
@@ -2006,7 +2004,7 @@ public class CANJaguar implements MotorSafety, PIDOutput, CANSpeedController {
 
     // Get the data.
     ByteBuffer dataBuffer =
-        CANJNI.FRCNetworkCommunicationCANSessionMuxReceiveMessage(targetedMessageID.asIntBuffer(),
+        CANJNI.FRCNetCommCANSessionMuxReceiveMessage(targetedMessageID.asIntBuffer(),
             messageMask, timeStamp);
 
     if (data != null) {

@@ -7,13 +7,15 @@
 
 #include <assert.h>
 #include <jni.h>
-#include "Log.h"
+#include "HAL/cpp/Log.h"
 
 #include "edu_wpi_first_wpilibj_hal_DIOJNI.h"
 
 #include "HAL/DIO.h"
 #include "HAL/PWM.h"
 #include "HALUtil.h"
+#include "HAL/Ports.h"
+#include "HAL/handles/HandlesInternal.h"
 
 // set the logging level
 TLogLevel dioJNILogLevel = logWARNING;
@@ -28,78 +30,60 @@ extern "C" {
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
- * Method:    initializeDigitalPort
- * Signature: (J)J;
+ * Method:    initializeDIOPort
+ * Signature: (IZ)I;
  */
-JNIEXPORT jlong JNICALL
-Java_edu_wpi_first_wpilibj_hal_DIOJNI_initializeDigitalPort(
-    JNIEnv *env, jclass, jlong id) {
-  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI initializeDigitalPort";
-  DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void *)id;
+JNIEXPORT jint JNICALL
+Java_edu_wpi_first_wpilibj_hal_DIOJNI_initializeDIOPort(
+    JNIEnv *env, jclass, jint id, jboolean input) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI initializeDIOPort";
+  DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_PortHandle)id;
+  DIOJNI_LOG(logDEBUG) << "Input = " << (jint)input;
   int32_t status = 0;
-  void *dio = initializeDigitalPort((void *)id, &status);
+  auto dio = HAL_InitializeDIOPort((HAL_PortHandle)id, (uint8_t)input, &status);
   DIOJNI_LOG(logDEBUG) << "Status = " << status;
-  DIOJNI_LOG(logDEBUG) << "DIO Ptr = " << dio;
-  CheckStatus(env, status);
-  return (jlong)dio;
+  DIOJNI_LOG(logDEBUG) << "DIO Handle = " << dio;
+  CheckStatusRange(env, 0, HAL_GetNumDigitalChannels(),
+                   hal::getPortHandleChannel((HAL_PortHandle)id), status);
+  return (jint)dio;
 }
 
 /*
-* Class:     edu_wpi_first_wpilibj_hal_DIOJNI
-* Method:    freeDigitalPort
-* Signature: (J)V;
+ * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
+ * Method:    checkDIOChannel
+ * Signature: (I)Z;
 */
-JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_freeDigitalPort(
-    JNIEnv *env, jclass, jlong id) {
-  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI freeDigitalPort";
-  DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void *)id;
-  freeDigitalPort((void *)id);
+JNIEXPORT jboolean JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_checkDIOChannel(
+    JNIEnv *env, jclass, jint channel) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI checkDIOChannel";
+  DIOJNI_LOG(logDEBUG) << "Channel = " << channel;
+  return HAL_CheckDIOChannel(channel);
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
- * Method:    allocateDIO
- * Signature: (JZ)Z
- */
-JNIEXPORT jboolean JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_allocateDIO(
-    JNIEnv *env, jclass, jlong id, jboolean value) {
-  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI allocateDIO";
-  DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void *)id;
-  int32_t status = 0;
-  jboolean returnValue = allocateDIO((void *)id, value, &status);
-  DIOJNI_LOG(logDEBUG) << "Status = " << status;
-  DIOJNI_LOG(logDEBUG) << "allocateDIOResult = " << (jint)returnValue;
-  CheckStatus(env, status);
-  return returnValue;
-}
-
-/*
- * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
- * Method:    freeDIO
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL
-Java_edu_wpi_first_wpilibj_hal_DIOJNI_freeDIO(JNIEnv *env, jclass, jlong id) {
-  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI freeDIO";
-  DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void *)id;
-  int32_t status = 0;
-  freeDIO((void *)id, &status);
-  DIOJNI_LOG(logDEBUG) << "Status = " << status;
-  CheckStatus(env, status);
+ * Method:    freeDIOPort
+ * Signature: (I)V;
+*/
+JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_freeDIOPort(
+    JNIEnv *env, jclass, jint id) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI freeDIOPort";
+  DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_DigitalHandle)id;
+  HAL_FreeDIOPort((HAL_DigitalHandle)id);
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
  * Method:    setDIO
- * Signature: (JS)V
+ * Signature: (IS)V
  */
 JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_setDIO(
-    JNIEnv *env, jclass, jlong id, jshort value) {
+    JNIEnv *env, jclass, jint id, jshort value) {
   // DIOJNI_LOG(logDEBUG) << "Calling DIOJNI setDIO";
-  // DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+  // DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_DigitalHandle)id;
   // DIOJNI_LOG(logDEBUG) << "Value = " << value;
   int32_t status = 0;
-  setDIO((void *)id, value, &status);
+  HAL_SetDIO((HAL_DigitalHandle)id, value, &status);
   // DIOJNI_LOG(logDEBUG) << "Status = " << status;
   CheckStatus(env, status);
 }
@@ -110,11 +94,11 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_setDIO(
  * Signature: (J)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_edu_wpi_first_wpilibj_hal_DIOJNI_getDIO(JNIEnv *env, jclass, jlong id) {
+Java_edu_wpi_first_wpilibj_hal_DIOJNI_getDIO(JNIEnv *env, jclass, jint id) {
   // DIOJNI_LOG(logDEBUG) << "Calling DIOJNI getDIO";
-  // DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+  // DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_DigitalHandle)id;
   int32_t status = 0;
-  jboolean returnValue = getDIO((void *)id, &status);
+  jboolean returnValue = HAL_GetDIO((HAL_DigitalHandle)id, &status);
   // DIOJNI_LOG(logDEBUG) << "Status = " << status;
   // DIOJNI_LOG(logDEBUG) << "getDIOResult = " << (jint)returnValue;
   CheckStatus(env, status);
@@ -128,11 +112,11 @@ Java_edu_wpi_first_wpilibj_hal_DIOJNI_getDIO(JNIEnv *env, jclass, jlong id) {
  */
 JNIEXPORT jboolean JNICALL
 Java_edu_wpi_first_wpilibj_hal_DIOJNI_getDIODirection(
-    JNIEnv *env, jclass, jlong id) {
+    JNIEnv *env, jclass, jint id) {
   DIOJNI_LOG(logDEBUG) << "Calling DIOJNI getDIODirection (RR upd)";
-  // DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+  // DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_DigitalHandle)id;
   int32_t status = 0;
-  jboolean returnValue = getDIODirection((void *)id, &status);
+  jboolean returnValue = HAL_GetDIODirection((HAL_DigitalHandle)id, &status);
   // DIOJNI_LOG(logDEBUG) << "Status = " << status;
   DIOJNI_LOG(logDEBUG) << "getDIODirectionResult = " << (jint)returnValue;
   CheckStatus(env, status);
@@ -145,12 +129,12 @@ Java_edu_wpi_first_wpilibj_hal_DIOJNI_getDIODirection(
  * Signature: (JD)V
  */
 JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_pulse(
-    JNIEnv *env, jclass, jlong id, jdouble value) {
+    JNIEnv *env, jclass, jint id, jdouble value) {
   DIOJNI_LOG(logDEBUG) << "Calling DIOJNI pulse (RR upd)";
-  // DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+  // DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_DigitalHandle)id;
   // DIOJNI_LOG(logDEBUG) << "Value = " << value;
   int32_t status = 0;
-  pulse((void *)id, value, &status);
+  HAL_Pulse((HAL_DigitalHandle)id, value, &status);
   DIOJNI_LOG(logDEBUG) << "Did it work? Status = " << status;
   CheckStatus(env, status);
 }
@@ -161,11 +145,11 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_pulse(
  * Signature: (J)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_edu_wpi_first_wpilibj_hal_DIOJNI_isPulsing(JNIEnv *env, jclass, jlong id) {
+Java_edu_wpi_first_wpilibj_hal_DIOJNI_isPulsing(JNIEnv *env, jclass, jint id) {
   DIOJNI_LOG(logDEBUG) << "Calling DIOJNI isPulsing (RR upd)";
-  // DIOJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+  // DIOJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_DigitalHandle)id;
   int32_t status = 0;
-  jboolean returnValue = isPulsing((void *)id, &status);
+  jboolean returnValue = HAL_IsPulsing((HAL_DigitalHandle)id, &status);
   // DIOJNI_LOG(logDEBUG) << "Status = " << status;
   DIOJNI_LOG(logDEBUG) << "isPulsingResult = " << (jint)returnValue;
   CheckStatus(env, status);
@@ -181,7 +165,7 @@ JNIEXPORT jboolean JNICALL
 Java_edu_wpi_first_wpilibj_hal_DIOJNI_isAnyPulsing(JNIEnv *env, jclass) {
   DIOJNI_LOG(logDEBUG) << "Calling DIOJNI isAnyPulsing (RR upd)";
   int32_t status = 0;
-  jboolean returnValue = isAnyPulsing(&status);
+  jboolean returnValue = HAL_IsAnyPulsing(&status);
   // DIOJNI_LOG(logDEBUG) << "Status = " << status;
   DIOJNI_LOG(logDEBUG) << "isAnyPulsingResult = " << (jint)returnValue;
   CheckStatus(env, status);
@@ -197,11 +181,91 @@ JNIEXPORT jshort JNICALL
 Java_edu_wpi_first_wpilibj_hal_DIOJNI_getLoopTiming(JNIEnv *env, jclass) {
   DIOJNI_LOG(logDEBUG) << "Calling DIOJNI getLoopTimeing";
   int32_t status = 0;
-  jshort returnValue = getLoopTiming(&status);
+  jshort returnValue = HAL_GetLoopTiming(&status);
   DIOJNI_LOG(logDEBUG) << "Status = " << status;
   DIOJNI_LOG(logDEBUG) << "LoopTiming = " << returnValue;
   CheckStatus(env, status);
   return returnValue;
+}
+
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
+ * Method:    allocateDigitalPWM
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL
+Java_edu_wpi_first_wpilibj_hal_DIOJNI_allocateDigitalPWM(JNIEnv* env, jclass) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI allocateDigitalPWM";
+  int32_t status = 0;
+  auto pwm = HAL_AllocateDigitalPWM(&status);
+  DIOJNI_LOG(logDEBUG) << "Status = " << status;
+  DIOJNI_LOG(logDEBUG) << "PWM Handle = " << pwm;
+  CheckStatus(env, status);
+  return (jint)pwm;
+}
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
+ * Method:    freeDigitalPWM
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL
+Java_edu_wpi_first_wpilibj_hal_DIOJNI_freeDigitalPWM(JNIEnv* env, jclass, jint id) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI freeDigitalPWM";
+  DIOJNI_LOG(logDEBUG) << "PWM Handle = " << (HAL_DigitalPWMHandle)id;
+  int32_t status = 0;
+  HAL_FreeDigitalPWM((HAL_DigitalPWMHandle)id, &status);
+  DIOJNI_LOG(logDEBUG) << "Status = " << status;
+  CheckStatus(env, status);
+}
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
+ * Method:    setDigitalPWMRate
+ * Signature: (D)V
+ */
+JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_setDigitalPWMRate(
+    JNIEnv* env, jclass, jdouble value) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI setDigitalPWMRate";
+  DIOJNI_LOG(logDEBUG) << "Rate= " << value;
+  int32_t status = 0;
+  HAL_SetDigitalPWMRate(value, &status);
+  DIOJNI_LOG(logDEBUG) << "Status = " << status;
+  CheckStatus(env, status);
+}
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
+ * Method:    setDigitalPWMDutyCycle
+ * Signature: (ID)V
+ */
+JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_DIOJNI_setDigitalPWMDutyCycle(
+    JNIEnv* env, jclass, jint id, jdouble value) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI setDigitalPWMDutyCycle";
+  DIOJNI_LOG(logDEBUG) << "PWM Handle = " << (HAL_DigitalPWMHandle)id;
+  DIOJNI_LOG(logDEBUG) << "DutyCycle= " << value;
+  int32_t status = 0;
+  HAL_SetDigitalPWMDutyCycle((HAL_DigitalPWMHandle)id, value, &status);
+  DIOJNI_LOG(logDEBUG) << "Status = " << status;
+  CheckStatus(env, status);
+}
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_DIOJNI
+ * Method:    setDigitalPWMOutputChannel
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL
+Java_edu_wpi_first_wpilibj_hal_DIOJNI_setDigitalPWMOutputChannel(
+    JNIEnv* env, jclass, jint id, jint value) {
+  DIOJNI_LOG(logDEBUG) << "Calling DIOJNI setDigitalPWMOutputChannel";
+  DIOJNI_LOG(logDEBUG) << "PWM Handle = " << (HAL_DigitalPWMHandle)id;
+  DIOJNI_LOG(logDEBUG) << "Channel= " << value;
+  int32_t status = 0;
+  HAL_SetDigitalPWMOutputChannel((HAL_DigitalPWMHandle)id, (uint32_t)value, &status);
+  DIOJNI_LOG(logDEBUG) << "Status = " << status;
+  CheckStatus(env, status);
 }
 
 }  // extern "C"

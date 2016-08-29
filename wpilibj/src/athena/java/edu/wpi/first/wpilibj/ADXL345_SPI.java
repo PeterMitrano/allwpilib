@@ -10,9 +10,9 @@ package edu.wpi.first.wpilibj;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInstances;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tInstances;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
@@ -20,9 +20,6 @@ import edu.wpi.first.wpilibj.tables.ITable;
 
 /**
  * ADXL345 SPI Accelerometer.
- *
- * @author dtjones
- * @author mwills
  */
 @SuppressWarnings({"TypeName"})
 public class ADXL345_SPI extends SensorBase implements Accelerometer, LiveWindowSendable {
@@ -56,7 +53,7 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer, LiveWindow
     @SuppressWarnings("MemberName")
     public final byte value;
 
-    Axes(byte value) {
+    private Axes(byte value) {
       this.value = value;
     }
   }
@@ -69,7 +66,7 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer, LiveWindow
     public double ZAxis;
   }
 
-  private SPI m_spi;
+  protected SPI m_spi;
 
   /**
    * Constructor.
@@ -80,7 +77,7 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer, LiveWindow
   public ADXL345_SPI(SPI.Port port, Range range) {
     m_spi = new SPI(port);
     init(range);
-    LiveWindow.addSensor("ADXL345_SPI", port.getValue(), this);
+    LiveWindow.addSensor("ADXL345_SPI", port.value, this);
   }
 
   public void free() {
@@ -107,7 +104,7 @@ public class ADXL345_SPI extends SensorBase implements Accelerometer, LiveWindow
 
     setRange(range);
 
-    UsageReporting.report(tResourceType.kResourceType_ADXL345, tInstances.kADXL345_SPI);
+    HAL.report(tResourceType.kResourceType_ADXL345, tInstances.kADXL345_SPI);
   }
 
   @Override

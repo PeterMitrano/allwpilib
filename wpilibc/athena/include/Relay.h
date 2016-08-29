@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include "HAL/Types.h"
 #include "LiveWindow/LiveWindowSendable.h"
 #include "MotorSafety.h"
 #include "SensorBase.h"
@@ -36,7 +37,7 @@ class Relay : public MotorSafety,
   enum Value { kOff, kOn, kForward, kReverse };
   enum Direction { kBothDirections, kForwardOnly, kReverseOnly };
 
-  Relay(uint32_t channel, Direction direction = kBothDirections);
+  explicit Relay(uint32_t channel, Direction direction = kBothDirections);
   virtual ~Relay();
 
   void Set(Value value);
@@ -65,6 +66,9 @@ class Relay : public MotorSafety,
  private:
   uint32_t m_channel;
   Direction m_direction;
+
+  HAL_RelayHandle m_forwardHandle = HAL_kInvalidHandle;
+  HAL_RelayHandle m_reverseHandle = HAL_kInvalidHandle;
 
   std::unique_ptr<MotorSafetyHelper> m_safetyHelper;
 };

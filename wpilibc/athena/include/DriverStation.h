@@ -90,32 +90,30 @@ class DriverStation : public SensorBase, public RobotStateInterface {
   void InTest(bool entering) { m_userInTest = entering; }
 
  protected:
-  DriverStation();
-
   void GetData();
 
  private:
-  static DriverStation* m_instance;
+  DriverStation();
   void ReportJoystickUnpluggedError(std::string message);
   void ReportJoystickUnpluggedWarning(std::string message);
   void Run();
+  void UpdateControlWord(bool force, HAL_ControlWord& controlWord) const;
 
-  std::unique_ptr<HALJoystickAxes[]> m_joystickAxes;
-  std::unique_ptr<HALJoystickPOVs[]> m_joystickPOVs;
-  std::unique_ptr<HALJoystickButtons[]> m_joystickButtons;
-  std::unique_ptr<HALJoystickDescriptor[]> m_joystickDescriptor;
+  std::unique_ptr<HAL_JoystickAxes[]> m_joystickAxes;
+  std::unique_ptr<HAL_JoystickPOVs[]> m_joystickPOVs;
+  std::unique_ptr<HAL_JoystickButtons[]> m_joystickButtons;
+  std::unique_ptr<HAL_JoystickDescriptor[]> m_joystickDescriptor;
 
   // Cached Data
-  std::unique_ptr<HALJoystickAxes[]> m_joystickAxesCache;
-  std::unique_ptr<HALJoystickPOVs[]> m_joystickPOVsCache;
-  std::unique_ptr<HALJoystickButtons[]> m_joystickButtonsCache;
-  std::unique_ptr<HALJoystickDescriptor[]> m_joystickDescriptorCache;
+  std::unique_ptr<HAL_JoystickAxes[]> m_joystickAxesCache;
+  std::unique_ptr<HAL_JoystickPOVs[]> m_joystickPOVsCache;
+  std::unique_ptr<HAL_JoystickButtons[]> m_joystickButtonsCache;
+  std::unique_ptr<HAL_JoystickDescriptor[]> m_joystickDescriptorCache;
 
   Task m_task;
   std::atomic<bool> m_isRunning{false};
   mutable Semaphore m_newControlData{Semaphore::kEmpty};
-  mutable priority_condition_variable m_packetDataAvailableCond;
-  priority_mutex m_packetDataAvailableMutex;
+  bool m_updatedControlLoopData = false;
   std::condition_variable_any m_waitForDataCond;
   priority_mutex m_waitForDataMutex;
   mutable priority_mutex m_joystickDataMutex;
@@ -123,5 +121,8 @@ class DriverStation : public SensorBase, public RobotStateInterface {
   bool m_userInAutonomous = false;
   bool m_userInTeleop = false;
   bool m_userInTest = false;
+  mutable HAL_ControlWord m_controlWordCache;
+  mutable std::chrono::steady_clock::time_point m_lastControlWordUpdate;
+  mutable priority_mutex m_controlWordMutex;
   double m_nextMessageTime = 0;
 };

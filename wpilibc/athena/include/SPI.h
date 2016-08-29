@@ -22,7 +22,7 @@ class DigitalInput;
 class SPI : public SensorBase {
  public:
   enum Port { kOnboardCS0, kOnboardCS1, kOnboardCS2, kOnboardCS3, kMXP };
-  SPI(Port SPIport);
+  explicit SPI(Port SPIport);
   virtual ~SPI();
 
   SPI(const SPI&) = delete;
@@ -57,9 +57,9 @@ class SPI : public SensorBase {
   void SetAccumulatorDeadband(int32_t deadband);
   int32_t GetAccumulatorLastValue() const;
   int64_t GetAccumulatorValue() const;
-  uint32_t GetAccumulatorCount() const;
+  int64_t GetAccumulatorCount() const;
   double GetAccumulatorAverage() const;
-  void GetAccumulatorOutput(int64_t& value, uint32_t& count) const;
+  void GetAccumulatorOutput(int64_t& value, int64_t& count) const;
 
  protected:
   uint8_t m_port;

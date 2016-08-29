@@ -7,27 +7,45 @@
 
 package edu.wpi.first.wpilibj.hal;
 
+import edu.wpi.first.wpilibj.PWMConfigDataResult;
+
 @SuppressWarnings("AbbreviationAsWordInName")
 public class PWMJNI extends DIOJNI {
-  public static native boolean allocatePWMChannel(long digitalPortPointer);
+  public static native int initializePWMPort(int halPortHandle);
 
-  public static native void freePWMChannel(long digitalPortPointer);
+  public static native boolean checkPWMChannel(int channel);
 
-  public static native void setPWM(long digitalPortPointer, short value);
+  public static native void freePWMPort(int pwmPortHandle);
 
-  public static native short getPWM(long digitalPortPointer);
+  public static native void setPWMConfigRaw(int pwmPortHandle, int maxPwm,
+                                            int deadbandMaxPwm, int centerPwm,
+                                            int deadbandMinPwm, int minPwm);
 
-  public static native void latchPWMZero(long digitalPortPointer);
+  public static native void setPWMConfig(int pwmPortHandle, double maxPwm,
+                                         double deadbandMaxPwm, double centerPwm,
+                                         double deadbandMinPwm, double minPwm);
 
-  public static native void setPWMPeriodScale(long digitalPortPointer, int squelchMask);
+  public static native PWMConfigDataResult getPWMConfigRaw(int pwmPortHandle);
 
-  public static native long allocatePWM();
+  public static native void setPWMEliminateDeadband(int pwmPortHandle, boolean eliminateDeadband);
 
-  public static native void freePWM(long pwmGenerator);
+  public static native boolean getPWMEliminateDeadband(int pwmPortHandle);
 
-  public static native void setPWMRate(double rate);
+  public static native void setPWMRaw(int pwmPortHandle, short value);
 
-  public static native void setPWMDutyCycle(long pwmGenerator, double dutyCycle);
+  public static native void setPWMSpeed(int pwmPortHandle, float speed);
 
-  public static native void setPWMOutputChannel(long pwmGenerator, int pin);
+  public static native void setPWMPosition(int pwmPortHandle, float position);
+
+  public static native short getPWMRaw(int pwmPortHandle);
+
+  public static native float getPWMSpeed(int pwmPortHandle);
+
+  public static native float getPWMPosition(int pwmPortHandle);
+
+  public static native  void setPWMDisabled(int pwmPortHandle);
+
+  public static native void latchPWMZero(int pwmPortHandle);
+
+  public static native void setPWMPeriodScale(int pwmPortHandle, int squelchMask);
 }

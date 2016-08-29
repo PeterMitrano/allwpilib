@@ -7,16 +7,22 @@
 
 #pragma once
 
-enum AccelerometerRange {
-  kRange_2G = 0,
-  kRange_4G = 1,
-  kRange_8G = 2,
+#include "HAL/Types.h"
+
+enum HAL_AccelerometerRange {
+  HAL_AccelerometerRange_k2G = 0,
+  HAL_AccelerometerRange_k4G = 1,
+  HAL_AccelerometerRange_k8G = 2,
 };
 
+#ifdef __cplusplus
 extern "C" {
-void setAccelerometerActive(bool);
-void setAccelerometerRange(AccelerometerRange);
-double getAccelerometerX();
-double getAccelerometerY();
-double getAccelerometerZ();
+#endif
+void HAL_SetAccelerometerActive(HAL_Bool active);
+void HAL_SetAccelerometerRange(HAL_AccelerometerRange range);
+double HAL_GetAccelerometerX(void);
+double HAL_GetAccelerometerY(void);
+double HAL_GetAccelerometerZ(void);
+#ifdef __cplusplus
 }
+#endif

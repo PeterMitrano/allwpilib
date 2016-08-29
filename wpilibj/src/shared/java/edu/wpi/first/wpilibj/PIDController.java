@@ -1,7 +1,8 @@
-/* Copyright (c) FIRST 2008-2012. All Rights Reserved. */
-/* Open Source Software - may be modified and shared by FRC teams. The code */
+/*----------------------------------------------------------------------------*/
+/* Copyright (c) FIRST 2008-2016. All Rights Reserved.                        */
+/* Open Source Software - may be modified and shared by FRC teams. The code   */
 /* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project. */
+/* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
 package edu.wpi.first.wpilibj;
@@ -19,7 +20,11 @@ import edu.wpi.first.wpilibj.util.BoundaryException;
  * Class implements a PID Control Loop.
  *
  * <p>Creates a separate thread which reads the given PIDSource and takes care of the integral
- * calculations, as well as writing the given PIDOutput
+ * calculations, as well as writing the given PIDOutput.
+ *
+ * <p>This feedback controller runs in discrete time, so time deltas are not used in the integral
+ * and derivative calculations. Therefore, the sample rate affects the controller's behavior for a
+ * given set of PID constants.
  */
 public class PIDController implements PIDInterface, LiveWindowSendable, Controller {
 
@@ -260,16 +265,7 @@ public class PIDController implements PIDInterface, LiveWindowSendable, Controll
         input = pidInput.pidGet();
       }
       synchronized (this) {
-        m_error = m_setpoint - input;
-        if (m_continuous) {
-          if (Math.abs(m_error) > (m_maximumInput - m_minimumInput) / 2) {
-            if (m_error > 0) {
-              m_error = m_error - m_maximumInput + m_minimumInput;
-            } else {
-              m_error = m_error + m_maximumInput - m_minimumInput;
-            }
-          }
-        }
+        m_error = getContinuousError(m_setpoint - input);
 
         if (m_pidInput.getPIDSourceType().equals(PIDSourceType.kRate)) {
           if (m_P != 0) {
@@ -541,8 +537,7 @@ public class PIDController implements PIDInterface, LiveWindowSendable, Controll
    * @return the current error
    */
   public synchronized double getError() {
-    // return m_error;
-    return getSetpoint() - m_pidInput.pidGet();
+    return getContinuousError(getSetpoint() - m_pidInput.pidGet());
   }
 
   /**
@@ -760,6 +755,26 @@ public class PIDController implements PIDInterface, LiveWindowSendable, Controll
     }
   }
 
+  /**
+   * Wraps error around for continuous inputs. The original error is returned if continuous mode is
+   * disabled. This is an unsynchronized function.
+   *
+   * @param error The current error of the PID controller.
+   * @return Error for continuous inputs.
+   */
+  protected double getContinuousError(double error) {
+    if (m_continuous) {
+      if (Math.abs(error) > (m_maximumInput - m_minimumInput) / 2) {
+        if (error > 0) {
+          return error - (m_maximumInput - m_minimumInput);
+        } else {
+          return error + (m_maximumInput - m_minimumInput);
+        }
+      }
+    }
+
+    return error;
+  }
 
   @Override
   public ITable getTable() {

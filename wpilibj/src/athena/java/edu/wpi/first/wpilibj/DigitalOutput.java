@@ -7,10 +7,9 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.DIOJNI;
-import edu.wpi.first.wpilibj.hal.PWMJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import edu.wpi.first.wpilibj.tables.ITableListener;
@@ -21,9 +20,11 @@ import edu.wpi.first.wpilibj.tables.ITableListener;
  */
 public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
 
-  private static final long invalidPwmGenerator = 0xffffffff;
+  private static final int invalidPwmGenerator = 0;
+  private int m_pwmGenerator = invalidPwmGenerator;
 
-  private long m_pwmGenerator = invalidPwmGenerator;
+  private int m_channel = 0;
+  private int m_handle = 0;
 
   /**
    * Create an instance of a digital output. Create an instance of a digital output given a
@@ -33,9 +34,12 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
    *                the MXP
    */
   public DigitalOutput(int channel) {
-    initDigitalPort(channel, false);
+    checkDigitalChannel(channel);
+    m_channel = channel;
 
-    UsageReporting.report(tResourceType.kResourceType_DigitalOutput, channel);
+    m_handle = DIOJNI.initializeDIOPort(DIOJNI.getPort((byte)channel), false);
+
+    HAL.report(tResourceType.kResourceType_DigitalOutput, channel);
   }
 
   /**
@@ -47,7 +51,8 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
     if (m_pwmGenerator != invalidPwmGenerator) {
       disablePWM();
     }
-    super.free();
+    DIOJNI.freeDIOPort(m_handle);
+    m_handle = 0;
   }
 
   /**
@@ -56,14 +61,24 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
    * @param value true is on, off is false
    */
   public void set(boolean value) {
-    DIOJNI.setDIO(super.m_port, (short) (value ? 1 : 0));
+    DIOJNI.setDIO(m_handle, (short) (value ? 1 : 0));
+  }
+
+  /**
+   * Gets the value being output from the Digital Output.
+   *
+   * @return the state of the digital output.
+   */
+  public boolean get() {
+    return DIOJNI.getDIO(m_handle);
   }
 
   /**
    * @return The GPIO channel number that this object represents.
    */
+  @Override
   public int getChannel() {
-    return super.m_channel;
+    return m_channel;
   }
 
   /**
@@ -74,7 +89,7 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
    * @param pulseLength The length of the pulse.
    */
   public void pulse(final int channel, final float pulseLength) {
-    DIOJNI.pulse(super.m_port, pulseLength);
+    DIOJNI.pulse(m_handle, pulseLength);
   }
 
   /**
@@ -89,7 +104,7 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
         (float) (pulseLength / 1.0e9 * (DIOJNI.getLoopTiming() * 25));
     System.err
         .println("You should use the float version of pulse for portability.  This is deprecated");
-    DIOJNI.pulse(super.m_port, convertedPulse);
+    DIOJNI.pulse(m_handle, convertedPulse);
   }
 
   /**
@@ -98,7 +113,7 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
    * @return true if pulsing
    */
   public boolean isPulsing() {
-    return DIOJNI.isPulsing(super.m_port);
+    return DIOJNI.isPulsing(m_handle);
   }
 
   /**
@@ -111,7 +126,7 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
    * @param rate The frequency to output all digital output PWM signals.
    */
   public void setPWMRate(double rate) {
-    PWMJNI.setPWMRate(rate);
+    DIOJNI.setDigitalPWMRate(rate);
   }
 
   /**
@@ -130,9 +145,9 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
     if (m_pwmGenerator != invalidPwmGenerator) {
       return;
     }
-    m_pwmGenerator = PWMJNI.allocatePWM();
-    PWMJNI.setPWMDutyCycle(m_pwmGenerator, initialDutyCycle);
-    PWMJNI.setPWMOutputChannel(m_pwmGenerator, m_channel);
+    m_pwmGenerator = DIOJNI.allocateDigitalPWM();
+    DIOJNI.setDigitalPWMDutyCycle(m_pwmGenerator, initialDutyCycle);
+    DIOJNI.setDigitalPWMOutputChannel(m_pwmGenerator, m_channel);
   }
 
   /**
@@ -145,9 +160,9 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
       return;
     }
     // Disable the output by routing to a dead bit.
-    PWMJNI.setPWMOutputChannel(m_pwmGenerator, kDigitalChannels);
-    PWMJNI.freePWM(m_pwmGenerator);
-    m_pwmGenerator = 0;
+    DIOJNI.setDigitalPWMOutputChannel(m_pwmGenerator, kDigitalChannels);
+    DIOJNI.freeDigitalPWM(m_pwmGenerator);
+    m_pwmGenerator = invalidPwmGenerator;
   }
 
   /**
@@ -163,7 +178,37 @@ public class DigitalOutput extends DigitalSource implements LiveWindowSendable {
     if (m_pwmGenerator == invalidPwmGenerator) {
       return;
     }
-    PWMJNI.setPWMDutyCycle(m_pwmGenerator, dutyCycle);
+    DIOJNI.setDigitalPWMDutyCycle(m_pwmGenerator, dutyCycle);
+  }
+
+  /**
+   * Get the analog trigger type.
+   *
+   * @return false
+   */
+  @Override
+  public int getAnalogTriggerTypeForRouting() {
+    return 0;
+  }
+
+  /**
+   * Is this an analog trigger.
+   *
+   * @return true if this is an analog trigger
+   */
+  @Override
+  public boolean isAnalogTrigger() {
+    return false;
+  }
+
+  /**
+   * Get the HAL Port Handle.
+   *
+   * @return The HAL Handle to the specified source.
+   */
+  @Override
+  public int getPortHandleForRouting() {
+    return m_handle;
   }
 
   /*

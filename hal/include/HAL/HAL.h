@@ -7,267 +7,63 @@
 
 #pragma once
 
-#include <math.h>
 #include <stdint.h>
 
-#include "Accelerometer.h"
-#include "AnalogAccumulator.h"
-#include "AnalogInput.h"
-#include "AnalogOutput.h"
-#include "AnalogTrigger.h"
-#include "Compressor.h"
-#include "Counter.h"
-#include "DIO.h"
-#include "Encoder.h"
-#include "Errors.h"
-#include "I2C.h"
-#include "Interrupts.h"
-#include "Notifier.h"
-#include "PDP.h"
-#include "PWM.h"
-#include "Power.h"
-#include "Relay.h"
-#include "SPI.h"
-#include "Semaphore.h"
-#include "SerialPort.h"
-#include "Solenoid.h"
-#include "Task.h"
-#include "Utilities.h"
+#include "FRC_NetworkCommunication/UsageReporting.h"
+#include "HAL/Accelerometer.h"
+#include "HAL/AnalogAccumulator.h"
+#include "HAL/AnalogGyro.h"
+#include "HAL/AnalogInput.h"
+#include "HAL/AnalogOutput.h"
+#include "HAL/AnalogTrigger.h"
+#include "HAL/Compressor.h"
+#include "HAL/Constants.h"
+#include "HAL/Counter.h"
+#include "HAL/DIO.h"
+#include "HAL/DriverStation.h"
+#include "HAL/Errors.h"
+#include "HAL/I2C.h"
+#include "HAL/Interrupts.h"
+#include "HAL/Notifier.h"
+#include "HAL/PDP.h"
+#include "HAL/PWM.h"
+#include "HAL/Ports.h"
+#include "HAL/Power.h"
+#include "HAL/Relay.h"
+#include "HAL/SPI.h"
+#include "HAL/SerialPort.h"
+#include "HAL/Solenoid.h"
+#include "HAL/Task.h"
+#include "HAL/Types.h"
 
-#define HAL_IO_CONFIG_DATA_SIZE 32
-#define HAL_SYS_STATUS_DATA_SIZE 44
-#define HAL_USER_STATUS_DATA_SIZE \
-  (984 - HAL_IO_CONFIG_DATA_SIZE - HAL_SYS_STATUS_DATA_SIZE)
+namespace HALUsageReporting = nUsageReporting;
 
-#define HALFRC_NetworkCommunication_DynamicType_DSEnhancedIO_Input 17
-#define HALFRC_NetworkCommunication_DynamicType_DSEnhancedIO_Output 18
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Header 19
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Extra1 20
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Vertices1 21
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Extra2 22
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Vertices2 23
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Joystick 24
-#define HALFRC_NetworkCommunication_DynamicType_Kinect_Custom 25
-
-namespace HALUsageReporting {
-enum tResourceType {
-  kResourceType_Controller,
-  kResourceType_Module,
-  kResourceType_Language,
-  kResourceType_CANPlugin,
-  kResourceType_Accelerometer,
-  kResourceType_ADXL345,
-  kResourceType_AnalogChannel,
-  kResourceType_AnalogTrigger,
-  kResourceType_AnalogTriggerOutput,
-  kResourceType_CANJaguar,
-  kResourceType_Compressor,
-  kResourceType_Counter,
-  kResourceType_Dashboard,
-  kResourceType_DigitalInput,
-  kResourceType_DigitalOutput,
-  kResourceType_DriverStationCIO,
-  kResourceType_DriverStationEIO,
-  kResourceType_DriverStationLCD,
-  kResourceType_Encoder,
-  kResourceType_GearTooth,
-  kResourceType_Gyro,
-  kResourceType_I2C,
-  kResourceType_Framework,
-  kResourceType_Jaguar,
-  kResourceType_Joystick,
-  kResourceType_Kinect,
-  kResourceType_KinectStick,
-  kResourceType_PIDController,
-  kResourceType_Preferences,
-  kResourceType_PWM,
-  kResourceType_Relay,
-  kResourceType_RobotDrive,
-  kResourceType_SerialPort,
-  kResourceType_Servo,
-  kResourceType_Solenoid,
-  kResourceType_SPI,
-  kResourceType_Task,
-  kResourceType_Ultrasonic,
-  kResourceType_Victor,
-  kResourceType_Button,
-  kResourceType_Command,
-  kResourceType_AxisCamera,
-  kResourceType_PCVideoServer,
-  kResourceType_SmartDashboard,
-  kResourceType_Talon,
-  kResourceType_HiTechnicColorSensor,
-  kResourceType_HiTechnicAccel,
-  kResourceType_HiTechnicCompass,
-  kResourceType_SRF08,
-  kResourceType_AnalogOutput,
-  kResourceType_VictorSP,
-  kResourceType_TalonSRX,
-  kResourceType_CANTalonSRX,
-  kResourceType_ADXL362,
-  kResourceType_ADXRS450,
-  kResourceType_RevSPARK,
-  kResourceType_MindsensorsSD540,
-  kResourceType_DigitalFilter,
-};
-
-enum tInstances {
-  kLanguage_LabVIEW = 1,
-  kLanguage_CPlusPlus = 2,
-  kLanguage_Java = 3,
-  kLanguage_Python = 4,
-
-  kCANPlugin_BlackJagBridge = 1,
-  kCANPlugin_2CAN = 2,
-
-  kFramework_Iterative = 1,
-  kFramework_Sample = 2,
-  kFramework_CommandControl = 3,
-
-  kRobotDrive_ArcadeStandard = 1,
-  kRobotDrive_ArcadeButtonSpin = 2,
-  kRobotDrive_ArcadeRatioCurve = 3,
-  kRobotDrive_Tank = 4,
-  kRobotDrive_MecanumPolar = 5,
-  kRobotDrive_MecanumCartesian = 6,
-
-  kDriverStationCIO_Analog = 1,
-  kDriverStationCIO_DigitalIn = 2,
-  kDriverStationCIO_DigitalOut = 3,
-
-  kDriverStationEIO_Acceleration = 1,
-  kDriverStationEIO_AnalogIn = 2,
-  kDriverStationEIO_AnalogOut = 3,
-  kDriverStationEIO_Button = 4,
-  kDriverStationEIO_LED = 5,
-  kDriverStationEIO_DigitalIn = 6,
-  kDriverStationEIO_DigitalOut = 7,
-  kDriverStationEIO_FixedDigitalOut = 8,
-  kDriverStationEIO_PWM = 9,
-  kDriverStationEIO_Encoder = 10,
-  kDriverStationEIO_TouchSlider = 11,
-
-  kADXL345_SPI = 1,
-  kADXL345_I2C = 2,
-
-  kCommand_Scheduler = 1,
-
-  kSmartDashboard_Instance = 1,
-};
-}
-
-struct HALControlWord {
-  uint32_t enabled : 1;
-  uint32_t autonomous : 1;
-  uint32_t test : 1;
-  uint32_t eStop : 1;
-  uint32_t fmsAttached : 1;
-  uint32_t dsAttached : 1;
-  uint32_t control_reserved : 26;
-};
-
-enum HALAllianceStationID {
-  kHALAllianceStationID_red1,
-  kHALAllianceStationID_red2,
-  kHALAllianceStationID_red3,
-  kHALAllianceStationID_blue1,
-  kHALAllianceStationID_blue2,
-  kHALAllianceStationID_blue3,
-};
-
-/* The maximum number of axes that will be stored in a single HALJoystickAxes
- * struct. This is used for allocating buffers, not bounds checking, since
- * there are usually less axes in practice.
- */
-static const size_t kMaxJoystickAxes = 12;
-static const size_t kMaxJoystickPOVs = 12;
-
-struct HALJoystickAxes {
-  uint16_t count;
-  float axes[kMaxJoystickAxes];
-};
-
-struct HALJoystickPOVs {
-  uint16_t count;
-  int16_t povs[kMaxJoystickPOVs];
-};
-
-struct HALJoystickButtons {
-  uint32_t buttons;
-  uint8_t count;
-};
-
-struct HALJoystickDescriptor {
-  uint8_t isXbox;
-  uint8_t type;
-  char name[256];
-  uint8_t axisCount;
-  uint8_t axisTypes[kMaxJoystickAxes];
-  uint8_t buttonCount;
-  uint8_t povCount;
-};
-
-inline float intToFloat(int value) { return (float)value; }
-
-inline int floatToInt(float value) { return round(value); }
-
+#ifdef __cplusplus
 extern "C" {
-extern const uint32_t dio_kNumSystems;
-extern const uint32_t solenoid_kNumDO7_0Elements;
-extern const uint32_t interrupt_kNumSystems;
-extern const uint32_t kSystemClockTicksPerMicrosecond;
+#endif
+HAL_PortHandle HAL_GetPort(int32_t channel);
+HAL_PortHandle HAL_GetPortWithModule(int32_t module, int32_t channel);
+const char* HAL_GetErrorMessage(int32_t code);
 
-void* getPort(uint8_t pin);
-void* getPortWithModule(uint8_t module, uint8_t pin);
-void freePort(void* port);
-const char* getHALErrorMessage(int32_t code);
+int32_t HAL_GetFPGAVersion(int32_t* status);
+int64_t HAL_GetFPGARevision(int32_t* status);
+uint64_t HAL_GetFPGATime(int32_t* status);
 
-uint16_t getFPGAVersion(int32_t* status);
-uint32_t getFPGARevision(int32_t* status);
-uint64_t getFPGATime(int32_t* status);
+HAL_Bool HAL_GetFPGAButton(int32_t* status);
 
-bool getFPGAButton(int32_t* status);
+HAL_Bool HAL_GetSystemActive(int32_t* status);
+HAL_Bool HAL_GetBrownedOut(int32_t* status);
 
-int HALSetErrorData(const char* errors, int errorsLength, int wait_ms);
-int HALSendError(int isError, int32_t errorCode, int isLVCode,
-                 const char* details, const char* location,
-                 const char* callStack, int printMsg);
+int32_t HAL_Initialize(int32_t mode);
 
-int HALGetControlWord(HALControlWord* data);
-int HALGetAllianceStation(enum HALAllianceStationID* allianceStation);
-int HALGetJoystickAxes(uint8_t joystickNum, HALJoystickAxes* axes);
-int HALGetJoystickPOVs(uint8_t joystickNum, HALJoystickPOVs* povs);
-int HALGetJoystickButtons(uint8_t joystickNum, HALJoystickButtons* buttons);
-int HALGetJoystickDescriptor(uint8_t joystickNum, HALJoystickDescriptor* desc);
-int HALGetJoystickIsXbox(uint8_t joystickNum);
-int HALGetJoystickType(uint8_t joystickNum);
-char* HALGetJoystickName(uint8_t joystickNum);
-int HALGetJoystickAxisType(uint8_t joystickNum, uint8_t axis);
-int HALSetJoystickOutputs(uint8_t joystickNum, uint32_t outputs,
-                          uint16_t leftRumble, uint16_t rightRumble);
-int HALGetMatchTime(float* matchTime);
-
-void HALSetNewDataSem(MULTIWAIT_ID sem);
-
-bool HALGetSystemActive(int32_t* status);
-bool HALGetBrownedOut(int32_t* status);
-
-int HALInitialize(int mode = 0);
-void HALNetworkCommunicationObserveUserProgramStarting();
-void HALNetworkCommunicationObserveUserProgramDisabled();
-void HALNetworkCommunicationObserveUserProgramAutonomous();
-void HALNetworkCommunicationObserveUserProgramTeleop();
-void HALNetworkCommunicationObserveUserProgramTest();
-
-uint32_t HALReport(uint8_t resource, uint8_t instanceNumber,
-                   uint8_t context = 0, const char* feature = nullptr);
+// ifdef's definition is to allow for default parameters in C++.
+#ifdef __cplusplus
+int64_t HAL_Report(int32_t resource, int32_t instanceNumber,
+                   int32_t context = 0, const char* feature = nullptr);
+#else
+int64_t HAL_Report(int32_t resource, int32_t instanceNumber, int32_t context,
+                   const char* feature);
+#endif
+#ifdef __cplusplus
 }
-
-// TODO: HACKS for now...
-extern "C" {
-
-void NumericArrayResize();
-void RTSetCleanupProc();
-void EDVR_CreateReference();
-void Occur();
-}
+#endif

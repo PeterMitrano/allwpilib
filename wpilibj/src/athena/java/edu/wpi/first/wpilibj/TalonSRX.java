@@ -7,8 +7,8 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 public class TalonSRX extends PWMSpeedController {
 
   /**
-   * Common initialization code called by all constructors.
+   * Constructor for a TalonSRX connected via PWM.
    *
    * <p>Note that the TalonSRX uses the following bounds for PWM values. These values should work
    * reasonably well for most controllers, but if users experience issues such as asymmetric
@@ -31,25 +31,19 @@ public class TalonSRX extends PWMSpeedController {
    * center
    * of the deadband range (off) - 1.48ms = the "low end" of the deadband range - .997ms = full
    * "reverse"
-   */
-  protected void initTalonSRX() {
-    setBounds(2.004, 1.52, 1.50, 1.48, .997);
-    setPeriodMultiplier(PeriodMultiplier.k1X);
-    setRaw(m_centerPwm);
-    setZeroLatch();
-
-    LiveWindow.addActuator("TalonSRX", getChannel(), this);
-    UsageReporting.report(tResourceType.kResourceType_TalonSRX, getChannel());
-  }
-
-  /**
-   * Constructor for a TalonSRX connected via PWM.
    *
-   * @param channel The PWM channel that the TalonSRX is attached to. 0-9 are on-board, 10-19 are on
-   *                the MXP port
+   * @param channel The PWM channel that the TalonSRX is attached to. 0-9 are on-board, 10-19 are
+   *                on the MXP port
    */
   public TalonSRX(final int channel) {
     super(channel);
-    initTalonSRX();
+
+    setBounds(2.004, 1.52, 1.50, 1.48, .997);
+    setPeriodMultiplier(PeriodMultiplier.k1X);
+    setSpeed(0.0);
+    setZeroLatch();
+
+    LiveWindow.addActuator("TalonSRX", getChannel(), this);
+    HAL.report(tResourceType.kResourceType_TalonSRX, getChannel());
   }
 }

@@ -12,6 +12,7 @@
 #include "AnalogTrigger.h"
 #include "CounterBase.h"
 #include "HAL/Counter.h"
+#include "HAL/Types.h"
 #include "LiveWindow/LiveWindowSendable.h"
 #include "SensorBase.h"
 
@@ -30,6 +31,12 @@ class Counter : public SensorBase,
                 public CounterBase,
                 public LiveWindowSendable {
  public:
+  enum Mode {
+    kTwoPulse = 0,
+    kSemiperiod = 1,
+    kPulseLength = 2,
+    kExternalDirection = 3
+  };
   explicit Counter(Mode mode = kTwoPulse);
   explicit Counter(int32_t channel);
   explicit Counter(DigitalSource* source);
@@ -82,12 +89,12 @@ class Counter : public SensorBase,
 
   void SetSamplesToAverage(int samplesToAverage);
   int GetSamplesToAverage() const;
-  uint32_t GetFPGAIndex() const { return m_index; }
+  int32_t GetFPGAIndex() const { return m_index; }
 
   void UpdateTable() override;
   void StartLiveWindowMode() override;
   void StopLiveWindowMode() override;
-  virtual std::string GetSmartDashboardType() const override;
+  std::string GetSmartDashboardType() const override;
   void InitTable(std::shared_ptr<ITable> subTable) override;
   std::shared_ptr<ITable> GetTable() const override;
 
@@ -97,9 +104,10 @@ class Counter : public SensorBase,
   // Makes the counter count down.
   std::shared_ptr<DigitalSource> m_downSource;
   // The FPGA counter object
-  void* m_counter = nullptr;  ///< The FPGA counter object.
+  HAL_CounterHandle m_counter = HAL_kInvalidHandle;
+
  private:
-  uint32_t m_index = 0;  ///< The index of this counter.
+  int32_t m_index = 0;  ///< The index of this counter.
 
   std::shared_ptr<ITable> m_table;
   friend class DigitalGlitchFilter;

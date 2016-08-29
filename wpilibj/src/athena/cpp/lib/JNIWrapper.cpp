@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include <jni.h>
-#include "Log.h"
+#include "HAL/cpp/Log.h"
 
 #include "edu_wpi_first_wpilibj_hal_JNIWrapper.h"
 
@@ -18,46 +18,31 @@ extern "C" {
 /*
  * Class:     edu_wpi_first_wpilibj_hal_JNIWrapper
  * Method:    getPortWithModule
- * Signature: (BB)J
+ * Signature: (BB)I
  */
-JNIEXPORT jlong JNICALL
+JNIEXPORT jint JNICALL
 Java_edu_wpi_first_wpilibj_hal_JNIWrapper_getPortWithModule(
-    JNIEnv* env, jclass, jbyte module, jbyte pin) {
+    JNIEnv* env, jclass, jbyte module, jbyte channel) {
   // FILE_LOG(logDEBUG) << "Calling JNIWrapper getPortWithModlue";
   // FILE_LOG(logDEBUG) << "Module = " << (jint)module;
-  // FILE_LOG(logDEBUG) << "Pin = " << (jint)pin;
-  void* port = getPortWithModule(module, pin);
-  // FILE_LOG(logDEBUG) << "Port Ptr = " << port;
-  return (jlong)port;
+  // FILE_LOG(logDEBUG) << "Channel = " << (jint)channel;
+  HAL_PortHandle port = HAL_GetPortWithModule(module, channel);
+  // FILE_LOG(logDEBUG) << "Port Handle = " << port;
+  return (jint)port;
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_JNIWrapper
  * Method:    getPort
- * Signature: (BB)J
+ * Signature: (B)I
  */
-JNIEXPORT jlong JNICALL Java_edu_wpi_first_wpilibj_hal_JNIWrapper_getPort(
-    JNIEnv* env, jclass, jbyte pin) {
+JNIEXPORT jint JNICALL Java_edu_wpi_first_wpilibj_hal_JNIWrapper_getPort(
+    JNIEnv* env, jclass, jbyte channel) {
   // FILE_LOG(logDEBUG) << "Calling JNIWrapper getPortWithModlue";
   // FILE_LOG(logDEBUG) << "Module = " << (jint)module;
-  // FILE_LOG(logDEBUG) << "Pin = " << (jint)pin;
-  void* port = getPort(pin);
-  // FILE_LOG(logDEBUG) << "Port Ptr = " << port;
-  return (jlong)port;
+  // FILE_LOG(logDEBUG) << "Channel = " << (jint)channel;
+  HAL_PortHandle port = HAL_GetPort(channel);
+  // FILE_LOG(logDEBUG) << "Port Handle = " << port;
+  return (jint)port;
 }
-
-/*
- * Class:     edu_wpi_first_wpilibj_hal_JNIWrapper
- * Method:    freePort
- * Signature: (J)V
- */
-JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_JNIWrapper_freePort(
-    JNIEnv* env, jclass, jlong id) {
-  // FILE_LOG(logDEBUG) << "Calling JNIWrapper getPortWithModlue";
-  // FILE_LOG(logDEBUG) << "Module = " << (jint)module;
-  // FILE_LOG(logDEBUG) << "Pin = " << (jint)pin;
-  freePort((void*)id);
-  // FILE_LOG(logDEBUG) << "Port Ptr = " << port;
-}
-
 }  // extern "C"

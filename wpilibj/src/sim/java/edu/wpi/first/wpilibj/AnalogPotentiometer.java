@@ -15,27 +15,12 @@ import edu.wpi.first.wpilibj.tables.ITable;
  * Class for reading analog potentiometers. Analog potentiometers read in an analog voltage that
  * corresponds to a position. Usually the position is either degrees or meters. However, if no
  * conversion is given it remains volts.
- *
- * @author Alex Henning
  */
 public class AnalogPotentiometer implements Potentiometer, LiveWindowSendable {
   private double m_scale, m_offset;
   private AnalogInput m_analog_input;
   private boolean m_init_analog_input;
   protected PIDSourceType m_pidSource = PIDSourceType.kDisplacement;
-
-  /**
-   * Common initialization code called by all constructors.
-   *
-   * @param input  The {@link AnalogInput} this potentiometer is plugged into.
-   * @param scale  The scaling to multiply the voltage by to get a meaningful unit.
-   * @param offset The offset to add to the scaled value for controlling the zero value
-   */
-  private void initPot(final AnalogInput input, double scale, double offset) {
-    this.m_scale = scale;
-    this.m_offset = offset;
-    m_analog_input = input;
-  }
 
   /**
    * AnalogPotentiometer constructor.
@@ -50,9 +35,8 @@ public class AnalogPotentiometer implements Potentiometer, LiveWindowSendable {
    * @param offset  The offset to add to the scaled value for controlling the zero value
    */
   public AnalogPotentiometer(final int channel, double scale, double offset) {
-    AnalogInput input = new AnalogInput(channel);
+    this(new AnalogInput(channel), scale, offset);
     m_init_analog_input = true;
-    initPot(input, scale, offset);
   }
 
   /**
@@ -69,7 +53,10 @@ public class AnalogPotentiometer implements Potentiometer, LiveWindowSendable {
    */
   public AnalogPotentiometer(final AnalogInput input, double scale, double offset) {
     m_init_analog_input = false;
-    initPot(input, scale, offset);
+
+    m_scale = scale;
+    m_offset = offset;
+    m_analog_input = input;
   }
 
   /**

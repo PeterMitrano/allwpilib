@@ -9,9 +9,9 @@ package edu.wpi.first.wpilibj;
 
 import java.nio.ByteBuffer;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
-import edu.wpi.first.wpilibj.communication.HALAllianceStationID;
-import edu.wpi.first.wpilibj.communication.HALControlWord;
+import edu.wpi.first.wpilibj.hal.AllianceStationID;
+import edu.wpi.first.wpilibj.hal.ControlWord;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.hal.HALUtil;
 import edu.wpi.first.wpilibj.hal.PowerJNI;
 
@@ -32,7 +32,7 @@ public class DriverStation implements RobotState.Interface {
 
   private class HALJoystickAxes {
     public float[] m_axes;
-    public byte m_count;
+    public short m_count;
 
     public HALJoystickAxes(int count) {
       m_axes = new float[count];
@@ -41,7 +41,7 @@ public class DriverStation implements RobotState.Interface {
 
   private class HALJoystickPOVs {
     public short[] m_povs;
-    public byte m_count;
+    public short m_count;
 
     public HALJoystickPOVs(int count) {
       m_povs = new short[count];
@@ -67,7 +67,7 @@ public class DriverStation implements RobotState.Interface {
     }
 
     public void run() {
-      m_ds.task();
+      m_ds.run();
     }
   } /* DriverStationTask */
 
@@ -81,27 +81,29 @@ public class DriverStation implements RobotState.Interface {
   private HALJoystickPOVs[] m_joystickPOVsCache = new HALJoystickPOVs[kJoystickPorts];
   private HALJoystickButtons[] m_joystickButtonsCache = new HALJoystickButtons[kJoystickPorts];
   // preallocated byte buffer for button count
-  private ByteBuffer m_buttonCountBuffer = ByteBuffer.allocateDirect(1); 
+  private ByteBuffer m_buttonCountBuffer = ByteBuffer.allocateDirect(1);
 
   private int[] m_joystickIsXbox = new int[kJoystickPorts];
   private int[] m_joystickType = new int[kJoystickPorts];
   private String[] m_joystickName = new String[kJoystickPorts];
-  private int[][] m_joystickAxisType =
-      new int[kJoystickPorts][FRCNetworkCommunicationsLibrary.kMaxJoystickAxes];
+  private int[][] m_joystickAxisType = new int[kJoystickPorts][HAL.kMaxJoystickAxes];
 
   private Thread m_thread;
   private final Object m_dataSem;
   private final Object m_newControlDataMutex;
   private final Object m_joystickMutex;
   private volatile boolean m_threadKeepAlive = true;
-  
+
+  private final Object m_controlWordMutex;
+  private ControlWord m_controlWordCache;
+  private long m_lastControlWordUpdate;
+
   private boolean m_userInDisabled = false;
   private boolean m_userInAutonomous = false;
   private boolean m_userInTeleop = false;
   private boolean m_userInTest = false;
+  private boolean m_updatedControlLoopData;
   private boolean m_newControlData;
-  private final long m_packetDataAvailableMutex;
-  private final long m_packetDataAvailableSem;
 
   /**
    * Gets an instance of the DriverStation
@@ -118,25 +120,23 @@ public class DriverStation implements RobotState.Interface {
    * <p>The single DriverStation instance is created statically with the instance static member
    * variable.
    */
-  protected DriverStation() {
+  private DriverStation() {
     m_dataSem = new Object();
     m_joystickMutex = new Object();
     m_newControlDataMutex = new Object();
     for (int i = 0; i < kJoystickPorts; i++) {
       m_joystickButtons[i] = new HALJoystickButtons();
-      m_joystickAxes[i] = new HALJoystickAxes(FRCNetworkCommunicationsLibrary.kMaxJoystickAxes);
-      m_joystickPOVs[i] = new HALJoystickPOVs(FRCNetworkCommunicationsLibrary.kMaxJoystickPOVs);
+      m_joystickAxes[i] = new HALJoystickAxes(HAL.kMaxJoystickAxes);
+      m_joystickPOVs[i] = new HALJoystickPOVs(HAL.kMaxJoystickPOVs);
 
       m_joystickButtonsCache[i] = new HALJoystickButtons();
-      m_joystickAxesCache[i] = 
-          new HALJoystickAxes(FRCNetworkCommunicationsLibrary.kMaxJoystickAxes);
-      m_joystickPOVsCache[i] = 
-          new HALJoystickPOVs(FRCNetworkCommunicationsLibrary.kMaxJoystickPOVs);
+      m_joystickAxesCache[i] = new HALJoystickAxes(HAL.kMaxJoystickAxes);
+      m_joystickPOVsCache[i] = new HALJoystickPOVs(HAL.kMaxJoystickPOVs);
     }
 
-    m_packetDataAvailableMutex = HALUtil.initializeMutexNormal();
-    m_packetDataAvailableSem = HALUtil.initializeMultiWait();
-    FRCNetworkCommunicationsLibrary.setNewDataSem(m_packetDataAvailableSem);
+    m_controlWordMutex = new Object();
+    m_controlWordCache = new ControlWord();
+    m_lastControlWordUpdate = 0;
 
     m_thread = new Thread(new DriverStationTask(this), "FRCDriverStation");
     m_thread.setPriority((Thread.NORM_PRIORITY + Thread.MAX_PRIORITY) / 2);
@@ -152,127 +152,46 @@ public class DriverStation implements RobotState.Interface {
   }
 
   /**
-   * Provides the service routine for the DS polling m_thread.
-   */
-  private void task() {
-    int safetyCounter = 0;
-    while (m_threadKeepAlive) {
-      HALUtil.takeMultiWait(m_packetDataAvailableSem, m_packetDataAvailableMutex);
-      getData();
-      synchronized (m_dataSem) {
-        m_dataSem.notifyAll();
-      }
-      if (++safetyCounter >= 4) {
-        MotorSafetyHelper.checkMotors();
-        safetyCounter = 0;
-      }
-      if (m_userInDisabled) {
-        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramDisabled();
-      }
-      if (m_userInAutonomous) {
-        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramAutonomous();
-      }
-      if (m_userInTeleop) {
-        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramTeleop();
-      }
-      if (m_userInTest) {
-        FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramTest();
-      }
-    }
-  }
-
-  /**
-   * Wait for new data from the driver station.
-   */
-  public void waitForData() {
-    waitForData(0);
-  }
-
-  /**
-   * Wait for new data or for timeout, which ever comes first. If timeout is 0, wait for new data
-   * only.
+   * Report error to Driver Station. Also prints error to System.err Optionally appends Stack trace
+   * to error message.
    *
-   * @param timeout The maximum time in milliseconds to wait.
+   * @param printTrace If true, append stack trace to error string
    */
-  public void waitForData(long timeout) {
-    synchronized (m_dataSem) {
-      try {
-        m_dataSem.wait(timeout);
-      } catch (InterruptedException ex) {
-        Thread.currentThread().interrupt();
+  public static void reportError(String error, boolean printTrace) {
+    reportErrorImpl(true, 1, error, printTrace);
+  }
+
+  /**
+   * Report warning to Driver Station. Also prints error to System.err Optionally appends Stack
+   * trace to warning message.
+   *
+   * @param printTrace If true, append stack trace to warning string
+   */
+  public static void reportWarning(String error, boolean printTrace) {
+    reportErrorImpl(false, 1, error, printTrace);
+  }
+
+  private static void reportErrorImpl(boolean isError, int code, String error, boolean
+      printTrace) {
+    StackTraceElement[] traces = Thread.currentThread().getStackTrace();
+    String locString;
+    if (traces.length > 3) {
+      locString = traces[3].toString();
+    } else {
+      locString = new String();
+    }
+    boolean haveLoc = false;
+    String traceString = " at ";
+    for (int i = 3; i < traces.length; i++) {
+      String loc = traces[i].toString();
+      traceString += loc + "\n";
+      // get first user function
+      if (!haveLoc && !loc.startsWith("edu.wpi.first.wpilibj")) {
+        locString = loc;
+        haveLoc = true;
       }
     }
-  }
-
-  /**
-   * Copy data from the DS task for the user. If no new data exists, it will just be returned,
-   * otherwise the data will be copied from the DS polling loop.
-   */
-  protected void getData() {
-    // Get the status of all of the joysticks
-    for (byte stick = 0; stick < kJoystickPorts; stick++) {
-      m_joystickAxesCache[stick].m_count = 
-          FRCNetworkCommunicationsLibrary.HALGetJoystickAxes(stick, 
-                                                             m_joystickAxesCache[stick].m_axes);
-      m_joystickPOVsCache[stick].m_count = 
-          FRCNetworkCommunicationsLibrary.HALGetJoystickPOVs(stick, 
-                                                             m_joystickPOVsCache[stick].m_povs);
-      m_joystickButtonsCache[stick].m_buttons =
-          FRCNetworkCommunicationsLibrary.HALGetJoystickButtons(stick, m_buttonCountBuffer);
-      m_joystickButtonsCache[stick].m_count = m_buttonCountBuffer.get(0);
-    }
-    // lock joystick mutex to swap cache data
-    synchronized (m_joystickMutex) {
-      // move cache to actual data
-      HALJoystickAxes[] currentAxes = m_joystickAxes;
-      m_joystickAxes = m_joystickAxesCache;
-      m_joystickAxesCache = currentAxes;
-
-      HALJoystickButtons[] currentButtons = m_joystickButtons;
-      m_joystickButtons = m_joystickButtonsCache;
-      m_joystickButtonsCache = currentButtons;
-
-      HALJoystickPOVs[] currentPOVs = m_joystickPOVs;
-      m_joystickPOVs = m_joystickPOVsCache;
-      m_joystickPOVsCache = currentPOVs;
-    }
-    //Lock new control data mutex and set new control data.
-    synchronized (m_newControlDataMutex) {
-      m_newControlData = true;
-    }
-  }
-
-  /**
-   * Read the battery voltage.
-   *
-   * @return The battery voltage in Volts.
-   */
-  public double getBatteryVoltage() {
-    return PowerJNI.getVinVoltage();
-  }
-
-  /**
-   * Reports errors related to unplugged joysticks Throttles the errors so that they don't overwhelm
-   * the DS.
-   */
-  private void reportJoystickUnpluggedError(String message) {
-    double currentTime = Timer.getFPGATimestamp();
-    if (currentTime > m_nextMessageTime) {
-      reportError(message, false);
-      m_nextMessageTime = currentTime + JOYSTICK_UNPLUGGED_MESSAGE_INTERVAL;
-    }
-  }
-
-  /**
-   * Reports errors related to unplugged joysticks Throttles the errors so that they don't overwhelm
-   * the DS.
-   */
-  private void reportJoystickUnpluggedWarning(String message) {
-    double currentTime = Timer.getFPGATimestamp();
-    if (currentTime > m_nextMessageTime) {
-      reportWarning(message, false);
-      m_nextMessageTime = currentTime + JOYSTICK_UNPLUGGED_MESSAGE_INTERVAL;
-    }
+    HAL.sendError(isError, code, false, error, locString, printTrace ? traceString : "", true);
   }
 
   /**
@@ -287,10 +206,10 @@ public class DriverStation implements RobotState.Interface {
     if (stick < 0 || stick >= kJoystickPorts) {
       throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
-    if (axis < 0 || axis >= FRCNetworkCommunicationsLibrary.kMaxJoystickAxes) {
+    if (axis < 0 || axis >= HAL.kMaxJoystickAxes) {
       throw new RuntimeException("Joystick axis is out of range");
     }
-    
+
     boolean error = false;
     double retVal = 0.0;
     synchronized (m_joystickMutex) {
@@ -301,27 +220,12 @@ public class DriverStation implements RobotState.Interface {
       } else {
         retVal =  m_joystickAxes[stick].m_axes[axis];
       }
-    } 
+    }
     if (error) {
       reportJoystickUnpluggedWarning("Joystick axis " + axis + " on port " + stick
           + " not available, check if controller is plugged in");
     }
     return retVal;
-  }
-
-  /**
-   * Returns the number of axes on a given joystick port.
-   *
-   * @param stick The joystick port number
-   * @return The number of axes on the indicated joystick
-   */
-  public int getStickAxisCount(int stick) {
-    if (stick < 0 || stick >= kJoystickPorts) {
-      throw new RuntimeException("Joystick index is out of range, should be 0-5");
-    }
-    synchronized (m_joystickMutex) {
-      return m_joystickAxes[stick].m_count;
-    }
   }
 
   /**
@@ -333,7 +237,7 @@ public class DriverStation implements RobotState.Interface {
     if (stick < 0 || stick >= kJoystickPorts) {
       throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
-    if (pov < 0 || pov >= FRCNetworkCommunicationsLibrary.kMaxJoystickPOVs) {
+    if (pov < 0 || pov >= HAL.kMaxJoystickPOVs) {
       throw new RuntimeException("Joystick POV is out of range");
     }
     boolean error = false;
@@ -351,21 +255,6 @@ public class DriverStation implements RobotState.Interface {
           + " not available, check if controller is plugged in");
     }
     return retVal;
-  }
-
-  /**
-   * Returns the number of POVs on a given joystick port.
-   *
-   * @param stick The joystick port number
-   * @return The number of POVs on the indicated joystick
-   */
-  public int getStickPOVCount(int stick) {
-    if (stick < 0 || stick >= kJoystickPorts) {
-      throw new RuntimeException("Joystick index is out of range, should be 0-5");
-    }
-    synchronized (m_joystickMutex) {
-      return m_joystickPOVs[stick].m_count;
-    }
   }
 
   /**
@@ -416,6 +305,36 @@ public class DriverStation implements RobotState.Interface {
   }
 
   /**
+   * Returns the number of axes on a given joystick port.
+   *
+   * @param stick The joystick port number
+   * @return The number of axes on the indicated joystick
+   */
+  public int getStickAxisCount(int stick) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
+    }
+    synchronized (m_joystickMutex) {
+      return m_joystickAxes[stick].m_count;
+    }
+  }
+
+  /**
+   * Returns the number of POVs on a given joystick port.
+   *
+   * @param stick The joystick port number
+   * @return The number of POVs on the indicated joystick
+   */
+  public int getStickPOVCount(int stick) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
+    }
+    synchronized (m_joystickMutex) {
+      return m_joystickPOVs[stick].m_count;
+    }
+  }
+
+  /**
    * Gets the number of buttons on a joystick.
    *
    * @param stick The joystick port number
@@ -448,7 +367,7 @@ public class DriverStation implements RobotState.Interface {
       if (1 > m_joystickButtons[stick].m_count && 1 > m_joystickAxes[stick].m_count) {
         error = true;
         retVal = false;
-      } else if (FRCNetworkCommunicationsLibrary.HALGetJoystickIsXbox((byte) stick) == 1) {
+      } else if (HAL.getJoystickIsXbox((byte) stick) == 1) {
         retVal = true;
       }
     }
@@ -478,7 +397,7 @@ public class DriverStation implements RobotState.Interface {
         error = true;
         retVal = -1;
       } else {
-        retVal = FRCNetworkCommunicationsLibrary.HALGetJoystickType((byte) stick);
+        retVal = HAL.getJoystickType((byte) stick);
       }
     }
     if (error) {
@@ -499,7 +418,7 @@ public class DriverStation implements RobotState.Interface {
       throw new RuntimeException("Joystick index is out of range, should be 0-5");
     }
     boolean error = false;
-    String retVal = "";  
+    String retVal = "";
     synchronized (m_joystickMutex) {
       // TODO: Remove this when calling for descriptor on empty stick no longer
       // crashes
@@ -507,12 +426,31 @@ public class DriverStation implements RobotState.Interface {
         error = true;
         retVal = "";
       } else {
-        retVal = FRCNetworkCommunicationsLibrary.HALGetJoystickName((byte) stick);
+        retVal = HAL.getJoystickName((byte) stick);
       }
-    } 
+    }
     if (error) {
       reportJoystickUnpluggedWarning("Joystick on port " + stick
           + " not available, check if controller is plugged in");
+    }
+    return retVal;
+  }
+
+  /**
+   * Returns the types of Axes on a given joystick port.
+   *
+   * @param stick The joystick port number
+   * @param axis The target axis
+   * @return What type of axis the axis is reporting to be
+   */
+  public int getJoystickAxisType(int stick, int axis) {
+    if (stick < 0 || stick >= kJoystickPorts) {
+      throw new RuntimeException("Joystick index is out of range, should be 0-5");
+    }
+
+    int retVal = -1;
+    synchronized (m_joystickMutex) {
+      retVal = HAL.getJoystickAxisType((byte) stick, (byte) axis);
     }
     return retVal;
   }
@@ -523,8 +461,10 @@ public class DriverStation implements RobotState.Interface {
    * @return True if the robot is enabled, false otherwise.
    */
   public boolean isEnabled() {
-    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
-    return controlWord.getEnabled() && controlWord.getDSAttached();
+    synchronized (m_controlWordMutex) {
+      updateControlWord(false);
+      return m_controlWordCache.getEnabled() && m_controlWordCache.getDSAttached();
+    }
   }
 
   /**
@@ -543,19 +483,10 @@ public class DriverStation implements RobotState.Interface {
    * @return True if autonomous mode should be enabled, false otherwise.
    */
   public boolean isAutonomous() {
-    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
-    return controlWord.getAutonomous();
-  }
-
-  /**
-   * Gets a value indicating whether the Driver Station requires the robot to be running in test
-   * mode.
-   *
-   * @return True if test mode should be enabled, false otherwise.
-   */
-  public boolean isTest() {
-    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
-    return controlWord.getTest();
+    synchronized (m_controlWordMutex) {
+      updateControlWord(false);
+      return m_controlWordCache.getAutonomous();
+    }
   }
 
   /**
@@ -569,22 +500,28 @@ public class DriverStation implements RobotState.Interface {
   }
 
   /**
-   * Gets a value indicating whether the FPGA outputs are enabled. The outputs may be disabled if
-   * the robot is disabled or e-stopped, the watdhog has expired, or if the roboRIO browns out.
+   * Gets a value indicating whether the Driver Station requires the robot to be running in test
+   * mode.
    *
-   * @return True if the FPGA outputs are enabled.
+   * @return True if test mode should be enabled, false otherwise.
    */
-  public boolean isSysActive() {
-    return FRCNetworkCommunicationsLibrary.HALGetSystemActive();
+  public boolean isTest() {
+    synchronized (m_controlWordMutex) {
+      updateControlWord(false);
+      return m_controlWordCache.getTest();
+    }
   }
 
   /**
-   * Check if the system is browned out.
+   * Gets a value indicating whether the Driver Station is attached.
    *
-   * @return True if the system is browned out
+   * @return True if Driver Station is attached, false otherwise.
    */
-  public boolean isBrownedOut() {
-    return FRCNetworkCommunicationsLibrary.HALGetBrownedOut();
+  public boolean isDSAttached() {
+    synchronized (m_controlWordMutex) {
+      updateControlWord(false);
+      return m_controlWordCache.getDSAttached();
+    }
   }
 
   /**
@@ -602,13 +539,44 @@ public class DriverStation implements RobotState.Interface {
   }
 
   /**
+   * Is the driver station attached to a Field Management System? Note: This does not work with the
+   * Blue DS.
+   *
+   * @return True if the robot is competing on a field being controlled by a Field Management System
+   */
+  public boolean isFMSAttached() {
+    synchronized (m_controlWordMutex) {
+      updateControlWord(false);
+      return m_controlWordCache.getFMSAttached();
+    }
+  }
+
+  /**
+   * Gets a value indicating whether the FPGA outputs are enabled. The outputs may be disabled if
+   * the robot is disabled or e-stopped, the watdhog has expired, or if the roboRIO browns out.
+   *
+   * @return True if the FPGA outputs are enabled.
+   */
+  public boolean isSysActive() {
+    return HAL.getSystemActive();
+  }
+
+  /**
+   * Check if the system is browned out.
+   *
+   * @return True if the system is browned out
+   */
+  public boolean isBrownedOut() {
+    return HAL.getBrownedOut();
+  }
+
+  /**
    * Get the current alliance from the FMS.
    *
    * @return the current alliance
    */
   public Alliance getAlliance() {
-    HALAllianceStationID allianceStationID =
-        FRCNetworkCommunicationsLibrary.HALGetAllianceStation();
+    AllianceStationID allianceStationID = HAL.getAllianceStation();
     if (allianceStationID == null) {
       return Alliance.Invalid;
     }
@@ -635,8 +603,7 @@ public class DriverStation implements RobotState.Interface {
    * @return the location of the team's driver station controls: 1, 2, or 3
    */
   public int getLocation() {
-    HALAllianceStationID allianceStationID =
-        FRCNetworkCommunicationsLibrary.HALGetAllianceStation();
+    AllianceStationID allianceStationID = HAL.getAllianceStation();
     if (allianceStationID == null) {
       return 0;
     }
@@ -659,19 +626,29 @@ public class DriverStation implements RobotState.Interface {
   }
 
   /**
-   * Is the driver station attached to a Field Management System? Note: This does not work with the
-   * Blue DS.
-   *
-   * @return True if the robot is competing on a field being controlled by a Field Management System
+   * Wait for new data from the driver station.
    */
-  public boolean isFMSAttached() {
-    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
-    return controlWord.getFMSAttached();
+  public void waitForData() {
+    waitForData(0);
   }
 
-  public boolean isDSAttached() {
-    HALControlWord controlWord = FRCNetworkCommunicationsLibrary.HALGetControlWord();
-    return controlWord.getDSAttached();
+  /**
+   * Wait for new data or for timeout, which ever comes first. If timeout is 0, wait for new data
+   * only.
+   *
+   * @param timeout The maximum time in milliseconds to wait.
+   */
+  public void waitForData(long timeout) {
+    synchronized (m_dataSem) {
+      try {
+        while (!m_updatedControlLoopData) {
+          m_dataSem.wait(timeout);
+        }
+        m_updatedControlLoopData = false;
+      } catch (InterruptedException ex) {
+        Thread.currentThread().interrupt();
+      }
+    }
   }
 
   /**
@@ -684,51 +661,16 @@ public class DriverStation implements RobotState.Interface {
    * @return Time remaining in current match period (auto or teleop) in seconds
    */
   public double getMatchTime() {
-    return FRCNetworkCommunicationsLibrary.HALGetMatchTime();
+    return HAL.getMatchTime();
   }
 
   /**
-   * Report error to Driver Station. Also prints error to System.err Optionally appends Stack trace
-   * to error message.
+   * Read the battery voltage.
    *
-   * @param printTrace If true, append stack trace to error string
+   * @return The battery voltage in Volts.
    */
-  public static void reportError(String error, boolean printTrace) {
-    reportErrorImpl(true, 1, error, printTrace);
-  }
-
-  /**
-   * Report warning to Driver Station. Also prints error to System.err Optionally appends Stack
-   * trace to warning message.
-   *
-   * @param printTrace If true, append stack trace to warning string
-   */
-  public static void reportWarning(String error, boolean printTrace) {
-    reportErrorImpl(false, 1, error, printTrace);
-  }
-
-  private static void reportErrorImpl(boolean isError, int code, String error, boolean
-      printTrace) {
-    StackTraceElement[] traces = Thread.currentThread().getStackTrace();
-    String locString;
-    if (traces.length > 3) {
-      locString = traces[3].toString();
-    } else {
-      locString = new String();
-    }
-    boolean haveLoc = false;
-    String traceString = " at ";
-    for (int i = 3; i < traces.length; i++) {
-      String loc = traces[i].toString();
-      traceString += loc + "\n";
-      // get first user function
-      if (!haveLoc && !loc.startsWith("edu.wpi.first.wpilibj")) {
-        locString = loc;
-        haveLoc = true;
-      }
-    }
-    FRCNetworkCommunicationsLibrary.HALSendError(isError, code, false, error, locString,
-        printTrace ? traceString : "", true);
+  public double getBatteryVoltage() {
+    return PowerJNI.getVinVoltage();
   }
 
   /**
@@ -773,5 +715,114 @@ public class DriverStation implements RobotState.Interface {
   @SuppressWarnings("MethodName")
   public void InTest(boolean entering) {
     m_userInTest = entering;
+  }
+
+  /**
+   * Copy data from the DS task for the user. If no new data exists, it will just be returned,
+   * otherwise the data will be copied from the DS polling loop.
+   */
+  protected void getData() {
+    // Get the status of all of the joysticks
+    for (byte stick = 0; stick < kJoystickPorts; stick++) {
+      m_joystickAxesCache[stick].m_count =
+          HAL.getJoystickAxes(stick, m_joystickAxesCache[stick].m_axes);
+      m_joystickPOVsCache[stick].m_count =
+          HAL.getJoystickPOVs(stick, m_joystickPOVsCache[stick].m_povs);
+      m_joystickButtonsCache[stick].m_buttons = HAL.getJoystickButtons(stick, m_buttonCountBuffer);
+      m_joystickButtonsCache[stick].m_count = m_buttonCountBuffer.get(0);
+    }
+    // Force a control word update, to make sure the data is the newest.
+    updateControlWord(true);
+
+    // lock joystick mutex to swap cache data
+    synchronized (m_joystickMutex) {
+      // move cache to actual data
+      HALJoystickAxes[] currentAxes = m_joystickAxes;
+      m_joystickAxes = m_joystickAxesCache;
+      m_joystickAxesCache = currentAxes;
+
+      HALJoystickButtons[] currentButtons = m_joystickButtons;
+      m_joystickButtons = m_joystickButtonsCache;
+      m_joystickButtonsCache = currentButtons;
+
+      HALJoystickPOVs[] currentPOVs = m_joystickPOVs;
+      m_joystickPOVs = m_joystickPOVsCache;
+      m_joystickPOVsCache = currentPOVs;
+    }
+    //Lock new control data mutex and set new control data.
+    synchronized (m_newControlDataMutex) {
+      m_newControlData = true;
+    }
+  }
+
+  /**
+   * Reports errors related to unplugged joysticks Throttles the errors so that they don't overwhelm
+   * the DS.
+   */
+  private void reportJoystickUnpluggedError(String message) {
+    double currentTime = Timer.getFPGATimestamp();
+    if (currentTime > m_nextMessageTime) {
+      reportError(message, false);
+      m_nextMessageTime = currentTime + JOYSTICK_UNPLUGGED_MESSAGE_INTERVAL;
+    }
+  }
+
+  /**
+   * Reports errors related to unplugged joysticks Throttles the errors so that they don't overwhelm
+   * the DS.
+   */
+  private void reportJoystickUnpluggedWarning(String message) {
+    double currentTime = Timer.getFPGATimestamp();
+    if (currentTime > m_nextMessageTime) {
+      reportWarning(message, false);
+      m_nextMessageTime = currentTime + JOYSTICK_UNPLUGGED_MESSAGE_INTERVAL;
+    }
+  }
+
+  /**
+   * Provides the service routine for the DS polling m_thread.
+   */
+  private void run() {
+    int safetyCounter = 0;
+    while (m_threadKeepAlive) {
+      HAL.waitForDSData();
+      getData();
+      synchronized (m_dataSem) {
+        m_updatedControlLoopData = true;
+        m_dataSem.notifyAll();
+      }
+      if (++safetyCounter >= 4) {
+        MotorSafetyHelper.checkMotors();
+        safetyCounter = 0;
+      }
+      if (m_userInDisabled) {
+        HAL.observeUserProgramDisabled();
+      }
+      if (m_userInAutonomous) {
+        HAL.observeUserProgramAutonomous();
+      }
+      if (m_userInTeleop) {
+        HAL.observeUserProgramTeleop();
+      }
+      if (m_userInTest) {
+        HAL.observeUserProgramTest();
+      }
+    }
+  }
+
+  /**
+   * Updates the data in the control word cache. Updates if the force parameter is set, or if
+   * 50ms have passed since the last update.
+   *
+   * @param force True to force an update to the cache, otherwise update if 50ms have passed.
+   */
+  private void updateControlWord(boolean force) {
+    long now = System.currentTimeMillis();
+    synchronized (m_controlWordMutex) {
+      if ((now - m_lastControlWordUpdate > 50) || force) {
+        HAL.getControlWord(m_controlWordCache);
+        now = m_lastControlWordUpdate;
+      }
+    }
   }
 }

@@ -16,15 +16,13 @@ import edu.wpi.first.wpilibj.test.AbstractTestSuite;
 /**
  * Holds all of the tests in the root wpilibj directory. Please list alphabetically so that it is
  * easy to determine if a test is missing from the list.
- *
- * @author Jonathan Leitschuh
  */
 @RunWith(Suite.class)
 @SuiteClasses({AnalogCrossConnectTest.class, AnalogPotentiometerTest.class,
     BuiltInAccelerometerTest.class, CANTalonTest.class,
-    CircularBufferTest.class, CounterTest.class, DigitalGlitchFilterTest.class,
-    DIOCrossConnectTest.class, EncoderTest.class, FilterNoiseTest.class,
-    FilterOutputTest.class, GyroTest.class, MotorEncoderTest.class,
+    CircularBufferTest.class, ConstantsPortsTest.class, CounterTest.class,
+    DigitalGlitchFilterTest.class, DIOCrossConnectTest.class, EncoderTest.class,
+    FilterNoiseTest.class, FilterOutputTest.class, GyroTest.class, MotorEncoderTest.class,
     MotorInvertingTest.class, PCMTest.class, PDPTest.class, PIDTest.class,
     PIDToleranceTest.class, PreferencesTest.class, RelayCrossConnectTest.class,
     SampleTest.class, TimerTest.class})

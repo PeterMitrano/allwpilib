@@ -11,15 +11,15 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import edu.wpi.first.wpilibj.AnalogTriggerOutput.AnalogTriggerType;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.AnalogJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.util.BoundaryException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Class for creating and configuring Analog Triggers.
- *
- * @author dtjones
  */
 public class AnalogTrigger {
 
@@ -42,34 +42,19 @@ public class AnalogTrigger {
   /**
    * Where the analog trigger is attached.
    */
-  protected long m_port;
+  protected int m_port;
   protected int m_index;
-
-  /**
-   * Initialize an analog trigger from a channel.
-   *
-   * @param channel the port to use for the analog trigger
-   */
-  protected void initTrigger(final int channel) {
-    final long portPointer = AnalogJNI.getPort((byte) channel);
-    ByteBuffer index = ByteBuffer.allocateDirect(4);
-    index.order(ByteOrder.LITTLE_ENDIAN);
-
-    m_port =
-        AnalogJNI.initializeAnalogTrigger(portPointer, index.asIntBuffer());
-    m_index = index.asIntBuffer().get(0);
-
-    UsageReporting.report(tResourceType.kResourceType_AnalogTrigger, channel);
-  }
+  protected AnalogInput m_analogInput = null;
+  protected boolean m_ownsAnalog = false;
 
   /**
    * Constructor for an analog trigger given a channel number.
    *
-   * @param channel the port to use for the analog trigger 0-3 are on-board, 4-7 are on the MXP
-   *                port
+   * @param channel the port to use for the analog trigger
    */
   public AnalogTrigger(final int channel) {
-    initTrigger(channel);
+    this(new AnalogInput(channel));
+    m_ownsAnalog = true;
   }
 
   /**
@@ -79,10 +64,15 @@ public class AnalogTrigger {
    * @param channel the AnalogInput to use for the analog trigger
    */
   public AnalogTrigger(AnalogInput channel) {
-    if (channel == null) {
-      throw new NullPointerException("The Analog Input given was null");
-    }
-    initTrigger(channel.getChannel());
+    m_analogInput = channel;
+    ByteBuffer index = ByteBuffer.allocateDirect(4);
+    index.order(ByteOrder.LITTLE_ENDIAN);
+
+    m_port =
+        AnalogJNI.initializeAnalogTrigger(channel.m_port, index.asIntBuffer());
+    m_index = index.asIntBuffer().get(0);
+
+    HAL.report(tResourceType.kResourceType_AnalogTrigger, channel.getChannel());
   }
 
   /**
@@ -91,6 +81,9 @@ public class AnalogTrigger {
   public void free() {
     AnalogJNI.cleanAnalogTrigger(m_port);
     m_port = 0;
+    if (m_ownsAnalog && m_analogInput != null) {
+      m_analogInput.free();
+    }
   }
 
   /**

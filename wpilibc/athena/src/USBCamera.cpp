@@ -34,7 +34,7 @@
  * the SOS flag explanation.
  */
 unsigned int USBCamera::GetJpegSize(void* buffer, unsigned int buffSize) {
-  uint8_t* data = (uint8_t*)buffer;
+  uint8_t* data = static_cast<uint8_t*>(buffer);
   if (!wpi_assert(data[0] == 0xff && data[1] == 0xd8)) return 0;
   unsigned int pos = 2;
   while (pos < buffSize) {
@@ -54,8 +54,7 @@ unsigned int USBCamera::GetJpegSize(void* buffer, unsigned int buffSize) {
     } else if (t == 0xda) {
       // SOS marker. The next two bytes are a 16-bit big-endian int that is
       // the length of the SOS header, skip that
-      unsigned int len = (((unsigned int)(data[pos + 2] & 0xff)) << 8 |
-                          ((unsigned int)data[pos + 3] & 0xff));
+      unsigned int len = (data[pos + 2] & 0xffu) << 8 | (data[pos + 3] & 0xffu);
       pos += len + 2;
       // The next marker is the first marker that is 0xff followed by a non-RST
       // element. 0xff followed by 0x00 is an escaped 0xff. 0xd0-0xd7 are RST
@@ -70,8 +69,7 @@ unsigned int USBCamera::GetJpegSize(void* buffer, unsigned int buffSize) {
       // 16-bit
       // big-endian int with the length of the marker header, skip that then
       // continue searching
-      unsigned int len = (((unsigned int)(data[pos + 2] & 0xff)) << 8 |
-                          ((unsigned int)data[pos + 3] & 0xff));
+      unsigned int len = (data[pos + 2] & 0xffu) << 8 | (data[pos + 3] & 0xffu);
       pos += len + 2;
     }
   }
@@ -156,8 +154,8 @@ void USBCamera::UpdateSettings() {
   for (unsigned int i = 0; i < count; i++) {
     std::cmatch m;
     if (!std::regex_match(modes[i].Name, m, reMode)) continue;
-    unsigned int width = (unsigned int)std::stoul(m[1].str());
-    unsigned int height = (unsigned int)std::stoul(m[2].str());
+    unsigned int width = static_cast<unsigned int>(std::stoul(m[1].str()));
+    unsigned int height = static_cast<unsigned int>(std::stoul(m[2].str()));
     if (width != m_width) continue;
     if (height != m_height) continue;
     double fps = atof(m[4].str().c_str());
@@ -201,7 +199,8 @@ void USBCamera::UpdateSettings() {
                      IMAQdxValueTypeF64, &minv);
       SAFE_IMAQ_CALL(IMAQdxGetAttributeMaximum, m_id, ATTR_EX_VALUE,
                      IMAQdxValueTypeF64, &maxv);
-      double val = minv + ((maxv - minv) * ((double)m_exposureValue / 100.0));
+      double val =
+          minv + (maxv - minv) * (static_cast<double>(m_exposureValue) / 100.0);
       SAFE_IMAQ_CALL(IMAQdxSetAttribute, m_id, ATTR_EX_VALUE,
                      IMAQdxValueTypeF64, val);
     }
@@ -215,7 +214,8 @@ void USBCamera::UpdateSettings() {
                  IMAQdxValueTypeF64, &minv);
   SAFE_IMAQ_CALL(IMAQdxGetAttributeMaximum, m_id, ATTR_BR_VALUE,
                  IMAQdxValueTypeF64, &maxv);
-  double val = minv + ((maxv - minv) * ((double)m_brightness / 100.0));
+  double val =
+      minv + (maxv - minv) * (static_cast<double>(m_brightness) / 100.0);
   SAFE_IMAQ_CALL(IMAQdxSetAttribute, m_id, ATTR_BR_VALUE, IMAQdxValueTypeF64,
                  val);
 

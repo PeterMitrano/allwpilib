@@ -8,8 +8,10 @@ model {
     components {
         HALAthena(NativeLibrarySpec) {
             targetPlatform 'arm'
-            tasks.withType(CppCompile) {
-                dependsOn addNiLibraryLinks
+            binaries.all {
+                tasks.withType(CppCompile) {
+                    addNiLibraryLinks(linker, targetPlatform)
+                }
             }
             sources {
                 cpp {
@@ -18,7 +20,7 @@ model {
                         includes = ["**/*.cpp"]
                     }
                     exportedHeaders {
-                        srcDirs = ["include", "lib/athena", "lib/athena/FRC_FPGA_ChipObject", "lib/shared"]
+                        srcDirs = ["include", "lib/athena/FRC_FPGA_ChipObject"]
                     }
                 }
             }

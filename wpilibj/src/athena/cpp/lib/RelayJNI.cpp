@@ -7,12 +7,14 @@
 
 #include <assert.h>
 #include <jni.h>
-#include "Log.h"
+#include "HAL/cpp/Log.h"
 
 #include "edu_wpi_first_wpilibj_hal_RelayJNI.h"
 
 #include "HAL/Relay.h"
+#include "HAL/Ports.h"
 #include "HALUtil.h"
+#include "HAL/handles/HandlesInternal.h"
 
 // set the logging level
 TLogLevel relayJNILogLevel = logWARNING;
@@ -27,68 +29,77 @@ extern "C" {
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_RelayJNI
- * Method:    setRelayForward
- * Signature: (JZ)V
+ * Method:    initializeRelayPort
+ * Signature: (IZ)I;
  */
-JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_RelayJNI_setRelayForward(
-    JNIEnv* env, jclass, jlong id, jboolean value) {
-  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI setRelayForward";
-  RELAYJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+JNIEXPORT jint JNICALL Java_edu_wpi_first_wpilibj_hal_RelayJNI_initializeRelayPort(
+    JNIEnv* env, jclass, jint id, jboolean fwd) {
+  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI initializeRelayPort";
+  RELAYJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_PortHandle)id;
+  RELAYJNI_LOG(logDEBUG) << "Forward = " << (jint)fwd;
+  int32_t status = 0;
+  HAL_RelayHandle handle = HAL_InitializeRelayPort((HAL_PortHandle)id, (uint8_t) fwd, &status);
+  RELAYJNI_LOG(logDEBUG) << "Status = " << status;
+  RELAYJNI_LOG(logDEBUG) << "Relay Handle = " << handle;
+  CheckStatusRange(env, 0, HAL_GetNumRelayChannels(),
+                   hal::getPortHandleChannel((HAL_PortHandle)id), status);
+  return (jint) handle;
+}
+
+/*
+* Class:     edu_wpi_first_wpilibj_hal_RelayJNI
+* Method:    freeRelayPort
+* Signature: (I)V;
+*/
+JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_RelayJNI_freeRelayPort(
+    JNIEnv *env, jclass, jint id) {
+  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI freeRelayPort";
+  RELAYJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_RelayHandle)id;
+  HAL_FreeRelayPort((HAL_RelayHandle)id);
+}
+
+/*
+* Class:     edu_wpi_first_wpilibj_hal_RelayJNI
+* Method:    checkRelayChannel
+* Signature: (I)Z;
+*/
+JNIEXPORT jboolean JNICALL Java_edu_wpi_first_wpilibj_hal_RelayJNI_checkRelayChannel(
+    JNIEnv *env, jclass, jint channel) {
+  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI checkRelayChannel";
+  RELAYJNI_LOG(logDEBUG) << "Channel = " << channel;
+  return (jboolean)HAL_CheckRelayChannel((uint8_t) channel);
+}
+
+/*
+ * Class:     edu_wpi_first_wpilibj_hal_RelayJNI
+ * Method:    setRelay
+ * Signature: (IZ)V
+ */
+JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_RelayJNI_setRelay(
+    JNIEnv* env, jclass, jint id, jboolean value) {
+  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI setRelay";
+  RELAYJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_RelayHandle)id;
   RELAYJNI_LOG(logDEBUG) << "Flag = " << (jint)value;
   int32_t status = 0;
-  setRelayForward((void*)id, value, &status);
+  HAL_SetRelay((HAL_RelayHandle)id, value, &status);
   RELAYJNI_LOG(logDEBUG) << "Status = " << status;
   CheckStatus(env, status);
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_RelayJNI
- * Method:    setRelayReverse
- * Signature: (JZ)V
- */
-JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_RelayJNI_setRelayReverse(
-    JNIEnv* env, jclass, jlong id, jboolean value) {
-  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI setRelayReverse";
-  RELAYJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
-  RELAYJNI_LOG(logDEBUG) << "Flag = " << (jint)value;
-  int32_t status = 0;
-  setRelayReverse((void*)id, value, &status);
-  RELAYJNI_LOG(logDEBUG) << "Status = " << status;
-  CheckStatus(env, status);
-}
-
-/*
- * Class:     edu_wpi_first_wpilibj_hal_RelayJNI
- * Method:    getRelayForward
- * Signature: (J)Z
+ * Method:    getRelay
+ * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_edu_wpi_first_wpilibj_hal_RelayJNI_getRelayForward(
-    JNIEnv* env, jclass, jlong id) {
-  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI getRelayForward";
-  RELAYJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
+Java_edu_wpi_first_wpilibj_hal_RelayJNI_getRelay(
+    JNIEnv* env, jclass, jint id) {
+  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI getRelay";
+  RELAYJNI_LOG(logDEBUG) << "Port Handle = " << (HAL_RelayHandle)id;
   int32_t status = 0;
-  jboolean returnValue = getRelayForward((void*)id, &status);
+  jboolean returnValue = HAL_GetRelay((HAL_RelayHandle)id, &status);
   RELAYJNI_LOG(logDEBUG) << "Status = " << status;
-  RELAYJNI_LOG(logDEBUG) << "getRelayForwardResult = " << (jint)returnValue;
-  CheckStatus(env, status);
-  return returnValue;
-}
-
-/*
- * Class:     edu_wpi_first_wpilibj_hal_RelayJNI
- * Method:    getRelayReverse
- * Signature: (J)Z
- */
-JNIEXPORT jboolean JNICALL
-Java_edu_wpi_first_wpilibj_hal_RelayJNI_getRelayReverse(
-    JNIEnv* env, jclass, jlong id) {
-  RELAYJNI_LOG(logDEBUG) << "Calling RELAYJNI getRelayReverse";
-  RELAYJNI_LOG(logDEBUG) << "Port Ptr = " << (void*)id;
-  int32_t status = 0;
-  jboolean returnValue = getRelayReverse((void*)id, &status);
-  RELAYJNI_LOG(logDEBUG) << "Status = " << status;
-  RELAYJNI_LOG(logDEBUG) << "getRelayReverseResult = " << (jint)returnValue;
+  RELAYJNI_LOG(logDEBUG) << "getRelayResult = " << (jint)returnValue;
   CheckStatus(env, status);
   return returnValue;
 }

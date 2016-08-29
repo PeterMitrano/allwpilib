@@ -10,9 +10,9 @@ package edu.wpi.first.wpilibj;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInstances;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tInstances;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
@@ -20,8 +20,6 @@ import edu.wpi.first.wpilibj.tables.ITable;
 
 /**
  * ADXL345 I2C Accelerometer.
- *
- * @author dtjones
  */
 @SuppressWarnings("TypeName")
 public class ADXL345_I2C extends SensorBase implements Accelerometer, LiveWindowSendable {
@@ -53,7 +51,7 @@ public class ADXL345_I2C extends SensorBase implements Accelerometer, LiveWindow
     @SuppressWarnings("MemberName")
     public final byte value;
 
-    Axes(byte value) {
+    private Axes(byte value) {
       this.value = value;
     }
   }
@@ -66,7 +64,7 @@ public class ADXL345_I2C extends SensorBase implements Accelerometer, LiveWindow
     public double ZAxis;
   }
 
-  private I2C m_i2c;
+  protected I2C m_i2c;
 
   /**
    * Constructs the ADXL345 Accelerometer with I2C address 0x1D.
@@ -93,8 +91,8 @@ public class ADXL345_I2C extends SensorBase implements Accelerometer, LiveWindow
 
     setRange(range);
 
-    UsageReporting.report(tResourceType.kResourceType_ADXL345, tInstances.kADXL345_I2C);
-    LiveWindow.addSensor("ADXL345_I2C", port.getValue(), this);
+    HAL.report(tResourceType.kResourceType_ADXL345, tInstances.kADXL345_I2C);
+    LiveWindow.addSensor("ADXL345_I2C", port.value, this);
   }
 
 

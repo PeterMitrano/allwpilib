@@ -7,8 +7,8 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
@@ -83,9 +83,8 @@ public class Ultrasonic extends SensorBase implements PIDSource, LiveWindowSenda
           return;
         }
         if (ultrasonic.isEnabled()) {
-          ultrasonic.m_pingChannel.pulse(m_pingChannel.m_channel, (float) kPingTime); // do
-          // the
-          // ping
+          // Do the ping
+          ultrasonic.m_pingChannel.pulse(m_pingChannel.getChannel(), (float) kPingTime);
         }
         ultrasonic = ultrasonic.m_nextSensor;
         Timer.delay(.1); // wait for ping to return
@@ -117,7 +116,7 @@ public class Ultrasonic extends SensorBase implements PIDSource, LiveWindowSenda
     setAutomaticMode(originalMode);
 
     m_instances++;
-    UsageReporting.report(tResourceType.kResourceType_Ultrasonic, m_instances);
+    HAL.report(tResourceType.kResourceType_Ultrasonic, m_instances);
     LiveWindow.addSensor("Ultrasonic", m_echoChannel.getChannel(), this);
   }
 
@@ -288,15 +287,8 @@ public class Ultrasonic extends SensorBase implements PIDSource, LiveWindowSenda
     setAutomaticMode(false); // turn off automatic round robin if pinging
     // single sensor
     m_counter.reset(); // reset the counter to zero (invalid data now)
-    m_pingChannel.pulse(m_pingChannel.m_channel, (float) kPingTime); // do
-    // the
-    // ping
-    // to
-    // start
-    // getting
-    // a
-    // single
-    // range
+    // do the ping to start getting a single range
+    m_pingChannel.pulse(m_pingChannel.getChannel(), (float) kPingTime);
   }
 
   /**

@@ -38,14 +38,13 @@ static constexpr double kMotorTime = 0.5;
 /**
  * A fixture that includes a PWM speed controller and an encoder connected to
  * the same motor.
- * @author Thomas Clark
  */
 class MotorEncoderTest : public testing::TestWithParam<MotorEncoderTestType> {
  protected:
   SpeedController* m_speedController;
   Encoder* m_encoder;
 
-  virtual void SetUp() override {
+  void SetUp() override {
     switch (GetParam()) {
       case TEST_VICTOR:
         m_speedController = new Victor(TestBench::kVictorChannel);
@@ -67,7 +66,7 @@ class MotorEncoderTest : public testing::TestWithParam<MotorEncoderTestType> {
     }
   }
 
-  virtual void TearDown() override {
+  void TearDown() override {
     delete m_speedController;
     delete m_encoder;
   }

@@ -11,6 +11,7 @@
 
 #include "Counter.h"
 #include "CounterBase.h"
+#include "HAL/Encoder.h"
 #include "LiveWindow/LiveWindowSendable.h"
 #include "PIDSource.h"
 #include "SensorBase.h"
@@ -65,10 +66,10 @@ class Encoder : public SensorBase,
   bool GetStopped() const override;
   bool GetDirection() const override;
 
-  double GetDistance() const;
-  double GetRate() const;
-  void SetMinRate(double minRate);
-  void SetDistancePerPulse(double distancePerPulse);
+  float GetDistance() const;
+  float GetRate() const;
+  void SetMinRate(float minRate);
+  void SetDistancePerPulse(float distancePerPulse);
   void SetReverseDirection(bool reverseDirection);
   void SetSamplesToAverage(int samplesToAverage);
   int GetSamplesToAverage() const;
@@ -88,21 +89,17 @@ class Encoder : public SensorBase,
   void InitTable(std::shared_ptr<ITable> subTable) override;
   std::shared_ptr<ITable> GetTable() const override;
 
-  int32_t GetFPGAIndex() const { return m_index; }
+  int32_t GetFPGAIndex() const;
 
  private:
-  void InitEncoder(bool _reverseDirection, EncodingType encodingType);
-  double DecodingScaleFactor() const;
+  void InitEncoder(bool reverseDirection, EncodingType encodingType);
+
+  float DecodingScaleFactor() const;
 
   std::shared_ptr<DigitalSource> m_aSource;  // the A phase of the quad encoder
   std::shared_ptr<DigitalSource> m_bSource;  // the B phase of the quad encoder
-  void* m_encoder = nullptr;
-  int32_t m_index = 0;              // The encoder's FPGA index.
-  double m_distancePerPulse = 1.0;  // distance of travel for each encoder tick
-  std::unique_ptr<Counter> m_counter =
-      nullptr;                  // Counter object for 1x and 2x encoding
-  EncodingType m_encodingType;  // Encoding type
-  int32_t m_encodingScale;      // 1x, 2x, or 4x, per the encodingType
+  std::unique_ptr<DigitalSource> m_indexSource = nullptr;
+  HAL_EncoderHandle m_encoder = HAL_kInvalidHandle;
 
   std::shared_ptr<ITable> m_table;
   friend class DigitalGlitchFilter;

@@ -7,21 +7,19 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.AnalogJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
 import edu.wpi.first.wpilibj.util.AllocationException;
-import edu.wpi.first.wpilibj.util.CheckedAllocationException;
 
 /**
  * Analog output class.
  */
 public class AnalogOutput extends SensorBase implements LiveWindowSendable {
-  private static Resource channels = new Resource(kAnalogOutputChannels);
-  private long m_port;
+  private int m_port;
   private int m_channel;
 
   /**
@@ -32,21 +30,13 @@ public class AnalogOutput extends SensorBase implements LiveWindowSendable {
   public AnalogOutput(final int channel) {
     m_channel = channel;
 
-    if (!AnalogJNI.checkAnalogOutputChannel(channel)) {
-      throw new AllocationException("Analog output channel " + m_channel
-          + " cannot be allocated. Channel is not present.");
-    }
-    try {
-      channels.allocate(channel);
-    } catch (CheckedAllocationException ex) {
-      throw new AllocationException("Analog output channel " + m_channel + " is already allocated");
-    }
+    SensorBase.checkAnalogOutputChannel(channel);
 
-    final long portPointer = AnalogJNI.getPort((byte) channel);
-    m_port = AnalogJNI.initializeAnalogOutputPort(portPointer);
+    final int portHandle = AnalogJNI.getPort((byte) channel);
+    m_port = AnalogJNI.initializeAnalogOutputPort(portHandle);
 
     LiveWindow.addSensor("AnalogOutput", channel, this);
-    UsageReporting.report(tResourceType.kResourceType_AnalogOutput, channel);
+    HAL.report(tResourceType.kResourceType_AnalogOutput, channel);
   }
 
   /**
@@ -55,7 +45,6 @@ public class AnalogOutput extends SensorBase implements LiveWindowSendable {
   public void free() {
     AnalogJNI.freeAnalogOutputPort(m_port);
     m_port = 0;
-    channels.free(m_channel);
     m_channel = 0;
   }
 

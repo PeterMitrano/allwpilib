@@ -24,17 +24,16 @@
 AnalogTriggerOutput::AnalogTriggerOutput(const AnalogTrigger& trigger,
                                          AnalogTriggerType outputType)
     : m_trigger(trigger), m_outputType(outputType) {
-  HALReport(HALUsageReporting::kResourceType_AnalogTriggerOutput,
-            trigger.GetIndex(), outputType);
+  HAL_Report(HALUsageReporting::kResourceType_AnalogTriggerOutput,
+             trigger.GetIndex(), static_cast<uint8_t>(outputType));
 }
 
 AnalogTriggerOutput::~AnalogTriggerOutput() {
-  if (m_interrupt != nullptr) {
+  if (m_interrupt != HAL_kInvalidHandle) {
     int32_t status = 0;
-    cleanInterrupts(m_interrupt, &status);
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
-    m_interrupt = nullptr;
-    m_interrupts->Free(m_interruptIndex);
+    HAL_CleanInterrupts(m_interrupt, &status);
+    // ignore status, as an invalid handle just needs to be ignored.
+    m_interrupt = HAL_kInvalidHandle;
   }
 }
 
@@ -45,25 +44,33 @@ AnalogTriggerOutput::~AnalogTriggerOutput() {
  */
 bool AnalogTriggerOutput::Get() const {
   int32_t status = 0;
-  bool result =
-      getAnalogTriggerOutput(m_trigger.m_trigger, m_outputType, &status);
-  wpi_setErrorWithContext(status, getHALErrorMessage(status));
+  bool result = HAL_GetAnalogTriggerOutput(
+      m_trigger.m_trigger, static_cast<HAL_AnalogTriggerType>(m_outputType),
+      &status);
+  wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   return result;
 }
 
 /**
- * @return The value to be written to the channel field of a routing mux.
+ * @return The HAL Handle to the specified source.
  */
-uint32_t AnalogTriggerOutput::GetChannelForRouting() const {
-  return (m_trigger.m_index << 2) + m_outputType;
+HAL_Handle AnalogTriggerOutput::GetPortHandleForRouting() const {
+  return m_trigger.m_trigger;
 }
 
 /**
- * @return The value to be written to the module field of a routing mux.
+ * Is source an AnalogTrigger
  */
-uint32_t AnalogTriggerOutput::GetModuleForRouting() const { return 0; }
+bool AnalogTriggerOutput::IsAnalogTrigger() const { return true; }
 
 /**
- * @return The value to be written to the module field of a routing mux.
+ * @return The type of analog trigger output to be used.
  */
-bool AnalogTriggerOutput::GetAnalogTriggerForRouting() const { return true; }
+AnalogTriggerType AnalogTriggerOutput::GetAnalogTriggerTypeForRouting() const {
+  return m_outputType;
+}
+
+/**
+ * @return The channel of the source.
+ */
+uint32_t AnalogTriggerOutput::GetChannel() const { return m_trigger.m_index; }

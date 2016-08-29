@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -27,9 +27,6 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
  * an {@link BeforeClass} statement to initialize network communications. Any test that needs to use
  * the hardware <b>MUST</b> extend from this class, to ensure that all of the hardware will be able
  * to run.
- *
- * @author Fredric Silberberg
- * @author Jonathan Leitschuh
  */
 public abstract class AbstractComsSetup {
   /**
@@ -47,7 +44,7 @@ public abstract class AbstractComsSetup {
     if (!initialized) {
       // Set some implementations so that the static methods work properly
       RobotBase.initializeHardwareConfiguration();
-      FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramStarting();
+      HAL.observeUserProgramStarting();
 
       LiveWindow.setEnabled(false);
       TestBench.out().println("Started coms");
@@ -185,8 +182,6 @@ public abstract class AbstractComsSetup {
   /**
    * Provided as a replacement to lambda functions to allow for repeatable checks to see if a
    * correct state is reached.
-   *
-   * @author Jonathan Leitschuh
    */
   public abstract class BooleanCheck {
     public BooleanCheck() {

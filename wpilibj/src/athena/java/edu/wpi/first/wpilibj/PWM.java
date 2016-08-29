@@ -7,9 +7,9 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.DIOJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.hal.PWMJNI;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
 import edu.wpi.first.wpilibj.tables.ITable;
@@ -32,104 +32,40 @@ public class PWM extends SensorBase implements LiveWindowSendable {
   /**
    * Represents the amount to multiply the minimum servo-pulse pwm period by.
    */
-  public static class PeriodMultiplier {
-
-    /**
-     * The integer value representing this enumeration.
-     */
-    @SuppressWarnings("MemberName")
-    public final int value;
-    static final int k1X_val = 1;
-    static final int k2X_val = 2;
-    static final int k4X_val = 4;
+  public enum PeriodMultiplier {
     /**
      * Period Multiplier: don't skip pulses.
      */
-    public static final PeriodMultiplier k1X = new PeriodMultiplier(k1X_val);
+    k1X,
     /**
      * Period Multiplier: skip every other pulse.
      */
-    public static final PeriodMultiplier k2X = new PeriodMultiplier(k2X_val);
+    k2X,
     /**
      * Period Multiplier: skip three out of four pulses.
      */
-    public static final PeriodMultiplier k4X = new PeriodMultiplier(k4X_val);
-
-    private PeriodMultiplier(int value) {
-      this.value = value;
-    }
+    k4X
   }
 
   private int m_channel;
-  private long m_port;
-
-  /**
-   * kDefaultPwmPeriod is in ms.
-   *
-   * <p>- 20ms periods (50 Hz) are the "safest" setting in that this works for all devices - 20ms
-   * periods seem to be desirable for Vex Motors - 20ms periods are the specified period for
-   * HS-322HD servos, but work reliably down to 10.0 ms; starting at about 8.5ms, the servo
-   * sometimes hums and get hot; by 5.0ms the hum is nearly continuous - 10ms periods work well for
-   * Victor 884 - 5ms periods allows higher update rates for Luminary Micro Jaguar speed
-   * controllers. Due to the shipping firmware on the Jaguar, we can't run the update period less
-   * than 5.05 ms.
-   *
-   * <p>kDefaultPwmPeriod is the 1x period (5.05 ms). In hardware, the period scaling is implemented
-   * as an output squelch to get longer periods for old devices.
-   */
-  protected static final double kDefaultPwmPeriod = 5.05;
-  /**
-   * kDefaultPwmCenter is the PWM range center in ms.
-   */
-  protected static final double kDefaultPwmCenter = 1.5;
-  /**
-   * kDefaultPWMStepsDown is the number of PWM steps below the centerpoint.
-   */
-  protected static final int kDefaultPwmStepsDown = 1000;
-  public static final int kPwmDisabled = 0;
-  private boolean m_eliminateDeadband;
-  private int m_maxPwm;
-  private int m_deadbandMaxPwm;
-  /*
-   * Intentionally package private
-   */
-  int m_centerPwm;
-  private int m_deadbandMinPwm;
-  private int m_minPwm;
-
-  /**
-   * Initialize PWMs given a channel.
-   *
-   * <p>This method is private and is the common path for all the constructors for creating PWM
-   * instances. Checks channel value ranges and allocates the appropriate channel. The allocation is
-   * only done to help users ensure that they don't double assign channels.
-   *
-   * @param channel The PWM channel number. 0-9 are on-board, 10-19 are on the MXP port
-   */
-  private void initPWM(final int channel) {
-    checkPWMChannel(channel);
-    m_channel = channel;
-
-    m_port = DIOJNI.initializeDigitalPort(DIOJNI.getPort((byte) channel));
-
-    if (!PWMJNI.allocatePWMChannel(m_port)) {
-      throw new AllocationException("PWM channel " + channel + " is already allocated");
-    }
-
-    PWMJNI.setPWM(m_port, (short) 0);
-
-    m_eliminateDeadband = false;
-
-    UsageReporting.report(tResourceType.kResourceType_PWM, channel);
-  }
+  private int m_handle;
 
   /**
    * Allocate a PWM given a channel.
    *
-   * @param channel The PWM channel.
+   * @param channel The PWM channel number. 0-9 are on-board, 10-19 are on the MXP port
    */
   public PWM(final int channel) {
-    initPWM(channel);
+    checkPWMChannel(channel);
+    m_channel = channel;
+
+    m_handle = PWMJNI.initializePWMPort(DIOJNI.getPort((byte) channel));
+
+    setDisabled();
+
+    PWMJNI.setPWMEliminateDeadband(m_handle, false);
+
+    HAL.report(tResourceType.kResourceType_PWM, channel);
   }
 
   /**
@@ -138,14 +74,12 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * <p>Free the resource associated with the PWM channel and set the value to 0.
    */
   public void free() {
-    if (m_port == 0) {
+    if (m_handle == 0) {
       return;
     }
-    PWMJNI.setPWM(m_port, (short) 0);
-    PWMJNI.freePWMChannel(m_port);
-    PWMJNI.freeDIO(m_port);
-    DIOJNI.freeDigitalPort(m_port);
-    m_port = 0;
+    setDisabled();
+    PWMJNI.freePWMPort(m_handle);
+    m_handle = 0;
   }
 
   /**
@@ -156,7 +90,7 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    *                          modifying any values.
    */
   public void enableDeadbandElimination(boolean eliminateDeadband) {
-    m_eliminateDeadband = eliminateDeadband;
+    PWMJNI.setPWMEliminateDeadband(m_handle, eliminateDeadband);
   }
 
   /**
@@ -173,13 +107,9 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * double, double)}
    */
   @Deprecated
-  public void setBounds(final int max, final int deadbandMax, final int center,
+  public void setRawBounds(final int max, final int deadbandMax, final int center,
                         final int deadbandMin, final int min) {
-    m_maxPwm = max;
-    m_deadbandMaxPwm = deadbandMax;
-    m_centerPwm = center;
-    m_deadbandMinPwm = deadbandMin;
-    m_minPwm = min;
+    PWMJNI.setPWMConfigRaw(m_handle, max, deadbandMax, center, deadbandMax, min);
   }
 
   /**
@@ -193,18 +123,18 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @param deadbandMin The low end of the deadband pulse width in ms
    * @param min         The minimum pulse width in ms
    */
-  protected void setBounds(double max, double deadbandMax, double center, double deadbandMin,
+  public void setBounds(double max, double deadbandMax, double center, double deadbandMin,
                            double min) {
-    double loopTime =
-        DIOJNI.getLoopTiming() / (kSystemClockTicksPerMicrosecond * 1e3);
+    PWMJNI.setPWMConfig(m_handle, max, deadbandMax, center, deadbandMax, min);
+  }
 
-    m_maxPwm = (int) ((max - kDefaultPwmCenter) / loopTime + kDefaultPwmStepsDown - 1);
-    m_deadbandMaxPwm =
-        (int) ((deadbandMax - kDefaultPwmCenter) / loopTime + kDefaultPwmStepsDown - 1);
-    m_centerPwm = (int) ((center - kDefaultPwmCenter) / loopTime + kDefaultPwmStepsDown - 1);
-    m_deadbandMinPwm =
-        (int) ((deadbandMin - kDefaultPwmCenter) / loopTime + kDefaultPwmStepsDown - 1);
-    m_minPwm = (int) ((min - kDefaultPwmCenter) / loopTime + kDefaultPwmStepsDown - 1);
+  /**
+   * Gets the bounds on the PWM pulse widths. This Gets the bounds on the PWM values for a
+   * particular type of controller. The values determine the upper and lower speeds as well
+   * as the deadband bracket.
+   */
+  public PWMConfigDataResult getRawBounds() {
+    return PWMJNI.getPWMConfigRaw(m_handle);
   }
 
   /**
@@ -226,19 +156,7 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @pre SetMinNegativePwm() called.
    */
   public void setPosition(double pos) {
-    if (pos < 0.0) {
-      pos = 0.0;
-    } else if (pos > 1.0) {
-      pos = 1.0;
-    }
-
-    int rawValue;
-    // note, need to perform the multiplication below as floating point before
-    // converting to int
-    rawValue = (int) ((pos * (double) getFullRangeScaleFactor()) + getMinNegativePwm());
-
-    // send the computed pwm value to the FPGA
-    setRaw(rawValue);
+    PWMJNI.setPWMPosition(m_handle, (float)pos);
   }
 
   /**
@@ -251,14 +169,7 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @pre SetMinNegativePwm() called.
    */
   public double getPosition() {
-    int value = getRaw();
-    if (value < getMinNegativePwm()) {
-      return 0.0;
-    } else if (value > getMaxPositivePwm()) {
-      return 1.0;
-    } else {
-      return (double) (value - getMinNegativePwm()) / (double) getFullRangeScaleFactor();
-    }
+    return PWMJNI.getPWMPosition(m_handle);
   }
 
   /**
@@ -273,30 +184,8 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @pre SetMaxNegativePwm() called.
    * @pre SetMinNegativePwm() called.
    */
-  final void setSpeed(double speed) {
-    // clamp speed to be in the range 1.0 >= speed >= -1.0
-    if (speed < -1.0) {
-      speed = -1.0;
-    } else if (speed > 1.0) {
-      speed = 1.0;
-    }
-
-    // calculate the desired output pwm value by scaling the speed appropriately
-    int rawValue;
-    if (speed == 0.0) {
-      rawValue = getCenterPwm();
-    } else if (speed > 0.0) {
-      rawValue =
-          (int) (speed * ((double) getPositiveScaleFactor())
-              + ((double) getMinPositivePwm()) + 0.5);
-    } else {
-      rawValue =
-          (int) (speed * ((double) getNegativeScaleFactor())
-              + ((double) getMaxNegativePwm()) + 0.5);
-    }
-
-    // send the computed pwm value to the FPGA
-    setRaw(rawValue);
+  public void setSpeed(double speed) {
+    PWMJNI.setPWMSpeed(m_handle, (float)speed);
   }
 
   /**
@@ -311,18 +200,7 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @pre SetMinNegativePwm() called.
    */
   public double getSpeed() {
-    int value = getRaw();
-    if (value > getMaxPositivePwm()) {
-      return 1.0;
-    } else if (value < getMinNegativePwm()) {
-      return -1.0;
-    } else if (value > getMinPositivePwm()) {
-      return (double) (value - getMinPositivePwm()) / (double) getPositiveScaleFactor();
-    } else if (value < getMaxNegativePwm()) {
-      return (double) (value - getMaxNegativePwm()) / (double) getNegativeScaleFactor();
-    } else {
-      return 0.0;
-    }
+    return PWMJNI.getPWMSpeed(m_handle);
   }
 
   /**
@@ -333,7 +211,7 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @param value Raw PWM value. Range 0 - 255.
    */
   public void setRaw(int value) {
-    PWMJNI.setPWM(m_port, (short) value);
+    PWMJNI.setPWMRaw(m_handle, (short) value);
   }
 
   /**
@@ -344,7 +222,15 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @return Raw PWM control value. Range: 0 - 255.
    */
   public int getRaw() {
-    return PWMJNI.getPWM(m_port);
+    return PWMJNI.getPWMRaw(m_handle);
+  }
+
+  /**
+   * Temporarily disables the PWM output. The next set call will reenable
+   * the output.
+   */
+  public void setDisabled() {
+    PWMJNI.setPWMDisabled(m_handle);
   }
 
   /**
@@ -353,18 +239,18 @@ public class PWM extends SensorBase implements LiveWindowSendable {
    * @param mult The period multiplier to apply to this channel
    */
   public void setPeriodMultiplier(PeriodMultiplier mult) {
-    switch (mult.value) {
-      case PeriodMultiplier.k4X_val:
+    switch (mult) {
+      case k4X:
         // Squelch 3 out of 4 outputs
-        PWMJNI.setPWMPeriodScale(m_port, 3);
+        PWMJNI.setPWMPeriodScale(m_handle, 3);
         break;
-      case PeriodMultiplier.k2X_val:
+      case k2X:
         // Squelch 1 out of 2 outputs
-        PWMJNI.setPWMPeriodScale(m_port, 1);
+        PWMJNI.setPWMPeriodScale(m_handle, 1);
         break;
-      case PeriodMultiplier.k1X_val:
+      case k1X:
         // Don't squelch any outputs
-        PWMJNI.setPWMPeriodScale(m_port, 0);
+        PWMJNI.setPWMPeriodScale(m_handle, 0);
         break;
       default:
         // Cannot hit this, limited by PeriodMultiplier enum
@@ -372,40 +258,8 @@ public class PWM extends SensorBase implements LiveWindowSendable {
   }
 
   protected void setZeroLatch() {
-    PWMJNI.latchPWMZero(m_port);
+    PWMJNI.latchPWMZero(m_handle);
   }
-
-  private int getMaxPositivePwm() {
-    return m_maxPwm;
-  }
-
-  private int getMinPositivePwm() {
-    return m_eliminateDeadband ? m_deadbandMaxPwm : m_centerPwm + 1;
-  }
-
-  private int getCenterPwm() {
-    return m_centerPwm;
-  }
-
-  private int getMaxNegativePwm() {
-    return m_eliminateDeadband ? m_deadbandMinPwm : m_centerPwm - 1;
-  }
-
-  private int getMinNegativePwm() {
-    return m_minPwm;
-  }
-
-  private int getPositiveScaleFactor() {
-    return getMaxPositivePwm() - getMinPositivePwm();
-  } // /< The scale for positive speeds.
-
-  private int getNegativeScaleFactor() {
-    return getMaxNegativePwm() - getMinNegativePwm();
-  } // /< The scale for negative speeds.
-
-  private int getFullRangeScaleFactor() {
-    return getMaxPositivePwm() - getMinNegativePwm();
-  } // /< The scale for positions.
 
   /*
    * Live Window code, only does anything if live window is activated.

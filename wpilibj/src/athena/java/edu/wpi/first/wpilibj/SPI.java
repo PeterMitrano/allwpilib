@@ -10,28 +10,23 @@ package edu.wpi.first.wpilibj;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.hal.SPIJNI;
 
 /**
  * Represents a SPI bus port.
- *
- * @author koconnor
  */
 public class SPI extends SensorBase {
 
   public enum Port {
     kOnboardCS0(0), kOnboardCS1(1), kOnboardCS2(2), kOnboardCS3(3), kMXP(4);
 
-    private int m_value;
+    @SuppressWarnings("MemberName")
+    public int value;
 
-    Port(int value) {
-      m_value = value;
-    }
-
-    public int getValue() {
-      return m_value;
+    private Port(int value) {
+      this.value = value;
     }
   }
 
@@ -48,12 +43,12 @@ public class SPI extends SensorBase {
    * @param port the physical SPI port
    */
   public SPI(Port port) {
-    m_port = (byte) port.getValue();
+    m_port = (byte) port.value;
     devices++;
 
     SPIJNI.spiInitialize(m_port);
 
-    UsageReporting.report(tResourceType.kResourceType_SPI, devices);
+    HAL.report(tResourceType.kResourceType_SPI, devices);
   }
 
   /**
@@ -367,11 +362,11 @@ public class SPI extends SensorBase {
     ByteBuffer value = ByteBuffer.allocateDirect(8);
     // set the byte order
     value.order(ByteOrder.LITTLE_ENDIAN);
-    ByteBuffer count = ByteBuffer.allocateDirect(4);
+    ByteBuffer count = ByteBuffer.allocateDirect(8);
     // set the byte order
     count.order(ByteOrder.LITTLE_ENDIAN);
-    SPIJNI.spiGetAccumulatorOutput(m_port, value.asLongBuffer(), count.asIntBuffer());
+    SPIJNI.spiGetAccumulatorOutput(m_port, value.asLongBuffer(), count.asLongBuffer());
     result.value = value.asLongBuffer().get(0);
-    result.count = count.asIntBuffer().get(0);
+    result.count = count.asLongBuffer().get(0);
   }
 }

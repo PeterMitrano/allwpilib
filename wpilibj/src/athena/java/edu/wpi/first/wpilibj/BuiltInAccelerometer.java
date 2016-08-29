@@ -7,9 +7,9 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.AccelerometerJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.livewindow.LiveWindowSendable;
@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj.tables.ITable;
 /**
  * Built-in accelerometer.
  *
- * <p>This class allows access to the RoboRIO's internal accelerometer.
+ * <p>This class allows access to the roboRIO's internal accelerometer.
  */
 public class BuiltInAccelerometer implements Accelerometer, LiveWindowSendable {
   /**
@@ -28,8 +28,7 @@ public class BuiltInAccelerometer implements Accelerometer, LiveWindowSendable {
    */
   public BuiltInAccelerometer(Range range) {
     setRange(range);
-    UsageReporting
-        .report(tResourceType.kResourceType_Accelerometer, 0, 0, "Built-in accelerometer");
+    HAL.report(tResourceType.kResourceType_Accelerometer, 0, 0, "Built-in accelerometer");
     LiveWindow.addSensor("BuiltInAccel", 0, this);
   }
 
@@ -66,7 +65,7 @@ public class BuiltInAccelerometer implements Accelerometer, LiveWindowSendable {
   /**
    * The acceleration in the X axis.
    *
-   * @return The acceleration of the RoboRIO along the X axis in g-forces
+   * @return The acceleration of the roboRIO along the X axis in g-forces
    */
   @Override
   public double getX() {
@@ -76,7 +75,7 @@ public class BuiltInAccelerometer implements Accelerometer, LiveWindowSendable {
   /**
    * The acceleration in the Y axis.
    *
-   * @return The acceleration of the RoboRIO along the Y axis in g-forces
+   * @return The acceleration of the roboRIO along the Y axis in g-forces
    */
   @Override
   public double getY() {
@@ -86,7 +85,7 @@ public class BuiltInAccelerometer implements Accelerometer, LiveWindowSendable {
   /**
    * The acceleration in the Z axis.
    *
-   * @return The acceleration of the RoboRIO along the Z axis in g-forces
+   * @return The acceleration of the roboRIO along the Z axis in g-forces
    */
   @Override
   public double getZ() {

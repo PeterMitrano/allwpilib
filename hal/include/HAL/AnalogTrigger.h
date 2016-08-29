@@ -9,28 +9,39 @@
 
 #include <stdint.h>
 
-enum AnalogTriggerType {
-  kInWindow = 0,
-  kState = 1,
-  kRisingPulse = 2,
-  kFallingPulse = 3
+#include "HAL/Types.h"
+
+enum HAL_AnalogTriggerType {
+  HAL_Trigger_kInWindow = 0,
+  HAL_Trigger_kState = 1,
+  HAL_Trigger_kRisingPulse = 2,
+  HAL_Trigger_kFallingPulse = 3
 };
 
+#ifdef __cplusplus
 extern "C" {
-void* initializeAnalogTrigger(void* port_pointer, uint32_t* index,
-                              int32_t* status);
-void cleanAnalogTrigger(void* analog_trigger_pointer, int32_t* status);
-void setAnalogTriggerLimitsRaw(void* analog_trigger_pointer, int32_t lower,
-                               int32_t upper, int32_t* status);
-void setAnalogTriggerLimitsVoltage(void* analog_trigger_pointer, double lower,
-                                   double upper, int32_t* status);
-void setAnalogTriggerAveraged(void* analog_trigger_pointer,
-                              bool useAveragedValue, int32_t* status);
-void setAnalogTriggerFiltered(void* analog_trigger_pointer,
-                              bool useFilteredValue, int32_t* status);
-bool getAnalogTriggerInWindow(void* analog_trigger_pointer, int32_t* status);
-bool getAnalogTriggerTriggerState(void* analog_trigger_pointer,
-                                  int32_t* status);
-bool getAnalogTriggerOutput(void* analog_trigger_pointer,
-                            AnalogTriggerType type, int32_t* status);
+#endif
+HAL_AnalogTriggerHandle HAL_InitializeAnalogTrigger(
+    HAL_AnalogInputHandle portHandle, int32_t* index, int32_t* status);
+void HAL_CleanAnalogTrigger(HAL_AnalogTriggerHandle analogTriggerHandle,
+                            int32_t* status);
+void HAL_SetAnalogTriggerLimitsRaw(HAL_AnalogTriggerHandle analogTriggerHandle,
+                                   int32_t lower, int32_t upper,
+                                   int32_t* status);
+void HAL_SetAnalogTriggerLimitsVoltage(
+    HAL_AnalogTriggerHandle analogTriggerHandle, double lower, double upper,
+    int32_t* status);
+void HAL_SetAnalogTriggerAveraged(HAL_AnalogTriggerHandle analogTriggerHandle,
+                                  HAL_Bool useAveragedValue, int32_t* status);
+void HAL_SetAnalogTriggerFiltered(HAL_AnalogTriggerHandle analogTriggerHandle,
+                                  HAL_Bool useFilteredValue, int32_t* status);
+HAL_Bool HAL_GetAnalogTriggerInWindow(
+    HAL_AnalogTriggerHandle analogTriggerHandle, int32_t* status);
+HAL_Bool HAL_GetAnalogTriggerTriggerState(
+    HAL_AnalogTriggerHandle analogTriggerHandle, int32_t* status);
+HAL_Bool HAL_GetAnalogTriggerOutput(HAL_AnalogTriggerHandle analogTriggerHandle,
+                                    HAL_AnalogTriggerType type,
+                                    int32_t* status);
+#ifdef __cplusplus
 }
+#endif

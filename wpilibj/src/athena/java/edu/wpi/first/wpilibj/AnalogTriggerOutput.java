@@ -7,9 +7,9 @@
 
 package edu.wpi.first.wpilibj;
 
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.hal.AnalogJNI;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 
 /**
  * Class to represent a specific output from an analog trigger. This class is used to get the
@@ -43,7 +43,6 @@ public class AnalogTriggerOutput extends DigitalSource {
    * Exceptions dealing with improper operation of the Analog trigger output.
    */
   public class AnalogTriggerOutputException extends RuntimeException {
-
     /**
      * Create a new exception with the given message.
      *
@@ -52,7 +51,6 @@ public class AnalogTriggerOutput extends DigitalSource {
     public AnalogTriggerOutputException(String message) {
       super(message);
     }
-
   }
 
   private final AnalogTrigger m_trigger;
@@ -77,12 +75,17 @@ public class AnalogTriggerOutput extends DigitalSource {
     m_trigger = trigger;
     m_outputType = outputType;
 
-    UsageReporting.report(tResourceType.kResourceType_AnalogTriggerOutput, trigger.getIndex(),
-        outputType.m_value);
+    HAL.report(tResourceType.kResourceType_AnalogTriggerOutput,
+        trigger.getIndex(), outputType.value);
   }
 
-  @Override
+  /**
+   * Frees the resources for this output.
+   */
   public void free() {
+    if (m_interrupt != 0) {
+      cancelInterrupts();
+    }
 
   }
 
@@ -92,38 +95,42 @@ public class AnalogTriggerOutput extends DigitalSource {
    * @return The state of the analog trigger output.
    */
   public boolean get() {
-    return AnalogJNI.getAnalogTriggerOutput(m_trigger.m_port, m_outputType.m_value);
+    return AnalogJNI.getAnalogTriggerOutput(m_trigger.m_port, m_outputType.value);
   }
 
   @Override
-  public int getChannelForRouting() {
-    return (m_trigger.m_index << 2) + m_outputType.m_value;
+  public int getPortHandleForRouting() {
+    return m_trigger.m_port;
   }
 
   @Override
-  public byte getModuleForRouting() {
-    return (byte) (m_trigger.m_index >> 2);
+  public int getAnalogTriggerTypeForRouting() {
+    return m_outputType.value;
   }
 
   @Override
-  public boolean getAnalogTriggerForRouting() {
+  public int getChannel() {
+    return m_trigger.m_index;
+  }
+
+  @Override
+  public boolean isAnalogTrigger() {
     return true;
   }
 
   /**
    * Defines the state in which the AnalogTrigger triggers.
-   *
-   * @author jonathanleitschuh
    */
   public enum AnalogTriggerType {
     kInWindow(AnalogJNI.AnalogTriggerType.kInWindow), kState(AnalogJNI.AnalogTriggerType.kState),
     kRisingPulse(AnalogJNI.AnalogTriggerType.kRisingPulse),
     kFallingPulse(AnalogJNI.AnalogTriggerType.kFallingPulse);
 
-    private final int m_value;
+    @SuppressWarnings("MemberName")
+    private final int value;
 
-    AnalogTriggerType(int value) {
-      m_value = value;
+    private AnalogTriggerType(int value) {
+      this.value = value;
     }
   }
 }

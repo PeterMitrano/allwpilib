@@ -15,7 +15,7 @@
 #include <mutex>
 #include <thread>
 #include "HALUtil.h"
-#include "Log.h"
+#include "HAL/cpp/Log.h"
 #include "SafeThread.h"
 #include "edu_wpi_first_wpilibj_hal_NotifierJNI.h"
 
@@ -79,7 +79,8 @@ void NotifierThreadJNI::Main() {
   args.version = JNI_VERSION_1_2;
   args.name = const_cast<char *>("Notifier");
   args.group = nullptr;
-  jint rs = jvm->AttachCurrentThreadAsDaemon((void **)&env, &args);
+  jint rs =
+      jvm->AttachCurrentThreadAsDaemon(reinterpret_cast<void **>(&env), &args);
   if (rs != JNI_OK) return;
 
   std::unique_lock<std::mutex> lock(m_mutex);
@@ -92,7 +93,7 @@ void NotifierThreadJNI::Main() {
     jmethodID mid = m_mid;
     uint64_t currentTime = m_currentTime;
     lock.unlock();  // don't hold mutex during callback execution
-    env->CallVoidMethod(func, mid, (jlong)currentTime);
+    env->CallVoidMethod(func, mid, static_cast<jlong>(currentTime));
     if (env->ExceptionCheck()) {
       env->ExceptionDescribe();
       env->ExceptionClear();
@@ -106,8 +107,11 @@ void NotifierThreadJNI::Main() {
   jvm->DetachCurrentThread();
 }
 
-void notifierHandler(uint64_t currentTimeInt, void *param) {
-  ((NotifierJNI *)param)->Notify(currentTimeInt);
+void notifierHandler(uint64_t currentTimeInt, HAL_NotifierHandle handle) {
+  int32_t status = 0;
+  auto param = HAL_GetNotifierParam(handle, &status);
+  if (param == nullptr) return;
+  (static_cast<NotifierJNI*>(param))->Notify(currentTimeInt);
 }
 
 extern "C" {
@@ -115,9 +119,9 @@ extern "C" {
 /*
  * Class:     edu_wpi_first_wpilibj_hal_NotifierJNI
  * Method:    initializeNotifier
- * Signature: (Ljava/lang/Runnable;)J
+ * Signature: (Ljava/lang/Runnable;)I
  */
-JNIEXPORT jlong JNICALL
+JNIEXPORT jint JNICALL
 Java_edu_wpi_first_wpilibj_hal_NotifierJNI_initializeNotifier(
     JNIEnv *env, jclass, jobject func) {
   NOTIFIERJNI_LOG(logDEBUG) << "Calling NOTIFIERJNI initializeNotifier";
@@ -141,34 +145,34 @@ Java_edu_wpi_first_wpilibj_hal_NotifierJNI_initializeNotifier(
   notify->Start();
   notify->SetFunc(env, func, mid);
   int32_t status = 0;
-  void *notifierPtr = initializeNotifier(notifierHandler, notify, &status);
+  HAL_NotifierHandle notifierHandle = HAL_InitializeNotifier(notifierHandler, notify, &status);
 
-  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Ptr = " << notifierPtr;
+  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Handle = " << notifierHandle;
   NOTIFIERJNI_LOG(logDEBUG) << "Status = " << status;
 
-  if (!notifierPtr || !CheckStatus(env, status)) {
+  if (notifierHandle <= 0 || !CheckStatus(env, status)) {
     // something went wrong in HAL, clean up
     delete notify;
   }
 
-  return (jlong)notifierPtr;
+  return (jint)notifierHandle;
 }
 
 /*
  * Class:     edu_wpi_first_wpilibj_hal_NotifierJNI
  * Method:    cleanNotifier
- * Signature: (J)V
+ * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_NotifierJNI_cleanNotifier(
-    JNIEnv *env, jclass, jlong notifierPtr) {
+    JNIEnv *env, jclass, jint notifierHandle) {
   NOTIFIERJNI_LOG(logDEBUG) << "Calling NOTIFIERJNI cleanNotifier";
 
-  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Ptr = " << (void *)notifierPtr;
+  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Handle = " << notifierHandle;
 
   int32_t status = 0;
   NotifierJNI *notify =
-      (NotifierJNI *)getNotifierParam((void *)notifierPtr, &status);
-  cleanNotifier((void *)notifierPtr, &status);
+      (NotifierJNI *)HAL_GetNotifierParam((HAL_NotifierHandle)notifierHandle, &status);
+  HAL_CleanNotifier((HAL_NotifierHandle)notifierHandle, &status);
   NOTIFIERJNI_LOG(logDEBUG) << "Status = " << status;
   CheckStatus(env, status);
   delete notify;
@@ -177,19 +181,19 @@ JNIEXPORT void JNICALL Java_edu_wpi_first_wpilibj_hal_NotifierJNI_cleanNotifier(
 /*
  * Class:     edu_wpi_first_wpilibj_hal_NotifierJNI
  * Method:    updateNotifierAlarm
- * Signature: (JJ)V
+ * Signature: (IJ)V
  */
 JNIEXPORT void JNICALL
 Java_edu_wpi_first_wpilibj_hal_NotifierJNI_updateNotifierAlarm(
-    JNIEnv *env, jclass cls, jlong notifierPtr, jlong triggerTime) {
+    JNIEnv *env, jclass cls, jint notifierHandle, jlong triggerTime) {
   NOTIFIERJNI_LOG(logDEBUG) << "Calling NOTIFIERJNI updateNotifierAlarm";
 
-  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Ptr = " << (void *)notifierPtr;
+  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Handle = " << notifierHandle;
 
   NOTIFIERJNI_LOG(logDEBUG) << "triggerTime = " << triggerTime;
 
   int32_t status = 0;
-  updateNotifierAlarm((void *)notifierPtr, (uint64_t)triggerTime, &status);
+  HAL_UpdateNotifierAlarm((HAL_NotifierHandle)notifierHandle, (uint64_t)triggerTime, &status);
   NOTIFIERJNI_LOG(logDEBUG) << "Status = " << status;
   CheckStatus(env, status);
 }
@@ -197,17 +201,17 @@ Java_edu_wpi_first_wpilibj_hal_NotifierJNI_updateNotifierAlarm(
 /*
  * Class:     edu_wpi_first_wpilibj_hal_NotifierJNI
  * Method:    stopNotifierAlarm
- * Signature: (J)V
+ * Signature: (I)V
  */
 JNIEXPORT void JNICALL
 Java_edu_wpi_first_wpilibj_hal_NotifierJNI_stopNotifierAlarm(
-    JNIEnv *env, jclass cls, jlong notifierPtr) {
+    JNIEnv *env, jclass cls, jint notifierHandle) {
   NOTIFIERJNI_LOG(logDEBUG) << "Calling NOTIFIERJNI stopNotifierAlarm";
 
-  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Ptr = " << (void *)notifierPtr;
+  NOTIFIERJNI_LOG(logDEBUG) << "Notifier Handle = " << notifierHandle;
 
   int32_t status = 0;
-  stopNotifierAlarm((void *)notifierPtr, &status);
+  HAL_StopNotifierAlarm((HAL_NotifierHandle)notifierHandle, &status);
   NOTIFIERJNI_LOG(logDEBUG) << "Status = " << status;
   CheckStatus(env, status);
 }

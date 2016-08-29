@@ -21,10 +21,10 @@ import edu.wpi.first.wpilibj.tables.ITable;
 import edu.wpi.first.wpilibj.tables.ITableListener;
 
 /**
- * The preferences class provides a relatively simple way to save important values to the RoboRIO to
- * access the next time the RoboRIO is booted.
+ * The preferences class provides a relatively simple way to save important values to the roboRIO to
+ * access the next time the roboRIO is booted.
  *
- * <p>This class loads and saves from a file inside the RoboRIO. The user can not access the file
+ * <p>This class loads and saves from a file inside the roboRIO. The user can not access the file
  * directly, but may modify values at specific fields which will then be saved to the file when
  * {@link Preferences#save() save()} is called.</p>
  *
@@ -34,8 +34,6 @@ import edu.wpi.first.wpilibj.tables.ITableListener;
  * with all the key-value pairs. To save using {@link NetworkTable}, simply set the boolean at
  * position ~S A V E~ to true. Also, if the value of any variable is " in the {@link NetworkTable},
  * then that represents non-existence in the {@link Preferences} table</p>
- *
- * @author Joe Grinstead
  */
 public class Preferences {
 
@@ -440,9 +438,9 @@ public class Preferences {
   }
 
   /**
-   * Saves the preferences to a file on the RoboRIO.
+   * Saves the preferences to a file on the roboRIO.
    *
-   * <p>This should <b>NOT</b> be called often. Too many writes can damage the RoboRIO's flash
+   * <p>This should <b>NOT</b> be called often. Too many writes can damage the roboRIO's flash
    * memory. While it is ok to save once or twice a match, this should never be called every run of
    * {@link IterativeRobot#teleopPeriodic()}.</p>
    *

@@ -52,32 +52,36 @@ DoubleSolenoid::DoubleSolenoid(uint8_t moduleNumber, uint32_t forwardChannel,
     wpi_setWPIErrorWithContext(ChannelIndexOutOfRange, buf.str());
     return;
   }
-  Resource::CreateResourceObject(m_allocated, m_maxModules * m_maxPorts);
-
-  buf << "Solenoid " << m_forwardChannel << " (Module: " << m_moduleNumber
-      << ")";
-  if (m_allocated->Allocate(
-          m_moduleNumber * kSolenoidChannels + m_forwardChannel, buf.str()) ==
-      std::numeric_limits<uint32_t>::max()) {
-    CloneError(*m_allocated);
+  int32_t status = 0;
+  m_forwardHandle = HAL_InitializeSolenoidPort(
+      HAL_GetPortWithModule(moduleNumber, m_forwardChannel), &status);
+  if (status != 0) {
+    wpi_setErrorWithContextRange(status, 0, HAL_GetNumSolenoidChannels(),
+                                 forwardChannel, HAL_GetErrorMessage(status));
+    m_forwardHandle = HAL_kInvalidHandle;
+    m_reverseHandle = HAL_kInvalidHandle;
     return;
   }
 
-  buf << "Solenoid " << m_reverseChannel << " (Module: " << m_moduleNumber
-      << ")";
-  if (m_allocated->Allocate(
-          m_moduleNumber * kSolenoidChannels + m_reverseChannel, buf.str()) ==
-      std::numeric_limits<uint32_t>::max()) {
-    CloneError(*m_allocated);
+  m_reverseHandle = HAL_InitializeSolenoidPort(
+      HAL_GetPortWithModule(moduleNumber, m_reverseChannel), &status);
+  if (status != 0) {
+    wpi_setErrorWithContextRange(status, 0, HAL_GetNumSolenoidChannels(),
+                                 reverseChannel, HAL_GetErrorMessage(status));
+    // free forward solenoid
+    HAL_FreeSolenoidPort(m_forwardHandle);
+    m_forwardHandle = HAL_kInvalidHandle;
+    m_reverseHandle = HAL_kInvalidHandle;
     return;
   }
 
   m_forwardMask = 1 << m_forwardChannel;
   m_reverseMask = 1 << m_reverseChannel;
-  HALReport(HALUsageReporting::kResourceType_Solenoid, m_forwardChannel,
-            m_moduleNumber);
-  HALReport(HALUsageReporting::kResourceType_Solenoid, m_reverseChannel,
-            m_moduleNumber);
+
+  HAL_Report(HALUsageReporting::kResourceType_Solenoid, m_forwardChannel,
+             m_moduleNumber);
+  HAL_Report(HALUsageReporting::kResourceType_Solenoid, m_reverseChannel,
+             m_moduleNumber);
   LiveWindow::GetInstance()->AddActuator("DoubleSolenoid", m_moduleNumber,
                                          m_forwardChannel, this);
 }
@@ -86,10 +90,8 @@ DoubleSolenoid::DoubleSolenoid(uint8_t moduleNumber, uint32_t forwardChannel,
  * Destructor.
  */
 DoubleSolenoid::~DoubleSolenoid() {
-  if (CheckSolenoidModule(m_moduleNumber)) {
-    m_allocated->Free(m_moduleNumber * kSolenoidChannels + m_forwardChannel);
-    m_allocated->Free(m_moduleNumber * kSolenoidChannels + m_reverseChannel);
-  }
+  HAL_FreeSolenoidPort(m_forwardHandle);
+  HAL_FreeSolenoidPort(m_reverseHandle);
   if (m_table != nullptr) m_table->RemoveTableListener(this);
 }
 
@@ -100,21 +102,30 @@ DoubleSolenoid::~DoubleSolenoid() {
  */
 void DoubleSolenoid::Set(Value value) {
   if (StatusIsFatal()) return;
-  uint8_t rawValue = 0x00;
 
+  bool forward = false;
+  bool reverse = false;
   switch (value) {
     case kOff:
-      rawValue = 0x00;
+      forward = false;
+      reverse = false;
       break;
     case kForward:
-      rawValue = m_forwardMask;
+      forward = true;
+      reverse = false;
       break;
     case kReverse:
-      rawValue = m_reverseMask;
+      forward = false;
+      reverse = true;
       break;
   }
+  int32_t fstatus = 0;
+  HAL_SetSolenoid(m_forwardHandle, forward, &fstatus);
+  int32_t rstatus = 0;
+  HAL_SetSolenoid(m_reverseHandle, reverse, &rstatus);
 
-  SolenoidBase::Set(rawValue, m_forwardMask | m_reverseMask, m_moduleNumber);
+  wpi_setErrorWithContext(fstatus, HAL_GetErrorMessage(fstatus));
+  wpi_setErrorWithContext(rstatus, HAL_GetErrorMessage(rstatus));
 }
 
 /**
@@ -124,10 +135,16 @@ void DoubleSolenoid::Set(Value value) {
  */
 DoubleSolenoid::Value DoubleSolenoid::Get() const {
   if (StatusIsFatal()) return kOff;
-  uint8_t value = GetAll(m_moduleNumber);
+  int32_t fstatus = 0;
+  int32_t rstatus = 0;
+  bool valueForward = HAL_GetSolenoid(m_forwardHandle, &fstatus);
+  bool valueReverse = HAL_GetSolenoid(m_reverseHandle, &rstatus);
 
-  if (value & m_forwardMask) return kForward;
-  if (value & m_reverseMask) return kReverse;
+  wpi_setErrorWithContext(fstatus, HAL_GetErrorMessage(fstatus));
+  wpi_setErrorWithContext(rstatus, HAL_GetErrorMessage(rstatus));
+
+  if (valueForward) return kForward;
+  if (valueReverse) return kReverse;
   return kOff;
 }
 /**

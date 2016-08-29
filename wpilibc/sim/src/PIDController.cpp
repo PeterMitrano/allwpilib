@@ -6,7 +6,9 @@
 /*----------------------------------------------------------------------------*/
 
 #include "PIDController.h"
-#include <math.h>
+
+#include <cmath>
+
 #include "Notifier.h"
 #include "PIDOutput.h"
 #include "PIDSource.h"
@@ -31,9 +33,8 @@ static const std::string kEnabled = "enabled";
  *               default is 50ms.
  */
 PIDController::PIDController(float Kp, float Ki, float Kd, PIDSource* source,
-                             PIDOutput* output, float period) {
-  Initialize(Kp, Ki, Kd, 0.0f, source, output, period);
-}
+                             PIDOutput* output, float period)
+    : PIDController(Kp, Ki, Kd, 0.0f, source, output, period) {}
 
 /**
  * Allocate a PID object with the given constants for P, I, D.
@@ -50,12 +51,6 @@ PIDController::PIDController(float Kp, float Ki, float Kd, PIDSource* source,
 PIDController::PIDController(float Kp, float Ki, float Kd, float Kf,
                              PIDSource* source, PIDOutput* output,
                              float period) {
-  Initialize(Kp, Ki, Kd, Kf, source, output, period);
-}
-
-void PIDController::Initialize(float Kp, float Ki, float Kd, float Kf,
-                               PIDSource* source, PIDOutput* output,
-                               float period) {
   m_table = nullptr;
 
   m_P = Kp;
@@ -122,11 +117,11 @@ void PIDController::Calculate() {
       std::lock_guard<priority_recursive_mutex> sync(m_mutex);
       m_error = m_setpoint - input;
       if (m_continuous) {
-        if (fabs(m_error) > (m_maximumInput - m_minimumInput) / 2) {
+        if (std::fabs(m_error) > (m_maximumInput - m_minimumInput) / 2) {
           if (m_error > 0) {
-            m_error = m_error - m_maximumInput + m_minimumInput;
+            m_error = m_error - (m_maximumInput - m_minimumInput);
           } else {
-            m_error = m_error + m_maximumInput - m_minimumInput;
+            m_error = m_error + (m_maximumInput - m_minimumInput);
           }
         }
       }
@@ -401,12 +396,11 @@ double PIDController::GetDeltaSetpoint() const {
  * @return the current error
  */
 float PIDController::GetError() const {
-  double pidInput;
+  double setpoint = GetSetpoint();
   {
-    std::lock_guard<priority_recursive_mutex> lock(m_mutex);
-    pidInput = m_pidInput->PIDGet();
+    std::lock_guard<priority_recursive_mutex> sync(m_mutex);
+    return GetContinuousError(setpoint - m_pidInput->PIDGet());
   }
-  return GetSetpoint() - pidInput;
 }
 
 /**
@@ -456,18 +450,6 @@ void PIDController::SetTolerance(float percent) {
 }
 
 /**
- * Set the percentage error which is considered tolerable for use with
- * OnTarget.
- *
- * @param percent percentage error which is tolerable
- */
-void PIDController::SetPercentTolerance(float percent) {
-  std::lock_guard<priority_recursive_mutex> lock(m_mutex);
-  m_toleranceType = kPercentTolerance;
-  m_tolerance = percent;
-}
-
-/**
  * Set the absolute error which is considered tolerable for use with
  * OnTarget.
  *
@@ -477,6 +459,18 @@ void PIDController::SetAbsoluteTolerance(float absTolerance) {
   std::lock_guard<priority_recursive_mutex> lock(m_mutex);
   m_toleranceType = kAbsoluteTolerance;
   m_tolerance = absTolerance;
+}
+
+/**
+ * Set the percentage error which is considered tolerable for use with
+ * OnTarget.
+ *
+ * @param percent percentage error which is tolerable
+ */
+void PIDController::SetPercentTolerance(float percent) {
+  std::lock_guard<priority_recursive_mutex> lock(m_mutex);
+  m_toleranceType = kPercentTolerance;
+  m_tolerance = percent;
 }
 
 /**
@@ -515,11 +509,11 @@ bool PIDController::OnTarget() const {
   double error = GetError();
   switch (m_toleranceType) {
     case kPercentTolerance:
-      return fabs(error) <
+      return std::fabs(error) <
              m_tolerance / 100 * (m_maximumInput - m_minimumInput);
       break;
     case kAbsoluteTolerance:
-      return fabs(error) < m_tolerance;
+      return std::fabs(error) < m_tolerance;
       break;
     case kNoTolerance:  // TODO: this case needs an error
       return false;
@@ -592,6 +586,27 @@ void PIDController::InitTable(std::shared_ptr<ITable> table) {
     m_table->PutBoolean(kEnabled, IsEnabled());
     m_table->AddTableListener(this, false);
   }
+}
+
+/**
+ * Wraps error around for continuous inputs. The original error is returned if
+ * continuous mode is disabled. This is an unsynchronized function.
+ *
+ * @param error The current error of the PID controller.
+ * @return Error for continuous inputs.
+ */
+double PIDController::GetContinuousError(double error) const {
+  if (m_continuous) {
+    if (std::fabs(error) > (m_maximumInput - m_minimumInput) / 2) {
+      if (error > 0) {
+        return error - (m_maximumInput - m_minimumInput);
+      } else {
+        return error + (m_maximumInput - m_minimumInput);
+      }
+    }
+  }
+
+  return error;
 }
 
 std::shared_ptr<ITable> PIDController::GetTable() const { return m_table; }

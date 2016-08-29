@@ -7,10 +7,6 @@
 
 #include "Error.h"
 
-#include <stdlib.h>
-#include <string.h>
-
-#include <iostream>
 #include <sstream>
 
 #include "DriverStation.h"
@@ -72,8 +68,8 @@ void Error::Report() {
 #if defined(_WIN32)
   const int MAX_DIR = 100;
   char basename[MAX_DIR];
-  _splitpath_s(m_filename.c_str(), nullptr, 0, basename, MAX_DIR, nullptr, 0, nullptr,
-               0);
+  _splitpath_s(m_filename.c_str(), nullptr, 0, basename, MAX_DIR, nullptr, 0,
+               nullptr, 0);
   locStream << basename;
 #else
   locStream << basename(m_filename.c_str());

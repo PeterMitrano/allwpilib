@@ -5,8 +5,7 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-#include <stdarg.h>
-#include <stdlib.h>
+#include <cstdarg>
 
 #include "Vision/BaeUtilities.h"
 #include "Vision/FrcError.h"
@@ -58,8 +57,7 @@ int frcDispose(void* object) { return imaqDispose(object); }
  * @return On success: 1. On failure: 0. To get extended error information, call
  * GetLastError().
  */
-int frcDispose(const char* functionName, ...) /* Variable argument list */
-{
+int frcDispose(const char* functionName, ...) {
   va_list disposalPtrList; /* Input argument list */
   void* disposalPtr;       /* For iteration */
   int success, returnValue = 1;
@@ -193,13 +191,10 @@ int frcWriteImage(const Image* image, const char* fileName) {
  * Parameter Discussion:
  *    Relevant parameters of the HistogramReport include:
  *      min, max, mean and stdDev
- *    min/max —Setting both min and max to 0 causes the function to
- *           set min to 0 and the max to 255 for 8-bit images and to the actual
- *           minimum value and maximum value of the image for all other image
- *           types.
- *    max—Setting both min and max to 0 causes the function to set max
- *          to 255 for 8-bit images and to the actual maximum value of the
- *          image for all other image types.
+ *
+ * min/max: Setting both min and max to 0 causes the function to set min to 0
+ * and the max to 255 for 8-bit images and to the actual minimum value and
+ * maximum value of the image for all other image types.
  *
  * @param image      Image whose histogram the function calculates.
  * @param numClasses The number of classes into which the function separates the
@@ -285,7 +280,9 @@ ColorHistogramReport* frcColorHistogram(const Image* image, int numClasses,
 
 ColorHistogramReport* frcColorHistogram(const Image* image, int numClasses,
                                         ColorMode mode, Image* mask) {
-  return imaqColorHistogram2((Image*)image, numClasses, mode, nullptr, mask);
+  return imaqColorHistogram2(
+      const_cast<Image*>(reinterpret_cast<const Image*>(image)), numClasses,
+      mode, nullptr, mask);
 }
 
 /**
@@ -455,14 +452,14 @@ int frcParticleAnalysis(Image* image, int particleNumber,
   if (!success) {
     return success;
   }
-  par->center_mass_x = (int)returnDouble;  // pixel
+  par->center_mass_x = static_cast<int>(returnDouble);  // pixel
 
   success = imaqMeasureParticle(image, particleNumber, 0,
                                 IMAQ_MT_CENTER_OF_MASS_Y, &returnDouble);
   if (!success) {
     return success;
   }
-  par->center_mass_y = (int)returnDouble;  // pixel
+  par->center_mass_y = static_cast<int>(returnDouble);  // pixel
 
   /* particle size statistics */
   success = imaqMeasureParticle(image, particleNumber, 0, IMAQ_MT_AREA,
@@ -477,28 +474,28 @@ int frcParticleAnalysis(Image* image, int particleNumber,
   if (!success) {
     return success;
   }
-  par->boundingRect.top = (int)returnDouble;
+  par->boundingRect.top = static_cast<int>(returnDouble);
 
   success = imaqMeasureParticle(image, particleNumber, 0,
                                 IMAQ_MT_BOUNDING_RECT_LEFT, &returnDouble);
   if (!success) {
     return success;
   }
-  par->boundingRect.left = (int)returnDouble;
+  par->boundingRect.left = static_cast<int>(returnDouble);
 
   success = imaqMeasureParticle(image, particleNumber, 0,
                                 IMAQ_MT_BOUNDING_RECT_HEIGHT, &returnDouble);
   if (!success) {
     return success;
   }
-  par->boundingRect.height = (int)returnDouble;
+  par->boundingRect.height = static_cast<int>(returnDouble);
 
   success = imaqMeasureParticle(image, particleNumber, 0,
                                 IMAQ_MT_BOUNDING_RECT_WIDTH, &returnDouble);
   if (!success) {
     return success;
   }
-  par->boundingRect.width = (int)returnDouble;
+  par->boundingRect.width = static_cast<int>(returnDouble);
 
   /* particle quality statistics */
   success = imaqMeasureParticle(image, particleNumber, 0,
@@ -655,7 +652,7 @@ int frcSmartThreshold(Image* dest, const Image* source,
  * @param rangeMin The lower boundary of the range of pixel values to keep
  * @param rangeMax The upper boundary of the range of pixel values to keep.
  *
- * @return int - error code: 0 = error. To get extended error information, call
+ * @return error code: 0 = error. To get extended error information, call
  *         GetLastError().
  */
 int frcSimpleThreshold(Image* dest, const Image* source, float rangeMin,
@@ -678,7 +675,7 @@ int frcSimpleThreshold(Image* dest, const Image* source, float rangeMin,
  * @param newValue The replacement value for pixels within the range. Use the
  *                 simplified call to leave the pixel values unchanged
  *
- * @return int - error code: 0 = error. To get extended error information, call
+ * @return error code: 0 = error. To get extended error information, call
  *         GetLastError().
  */
 int frcSimpleThreshold(Image* dest, const Image* source, float rangeMin,

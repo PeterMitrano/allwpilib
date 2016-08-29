@@ -23,20 +23,21 @@ constexpr double ADXL345_I2C::kGsPerLSB;
  * @param range         The range (+ or -) that the accelerometer will measure
  * @param deviceAddress The I2C address of the accelerometer (0x1D or 0x53)
  */
-ADXL345_I2C::ADXL345_I2C(Port port, Range range, int deviceAddress)
-    : I2C(port, deviceAddress) {
+ADXL345_I2C::ADXL345_I2C(I2C::Port port, Range range, int deviceAddress)
+    : m_i2c(port, deviceAddress) {
   // Turn on the measurements
-  Write(kPowerCtlRegister, kPowerCtl_Measure);
+  m_i2c.Write(kPowerCtlRegister, kPowerCtl_Measure);
   // Specify the data format to read
   SetRange(range);
 
-  HALReport(HALUsageReporting::kResourceType_ADXL345,
-            HALUsageReporting::kADXL345_I2C, 0);
+  HAL_Report(HALUsageReporting::kResourceType_ADXL345,
+             HALUsageReporting::kADXL345_I2C, 0);
   LiveWindow::GetInstance()->AddSensor("ADXL345_I2C", port, this);
 }
 
 void ADXL345_I2C::SetRange(Range range) {
-  Write(kDataFormatRegister, kDataFormat_FullRes | (uint8_t)range);
+  m_i2c.Write(kDataFormatRegister,
+              kDataFormat_FullRes | static_cast<uint8_t>(range));
 }
 
 double ADXL345_I2C::GetX() { return GetAcceleration(kAxis_X); }
@@ -53,7 +54,8 @@ double ADXL345_I2C::GetZ() { return GetAcceleration(kAxis_Z); }
  */
 double ADXL345_I2C::GetAcceleration(ADXL345_I2C::Axes axis) {
   int16_t rawAccel = 0;
-  Read(kDataRegister + (uint8_t)axis, sizeof(rawAccel), (uint8_t*)&rawAccel);
+  m_i2c.Read(kDataRegister + static_cast<uint8_t>(axis), sizeof(rawAccel),
+             reinterpret_cast<uint8_t*>(&rawAccel));
   return rawAccel * kGsPerLSB;
 }
 
@@ -66,7 +68,8 @@ double ADXL345_I2C::GetAcceleration(ADXL345_I2C::Axes axis) {
 ADXL345_I2C::AllAxes ADXL345_I2C::GetAccelerations() {
   AllAxes data = AllAxes();
   int16_t rawData[3];
-  Read(kDataRegister, sizeof(rawData), (uint8_t*)rawData);
+  m_i2c.Read(kDataRegister, sizeof(rawData),
+             reinterpret_cast<uint8_t*>(rawData));
 
   data.XAxis = rawData[0] * kGsPerLSB;
   data.YAxis = rawData[1] * kGsPerLSB;

@@ -7,9 +7,9 @@
 
 #include "CANTalon.h"
 
-#include <unistd.h>  // usleep
-
+#include <chrono>
 #include <sstream>
+#include <thread>
 
 #include "HAL/HAL.h"
 #include "LiveWindow/LiveWindow.h"
@@ -30,6 +30,8 @@ const double kNativePwdUnitsPerRotation = 4096.0;
  * measured by Talon's 100ms timebase to rotations per minute.
  */
 const double kMinutesPer100msUnit = 1.0 / 600.0;
+
+constexpr unsigned int CANTalon::kDelayForSolicitedSignalsUs;
 
 /**
  * Constructor for the CANTalon device.
@@ -117,7 +119,7 @@ float CANTalon::Get() const {
     case kFollower:
     default:
       m_impl->GetAppliedThrottle(value);
-      return (float)value / 1023.0;
+      return static_cast<float>(value) / 1023.0;
   }
 }
 
@@ -154,11 +156,11 @@ void CANTalon::Set(float value) {
         status = CTR_OKAY;
       } break;
       case CANSpeedController::kFollower: {
-        status = m_impl->SetDemand((int)value);
+        status = m_impl->SetDemand(static_cast<int>(value));
       } break;
       case CANSpeedController::kVoltage: {
         // Voltage is an 8.8 fixed point number.
-        int volts = int((m_isInverted ? -value : value) * 256);
+        int volts = static_cast<int>((m_isInverted ? -value : value) * 256);
         status = m_impl->SetDemand(volts);
       } break;
       case CANSpeedController::kSpeed:
@@ -175,7 +177,7 @@ void CANTalon::Set(float value) {
         status = m_impl->SetDemand(milliamperes);
       } break;
       case CANSpeedController::kMotionProfile: {
-        status = m_impl->SetDemand((int)value);
+        status = m_impl->SetDemand(static_cast<int>(value));
       } break;
       default:
         wpi_setWPIErrorWithContext(
@@ -184,13 +186,13 @@ void CANTalon::Set(float value) {
         break;
     }
     if (status != CTR_OKAY) {
-      wpi_setErrorWithContext(status, getHALErrorMessage(status));
+      wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
     }
 
     status = m_impl->SetModeSelect(m_sendMode);
 
     if (status != CTR_OKAY) {
-      wpi_setErrorWithContext(status, getHALErrorMessage(status));
+      wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
     }
   }
 }
@@ -214,7 +216,7 @@ void CANTalon::Reset() {
  * for more information).
  */
 void CANTalon::Disable() {
-  m_impl->SetModeSelect((int)CANTalon::kDisabled);
+  m_impl->SetModeSelect(static_cast<int>(CANTalon::kDisabled));
   m_controlEnabled = false;
 }
 
@@ -248,7 +250,7 @@ bool CANTalon::IsEnabled() const { return IsControlEnabled(); }
 void CANTalon::SetP(double p) {
   CTR_Code status = m_impl->SetPgain(m_profile, p);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -261,7 +263,7 @@ void CANTalon::SetP(double p) {
 void CANTalon::SetI(double i) {
   CTR_Code status = m_impl->SetIgain(m_profile, i);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -274,7 +276,7 @@ void CANTalon::SetI(double i) {
 void CANTalon::SetD(double d) {
   CTR_Code status = m_impl->SetDgain(m_profile, d);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -287,7 +289,7 @@ void CANTalon::SetD(double d) {
 void CANTalon::SetF(double f) {
   CTR_Code status = m_impl->SetFgain(m_profile, f);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -300,7 +302,7 @@ void CANTalon::SetF(double f) {
 void CANTalon::SetIzone(unsigned iz) {
   CTR_Code status = m_impl->SetIzone(m_profile, iz);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -312,7 +314,7 @@ void CANTalon::SelectProfileSlot(int slotIdx) {
   m_profile = (slotIdx == 0) ? 0 : 1; /* only get two slots for now */
   CTR_Code status = m_impl->SetProfileSlotSelect(m_profile);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -356,9 +358,10 @@ void CANTalon::SetFeedbackDevice(FeedbackDevice feedbackDevice) {
    */
   m_feedbackDevice = feedbackDevice;
   /* pass feedback to actual CAN frame */
-  CTR_Code status = m_impl->SetFeedbackDeviceSelect((int)feedbackDevice);
+  CTR_Code status =
+      m_impl->SetFeedbackDeviceSelect(static_cast<int>(feedbackDevice));
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -366,9 +369,10 @@ void CANTalon::SetFeedbackDevice(FeedbackDevice feedbackDevice) {
  * Select the feedback device to use in closed-loop
  */
 void CANTalon::SetStatusFrameRateMs(StatusFrameRate stateFrame, int periodMs) {
-  CTR_Code status = m_impl->SetStatusFrameRate((int)stateFrame, periodMs);
+  CTR_Code status =
+      m_impl->SetStatusFrameRate(static_cast<int>(stateFrame), periodMs);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -384,13 +388,15 @@ double CANTalon::GetP() const {
   // Update the info in m_impl.
   CTR_Code status = m_impl->RequestParam(param);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
-  usleep(kDelayForSolicitedSignalsUs); /* small yield for getting response */
+  // small yield for getting response
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
   double p;
   status = m_impl->GetPgain(m_profile, p);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return p;
 }
@@ -405,14 +411,16 @@ double CANTalon::GetI() const {
   // Update the info in m_impl.
   CTR_Code status = m_impl->RequestParam(param);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
-  usleep(kDelayForSolicitedSignalsUs); /* small yield for getting response */
+  // small yield for getting response
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
 
   double i;
   status = m_impl->GetIgain(m_profile, i);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return i;
 }
@@ -427,14 +435,15 @@ double CANTalon::GetD() const {
   // Update the info in m_impl.
   CTR_Code status = m_impl->RequestParam(param);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
-  usleep(kDelayForSolicitedSignalsUs); /* small yield for getting response */
-
+  // small yield for getting response
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
   double d;
   status = m_impl->GetDgain(m_profile, d);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return d;
 }
@@ -449,14 +458,16 @@ double CANTalon::GetF() const {
   // Update the info in m_impl.
   CTR_Code status = m_impl->RequestParam(param);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 
-  usleep(kDelayForSolicitedSignalsUs); /* small yield for getting response */
+  // small yield for getting response
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
   double f;
   status = m_impl->GetFgain(m_profile, f);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return f;
 }
@@ -471,14 +482,15 @@ int CANTalon::GetIzone() const {
   // Update the info in m_impl.
   CTR_Code status = m_impl->RequestParam(param);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
-  usleep(kDelayForSolicitedSignalsUs);
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
 
   int iz;
   status = m_impl->GetIzone(m_profile, iz);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return iz;
 }
@@ -497,7 +509,7 @@ float CANTalon::GetBusVoltage() const {
   double voltage;
   CTR_Code status = m_impl->GetBatteryV(voltage);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return voltage;
 }
@@ -508,9 +520,9 @@ float CANTalon::GetBusVoltage() const {
 float CANTalon::GetOutputVoltage() const {
   int throttle11;
   CTR_Code status = m_impl->GetAppliedThrottle(throttle11);
-  float voltage = GetBusVoltage() * (float(throttle11) / 1023.0);
+  float voltage = GetBusVoltage() * (static_cast<float>(throttle11) / 1023.0);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return voltage;
 }
@@ -523,7 +535,7 @@ float CANTalon::GetOutputCurrent() const {
 
   CTR_Code status = m_impl->GetCurrent(current);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 
   return current;
@@ -537,7 +549,7 @@ float CANTalon::GetTemperature() const {
 
   CTR_Code status = m_impl->GetTemp(temp);
   if (temp != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return temp;
 }
@@ -553,7 +565,7 @@ void CANTalon::SetPosition(double pos) {
   int32_t nativePos = ScaleRotationsToNativeUnits(m_feedbackDevice, pos);
   CTR_Code status = m_impl->SetSensorPosition(nativePos);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -571,7 +583,7 @@ double CANTalon::GetPosition() const {
   int32_t position;
   CTR_Code status = m_impl->GetSensorPosition(position);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return ScaleNativeUnitsToRotations(m_feedbackDevice, position);
 }
@@ -584,7 +596,7 @@ double CANTalon::GetPosition() const {
 void CANTalon::SetSensorDirection(bool reverseSensor) {
   CTR_Code status = m_impl->SetRevFeedbackSensor(reverseSensor ? 1 : 0);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -602,7 +614,7 @@ void CANTalon::SetSensorDirection(bool reverseSensor) {
 void CANTalon::SetClosedLoopOutputDirection(bool reverseOutput) {
   CTR_Code status = m_impl->SetRevMotDuringCloseLoopEn(reverseOutput ? 1 : 0);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -616,7 +628,7 @@ int CANTalon::GetClosedLoopError() const {
   /* retrieve the closed loop error in native units */
   CTR_Code status = m_impl->GetCloseLoopErr(error);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return error;
 }
@@ -660,7 +672,7 @@ double CANTalon::GetSpeed() const {
   int32_t speed;
   CTR_Code status = m_impl->GetSensorVelocity(speed);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return ScaleNativeUnitsToRpm(m_feedbackDevice, speed);
 }
@@ -677,7 +689,7 @@ int CANTalon::GetAnalogIn() const {
   int position;
   CTR_Code status = m_impl->GetAnalogInWithOv(position);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return position;
 }
@@ -685,7 +697,7 @@ int CANTalon::GetAnalogIn() const {
 void CANTalon::SetAnalogPosition(int newPosition) {
   CTR_Code status = m_impl->SetParam(CanTalonSRX::eAinPosition, newPosition);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -707,7 +719,7 @@ int CANTalon::GetAnalogInVel() const {
   int vel;
   CTR_Code status = m_impl->GetAnalogInVel(vel);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return vel;
 }
@@ -722,14 +734,14 @@ int CANTalon::GetEncPosition() const {
   int position;
   CTR_Code status = m_impl->GetEncPosition(position);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return position;
 }
 void CANTalon::SetEncPosition(int newPosition) {
   CTR_Code status = m_impl->SetParam(CanTalonSRX::eEncPosition, newPosition);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -743,7 +755,7 @@ int CANTalon::GetEncVel() const {
   int vel;
   CTR_Code status = m_impl->GetEncVel(vel);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return vel;
 }
@@ -751,34 +763,34 @@ int CANTalon::GetPulseWidthPosition() const {
   int param;
   CTR_Code status = m_impl->GetPulseWidthPosition(param);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   return param;
 }
 void CANTalon::SetPulseWidthPosition(int newPosition) {
   CTR_Code status = m_impl->SetParam(CanTalonSRX::ePwdPosition, newPosition);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 int CANTalon::GetPulseWidthVelocity() const {
   int param;
   CTR_Code status = m_impl->GetPulseWidthVelocity(param);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   return param;
 }
 int CANTalon::GetPulseWidthRiseToFallUs() const {
   int param;
   CTR_Code status = m_impl->GetPulseWidthRiseToFallUs(param);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   return param;
 }
 int CANTalon::GetPulseWidthRiseToRiseUs() const {
   int param;
   CTR_Code status = m_impl->GetPulseWidthRiseToRiseUs(param);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   return param;
 }
 
@@ -830,7 +842,7 @@ int CANTalon::GetPinStateQuadA() const {
   int retval;
   CTR_Code status = m_impl->GetQuadApin(retval);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return retval;
 }
@@ -842,7 +854,7 @@ int CANTalon::GetPinStateQuadB() const {
   int retval;
   CTR_Code status = m_impl->GetQuadBpin(retval);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return retval;
 }
@@ -854,7 +866,7 @@ int CANTalon::GetPinStateQuadIdx() const {
   int retval;
   CTR_Code status = m_impl->GetQuadIdxpin(retval);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return retval;
 }
@@ -868,7 +880,7 @@ int CANTalon::IsFwdLimitSwitchClosed() const {
   CTR_Code status = m_impl->GetLimitSwitchClosedFor(
       retval); /* rename this func, '1' => open, '0' => closed */
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return retval ? 0 : 1;
 }
@@ -882,7 +894,7 @@ int CANTalon::IsRevLimitSwitchClosed() const {
   CTR_Code status = m_impl->GetLimitSwitchClosedRev(
       retval); /* rename this func, '1' => open, '0' => closed */
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return retval ? 0 : 1;
 }
@@ -896,7 +908,7 @@ int CANTalon::GetNumberOfQuadIdxRises() const {
   CTR_Code status = m_impl->GetEncIndexRiseEvents(
       rises); /* rename this func, '1' => open, '0' => closed */
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return rises;
 }
@@ -910,7 +922,7 @@ void CANTalon::SetNumberOfQuadIdxRises(int rises) {
       CanTalonSRX::eEncIndexRiseEvents,
       rises); /* rename this func, '1' => open, '0' => closed */
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -923,11 +935,11 @@ bool CANTalon::GetForwardLimitOK() const {
   CTR_Code status = CTR_OKAY;
   status = m_impl->GetFault_ForSoftLim(softLim);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   status = m_impl->GetFault_ForLim(limSwit);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   /* If either fault is asserted, signal caller we are disabled (with false?) */
   return (softLim | limSwit) ? false : true;
@@ -942,11 +954,11 @@ bool CANTalon::GetReverseLimitOK() const {
   CTR_Code status = CTR_OKAY;
   status = m_impl->GetFault_RevSoftLim(softLim);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   status = m_impl->GetFault_RevLim(limSwit);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   /* If either fault is asserted, signal caller we are disabled (with false?) */
   return (softLim | limSwit) ? false : true;
@@ -964,42 +976,42 @@ uint16_t CANTalon::GetFaults() const {
   val = 0;
   status = m_impl->GetFault_OverTemp(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kTemperatureFault : 0;
 
   /* voltage */
   val = 0;
   status = m_impl->GetFault_UnderVoltage(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kBusVoltageFault : 0;
 
   /* fwd-limit-switch */
   val = 0;
   status = m_impl->GetFault_ForLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kFwdLimitSwitch : 0;
 
   /* rev-limit-switch */
   val = 0;
   status = m_impl->GetFault_RevLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kRevLimitSwitch : 0;
 
   /* fwd-soft-limit */
   val = 0;
   status = m_impl->GetFault_ForSoftLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kFwdSoftLimit : 0;
 
   /* rev-soft-limit */
   val = 0;
   status = m_impl->GetFault_RevSoftLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kRevSoftLimit : 0;
 
   return retval;
@@ -1014,42 +1026,42 @@ uint16_t CANTalon::GetStickyFaults() const {
   val = 0;
   status = m_impl->GetStckyFault_OverTemp(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kTemperatureFault : 0;
 
   /* voltage */
   val = 0;
   status = m_impl->GetStckyFault_UnderVoltage(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kBusVoltageFault : 0;
 
   /* fwd-limit-switch */
   val = 0;
   status = m_impl->GetStckyFault_ForLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kFwdLimitSwitch : 0;
 
   /* rev-limit-switch */
   val = 0;
   status = m_impl->GetStckyFault_RevLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kRevLimitSwitch : 0;
 
   /* fwd-soft-limit */
   val = 0;
   status = m_impl->GetStckyFault_ForSoftLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kFwdSoftLimit : 0;
 
   /* rev-soft-limit */
   val = 0;
   status = m_impl->GetStckyFault_RevSoftLim(val);
   if (status != CTR_OKAY)
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   retval |= (val) ? CANSpeedController::kRevSoftLimit : 0;
 
   return retval;
@@ -1057,7 +1069,7 @@ uint16_t CANTalon::GetStickyFaults() const {
 
 void CANTalon::ClearStickyFaults() {
   CTR_Code status = m_impl->ClearStickyFaults();
-  wpi_setErrorWithContext(status, getHALErrorMessage(status));
+  wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
 }
 
 /**
@@ -1076,9 +1088,10 @@ void CANTalon::SetVoltageRampRate(double rampRate) {
           Talon's throttle ramp is in dThrot/d10ms.  1023 is full fwd, -1023 is
      full rev. */
   double rampRatedThrotPer10ms = (rampRate * 1023.0 / 12.0) / 100;
-  CTR_Code status = m_impl->SetRampThrottle((int)rampRatedThrotPer10ms);
+  CTR_Code status =
+      m_impl->SetRampThrottle(static_cast<int>(rampRatedThrotPer10ms));
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1088,7 +1101,7 @@ void CANTalon::SetVoltageCompensationRampRate(double rampRate) {
   CTR_Code status = CTR_OKAY;
   status = m_impl->SetVoltageCompensationRate(rampRate / 1000);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1104,7 +1117,7 @@ void CANTalon::SetCloseLoopRampRate(double rampRate) {
   CTR_Code status = m_impl->SetCloseLoopRampRate(
       m_profile, rampRate * 1023.0 / 12.0 / 1000.0);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1115,19 +1128,20 @@ uint32_t CANTalon::GetFirmwareVersion() const {
   int firmwareVersion;
   CTR_Code status = m_impl->RequestParam(CanTalonSRX::eFirmVers);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
-  usleep(kDelayForSolicitedSignalsUs);
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
   status =
       m_impl->GetParamResponseInt32(CanTalonSRX::eFirmVers, firmwareVersion);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 
   /* only sent once on boot */
   // CTR_Code status = m_impl->GetFirmVers(firmwareVersion);
   // if (status != CTR_OKAY) {
-  //  wpi_setErrorWithContext(status, getHALErrorMessage(status));
+  //  wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   //}
 
   return firmwareVersion;
@@ -1139,13 +1153,15 @@ uint32_t CANTalon::GetFirmwareVersion() const {
 int CANTalon::GetIaccum() const {
   CTR_Code status = m_impl->RequestParam(CanTalonSRX::ePidIaccum);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
-  usleep(kDelayForSolicitedSignalsUs); /* small yield for getting response */
+  // small yield for getting response
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
   int iaccum;
   status = m_impl->GetParamResponseInt32(CanTalonSRX::ePidIaccum, iaccum);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return iaccum;
 }
@@ -1156,7 +1172,7 @@ int CANTalon::GetIaccum() const {
 void CANTalon::ClearIaccum() {
   CTR_Code status = m_impl->SetParam(CanTalonSRX::ePidIaccum, 0);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1167,8 +1183,8 @@ void CANTalon::ConfigNeutralMode(NeutralMode mode) {
   CTR_Code status = CTR_OKAY;
   switch (mode) {
     default:
-    case kNeutralMode_Jumper: /* use default setting in flash based on
-                                 webdash/BrakeCal button selection */
+    case kNeutralMode_Jumper:
+      // use default setting in flash based on webdash/BrakeCal button selection
       status = m_impl->SetOverrideBrakeType(
           CanTalonSRX::kBrakeOverride_UseDefaultsFromFlash);
       break;
@@ -1182,7 +1198,7 @@ void CANTalon::ConfigNeutralMode(NeutralMode mode) {
       break;
   }
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1194,7 +1210,7 @@ int CANTalon::GetBrakeEnableDuringNeutral() const {
   int brakeEn = 0;
   CTR_Code status = m_impl->GetBrakeIsEnabled(brakeEn);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   return brakeEn;
 }
@@ -1286,7 +1302,7 @@ void CANTalon::ConfigLimitSwitchOverrides(bool bForwardLimitSwitchEn,
   /* update signal and error check code */
   status = m_impl->SetOverrideLimitSwitchEn(fwdRevEnable);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1302,17 +1318,17 @@ void CANTalon::ConfigLimitMode(LimitMode mode) {
        * limit switch.*/
       status = m_impl->SetForwardSoftEnable(false);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       status = m_impl->SetReverseSoftEnable(false);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       /* override enable the limit switches, this circumvents the webdash */
       status = m_impl->SetOverrideLimitSwitchEn(
           CanTalonSRX::kLimitSwitchOverride_EnableFwd_EnableRev);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       break;
     case kLimitMode_SoftPositionLimits: /** Use both switches and soft limits */
@@ -1320,37 +1336,38 @@ void CANTalon::ConfigLimitMode(LimitMode mode) {
        * limit switch.*/
       status = m_impl->SetForwardSoftEnable(true);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       status = m_impl->SetReverseSoftEnable(true);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       /* override enable the limit switches, this circumvents the webdash */
       status = m_impl->SetOverrideLimitSwitchEn(
           CanTalonSRX::kLimitSwitchOverride_EnableFwd_EnableRev);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       break;
 
-    case kLimitMode_SrxDisableSwitchInputs: /** disable both limit switches and
-                                               soft limits */
+    case kLimitMode_SrxDisableSwitchInputs:
+      // disable both limit switches and soft limits
+
       /* turn on both limits. SRX has individual enables and polarity for each
        * limit switch.*/
       status = m_impl->SetForwardSoftEnable(false);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       status = m_impl->SetReverseSoftEnable(false);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       /* override enable the limit switches, this circumvents the webdash */
       status = m_impl->SetOverrideLimitSwitchEn(
           CanTalonSRX::kLimitSwitchOverride_DisableFwd_DisableRev);
       if (status != CTR_OKAY) {
-        wpi_setErrorWithContext(status, getHALErrorMessage(status));
+        wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
       }
       break;
   }
@@ -1365,7 +1382,7 @@ void CANTalon::ConfigForwardLimit(double forwardLimitPosition) {
       ScaleRotationsToNativeUnits(m_feedbackDevice, forwardLimitPosition);
   status = m_impl->SetForwardSoftLimit(nativeLimitPos);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1380,7 +1397,7 @@ void CANTalon::ConfigForwardSoftLimitEnable(bool bForwardSoftLimitEn) {
   CTR_Code status = CTR_OKAY;
   status = m_impl->SetForwardSoftEnable(bForwardSoftLimitEn);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1395,7 +1412,7 @@ void CANTalon::ConfigReverseSoftLimitEnable(bool bReverseSoftLimitEn) {
   CTR_Code status = CTR_OKAY;
   status = m_impl->SetReverseSoftEnable(bReverseSoftLimitEn);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1414,7 +1431,7 @@ void CANTalon::ConfigFwdLimitSwitchNormallyOpen(bool normallyOpen) {
       m_impl->SetParam(CanTalonSRX::eOnBoot_LimitSwitch_Forward_NormallyClosed,
                        normallyOpen ? 0 : 1);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1433,7 +1450,7 @@ void CANTalon::ConfigRevLimitSwitchNormallyOpen(bool normallyOpen) {
       m_impl->SetParam(CanTalonSRX::eOnBoot_LimitSwitch_Reverse_NormallyClosed,
                        normallyOpen ? 0 : 1);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1446,7 +1463,7 @@ void CANTalon::ConfigReverseLimit(double reverseLimitPosition) {
       ScaleRotationsToNativeUnits(m_feedbackDevice, reverseLimitPosition);
   status = m_impl->SetReverseSoftLimit(nativeLimitPos);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1502,7 +1519,7 @@ void CANTalon::ConfigSetParameter(uint32_t paramEnum, double value) {
   /* config peak throttle when in closed-loop mode in the positive direction. */
   status = m_impl->SetParam((CanTalonSRX::param_t)paramEnum, value);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1515,15 +1532,16 @@ bool CANTalon::GetParameter(uint32_t paramEnum, double& dvalue) const {
   /* send the request frame */
   CTR_Code status = m_impl->RequestParam((CanTalonSRX::param_t)paramEnum);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
     retval = false;
   }
   /* small yield for getting response */
-  usleep(kDelayForSolicitedSignalsUs);
+  std::this_thread::sleep_for(
+      std::chrono::microseconds(kDelayForSolicitedSignalsUs));
   /* get the last received update */
   status = m_impl->GetParamResponse((CanTalonSRX::param_t)paramEnum, dvalue);
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
     retval = false;
   }
   return retval;
@@ -1546,8 +1564,8 @@ void CANTalon::ConfigFaultTime(float faultTime) {
  */
 void CANTalon::ApplyControlMode(CANSpeedController::ControlMode mode) {
   m_controlMode = mode;
-  HALReport(HALUsageReporting::kResourceType_CANTalonSRX, m_deviceNumber + 1,
-            mode);
+  HAL_Report(HALUsageReporting::kResourceType_CANTalonSRX, m_deviceNumber + 1,
+             mode);
   switch (mode) {
     case kPercentVbus:
       m_sendMode = kThrottle;
@@ -1572,9 +1590,9 @@ void CANTalon::ApplyControlMode(CANSpeedController::ControlMode mode) {
       break;
   }
   // Keep the talon disabled until Set() is called.
-  CTR_Code status = m_impl->SetModeSelect((int)kDisabled);
+  CTR_Code status = m_impl->SetModeSelect(static_cast<int>(kDisabled));
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 
@@ -1633,14 +1651,13 @@ double CANTalon::GetNativeUnitsPerRotationScalar(
   CTR_Code status = CTR_OKAY;
   double retval = 0;
   switch (devToLookup) {
-    case QuadEncoder: { /* When caller wants to lookup Quadrature, the QEI may
-                         * be in 1x if the selected feedback is edge counter.
-                         * Additionally if the quadrature source is the CTRE Mag
-                         * encoder, then the CPR is known.
-                         * This is nice in that the calling app does not require
-                         * knowing the CPR at all.
-                         * So do both checks here.
-                         */
+    case QuadEncoder: {
+      /* When caller wants to lookup Quadrature, the QEI may be in 1x if the
+       * selected feedback is edge counter. Additionally if the quadrature
+       * source is the CTRE Mag encoder, then the CPR is known. This is nice in
+       * that the calling app does not require knowing the CPR at all. So do
+       * both checks here.
+       */
       int32_t qeiPulsePerCount = 4; /* default to 4x */
       switch (m_feedbackDevice) {
         case CtreMagEncoder_Relative:
@@ -1655,8 +1672,8 @@ double CANTalon::GetNativeUnitsPerRotationScalar(
           qeiPulsePerCount = 1;
           break;
         case QuadEncoder: /* Talon's QEI is 4x */
-        default: /* pulse width and everything else, assume its regular quad
-                    use. */
+        default:
+          // pulse width and everything else, assume its regular quad use.
           break;
       }
       if (scalingAvail) {
@@ -1696,7 +1713,8 @@ double CANTalon::GetNativeUnitsPerRotationScalar(
          * bottom of this func.
          */
       } else {
-        retval = (double)kNativeAdcUnitsPerRotation / m_numPotTurns;
+        retval =
+            static_cast<double>(kNativeAdcUnitsPerRotation) / m_numPotTurns;
         scalingAvail = true;
       }
       break;
@@ -1709,7 +1727,7 @@ double CANTalon::GetNativeUnitsPerRotationScalar(
   }
   /* handle any detected errors */
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
   /* if scaling information is not possible, signal caller
    * by returning zero
@@ -1732,11 +1750,11 @@ double CANTalon::GetNativeUnitsPerRotationScalar(
 int32_t CANTalon::ScaleRotationsToNativeUnits(FeedbackDevice devToLookup,
                                               double fullRotations) const {
   /* first assume we don't have config info, prep the default return */
-  int32_t retval = (int32_t)fullRotations;
+  int32_t retval = static_cast<int32_t>(fullRotations);
   /* retrieve scaling info */
   double scalar = GetNativeUnitsPerRotationScalar(devToLookup);
   /* apply scalar if its available */
-  if (scalar > 0) retval = (int32_t)(fullRotations * scalar);
+  if (scalar > 0) retval = static_cast<int32_t>(fullRotations * scalar);
   return retval;
 }
 
@@ -1754,11 +1772,13 @@ int32_t CANTalon::ScaleRotationsToNativeUnits(FeedbackDevice devToLookup,
 int32_t CANTalon::ScaleVelocityToNativeUnits(FeedbackDevice devToLookup,
                                              double rpm) const {
   /* first assume we don't have config info, prep the default return */
-  int32_t retval = (int32_t)rpm;
+  int32_t retval = static_cast<int32_t>(rpm);
   /* retrieve scaling info */
   double scalar = GetNativeUnitsPerRotationScalar(devToLookup);
   /* apply scalar if its available */
-  if (scalar > 0) retval = (int32_t)(rpm * kMinutesPer100msUnit * scalar);
+  if (scalar > 0) {
+    retval = static_cast<int32_t>(rpm * kMinutesPer100msUnit * scalar);
+  }
   return retval;
 }
 
@@ -1775,11 +1795,11 @@ int32_t CANTalon::ScaleVelocityToNativeUnits(FeedbackDevice devToLookup,
 double CANTalon::ScaleNativeUnitsToRotations(FeedbackDevice devToLookup,
                                              int32_t nativePos) const {
   /* first assume we don't have config info, prep the default return */
-  double retval = (double)nativePos;
+  double retval = static_cast<double>(nativePos);
   /* retrieve scaling info */
   double scalar = GetNativeUnitsPerRotationScalar(devToLookup);
   /* apply scalar if its available */
-  if (scalar > 0) retval = ((double)nativePos) / scalar;
+  if (scalar > 0) retval = static_cast<double>(nativePos) / scalar;
   return retval;
 }
 
@@ -1796,12 +1816,12 @@ double CANTalon::ScaleNativeUnitsToRotations(FeedbackDevice devToLookup,
 double CANTalon::ScaleNativeUnitsToRpm(FeedbackDevice devToLookup,
                                        int32_t nativeVel) const {
   /* first assume we don't have config info, prep the default return */
-  double retval = (double)nativeVel;
+  double retval = static_cast<double>(nativeVel);
   /* retrieve scaling info */
   double scalar = GetNativeUnitsPerRotationScalar(devToLookup);
   /* apply scalar if its available */
   if (scalar > 0)
-    retval = (double)(nativeVel) / (scalar * kMinutesPer100msUnit);
+    retval = static_cast<double>(nativeVel) / (scalar * kMinutesPer100msUnit);
   return retval;
 }
 
@@ -1965,7 +1985,7 @@ void CANTalon::GetMotionProfileStatus(
       0; /* this signal is only used sending pts to Talon */
 
   if (status != CTR_OKAY) {
-    wpi_setErrorWithContext(status, getHALErrorMessage(status));
+    wpi_setErrorWithContext(status, HAL_GetErrorMessage(status));
   }
 }
 

@@ -10,13 +10,18 @@
 #include <stdint.h>
 
 #include "ChipObject.h"
-#include "HAL/Port.h"
-#include "HAL/cpp/Resource.h"
+#include "HAL/AnalogTrigger.h"
+#include "HAL/Ports.h"
+#include "HAL/Types.h"
+#include "HAL/handles/DigitalHandleResource.h"
+#include "HAL/handles/HandlesInternal.h"
+#include "PortsInternal.h"
 
 namespace hal {
-constexpr uint32_t kNumHeaders = 10;  // Number of non-MXP pins
-constexpr uint32_t kDigitalPins = 26;
-constexpr uint32_t kPwmPins = 20;
+/**
+ * MXP channels when used as digital output PWM are offset from actual value
+ */
+constexpr uint32_t kMXPDigitalPWMOffset = 6;
 
 constexpr uint32_t kExpectedLoopTiming = 40;
 
@@ -52,22 +57,31 @@ constexpr int32_t kPwmDisabled = 0;
 // Create a mutex to protect changes to the DO PWM config
 extern priority_recursive_mutex digitalPwmMutex;
 
-extern tDIO* digitalSystem;
-extern tRelay* relaySystem;
-extern tPWM* pwmSystem;
-extern hal::Resource* DIOChannels;
-extern hal::Resource* DO_PWMGenerators;
-extern hal::Resource* PWMChannels;
+extern std::unique_ptr<tDIO> digitalSystem;
+extern std::unique_ptr<tRelay> relaySystem;
+extern std::unique_ptr<tPWM> pwmSystem;
 
 extern bool digitalSystemsInitialized;
 
 struct DigitalPort {
-  Port port;
-  uint32_t PWMGeneratorID;
+  uint8_t channel;
+  bool configSet = false;
+  bool eliminateDeadband = false;
+  int32_t maxPwm = 0;
+  int32_t deadbandMaxPwm = 0;
+  int32_t centerPwm = 0;
+  int32_t deadbandMinPwm = 0;
+  int32_t minPwm = 0;
 };
 
+extern DigitalHandleResource<HAL_DigitalHandle, DigitalPort,
+                             kNumDigitalChannels + kNumPWMHeaders>
+    digitalChannelHandles;
+
 void initializeDigital(int32_t* status);
-void remapDigitalSource(bool analogTrigger, uint32_t& pin, uint8_t& module);
-uint32_t remapMXPPWMChannel(uint32_t pin);
-uint32_t remapMXPChannel(uint32_t pin);
-}
+bool remapDigitalSource(HAL_Handle digitalSourceHandle,
+                        HAL_AnalogTriggerType analogTriggerType,
+                        uint8_t& channel, uint8_t& module, bool& analogTrigger);
+int32_t remapMXPPWMChannel(int32_t channel);
+int32_t remapMXPChannel(int32_t channel);
+}  // namespace hal

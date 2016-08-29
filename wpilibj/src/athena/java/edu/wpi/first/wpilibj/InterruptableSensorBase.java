@@ -9,7 +9,7 @@ package edu.wpi.first.wpilibj;
 
 import edu.wpi.first.wpilibj.hal.InterruptJNI;
 import edu.wpi.first.wpilibj.util.AllocationException;
-import edu.wpi.first.wpilibj.util.CheckedAllocationException;
+
 
 /**
  * Base for sensors to be used with interrupts.
@@ -23,18 +23,7 @@ public abstract class InterruptableSensorBase extends SensorBase {
     @SuppressWarnings("MemberName")
     public final int value;
 
-    @SuppressWarnings("JavadocMethod")
-    public static WaitResult valueOf(int value) {
-      for (WaitResult mode : values()) {
-        if (mode.value == value) {
-          return mode;
-        }
-      }
-      return null;
-    }
-
-
-    WaitResult(int value) {
+    private WaitResult(int value) {
       this.value = value;
     }
   }
@@ -42,21 +31,12 @@ public abstract class InterruptableSensorBase extends SensorBase {
   /**
    * The interrupt resource.
    */
-  protected long m_interrupt = 0;
+  protected int m_interrupt = InterruptJNI.HalInvalidHandle;
 
   /**
    * Flags if the interrupt being allocated is synchronous.
    */
   protected boolean m_isSynchronousInterrupt = false;
-
-  /**
-   * The index of the interrupt.
-   */
-  protected int m_interruptIndex;
-  /**
-   * Resource manager.
-   */
-  protected static Resource m_interrupts = new Resource(8);
 
   /**
    * Create a new InterrupatableSensorBase.
@@ -70,21 +50,14 @@ public abstract class InterruptableSensorBase extends SensorBase {
    *
    * @return true if this is an analog trigger.
    */
-  abstract boolean getAnalogTriggerForRouting();
+  public abstract int getAnalogTriggerTypeForRouting();
 
   /**
    * The channel routing number.
    *
    * @return channel routing number
    */
-  abstract int getChannelForRouting();
-
-  /**
-   * The modules routing number.
-   *
-   * @return module routing number
-   */
-  abstract byte getModuleForRouting();
+  public abstract int getPortHandleForRouting();
 
   /**
    * Request one of the 8 interrupts asynchronously on this digital input.
@@ -104,8 +77,8 @@ public abstract class InterruptableSensorBase extends SensorBase {
 
     assert (m_interrupt != 0);
 
-    InterruptJNI.requestInterrupts(m_interrupt, getModuleForRouting(), getChannelForRouting(),
-        getAnalogTriggerForRouting());
+    InterruptJNI.requestInterrupts(m_interrupt, getPortHandleForRouting(),
+                                   getAnalogTriggerTypeForRouting());
     setUpSourceEdge(true, false);
     InterruptJNI.attachInterruptHandler(m_interrupt, handler.m_function,
         handler.overridableParameter());
@@ -125,8 +98,8 @@ public abstract class InterruptableSensorBase extends SensorBase {
 
     assert (m_interrupt != 0);
 
-    InterruptJNI.requestInterrupts(m_interrupt, getModuleForRouting(), getChannelForRouting(),
-        getAnalogTriggerForRouting());
+    InterruptJNI.requestInterrupts(m_interrupt, getPortHandleForRouting(),
+                                   getAnalogTriggerTypeForRouting());
     setUpSourceEdge(true, false);
 
   }
@@ -138,15 +111,9 @@ public abstract class InterruptableSensorBase extends SensorBase {
    *                have to explicitly wait for the interrupt to occur.
    */
   protected void allocateInterrupts(boolean watcher) {
-    try {
-      m_interruptIndex = m_interrupts.allocate();
-    } catch (CheckedAllocationException ex) {
-      throw new AllocationException("No interrupts are left to be allocated");
-    }
     m_isSynchronousInterrupt = watcher;
 
-    m_interrupt =
-        InterruptJNI.initializeInterrupts(m_interruptIndex, watcher);
+    m_interrupt = InterruptJNI.initializeInterrupts(watcher);
   }
 
   /**
@@ -159,7 +126,6 @@ public abstract class InterruptableSensorBase extends SensorBase {
     }
     InterruptJNI.cleanInterrupts(m_interrupt);
     m_interrupt = 0;
-    m_interrupts.free(m_interruptIndex);
   }
 
   /**
@@ -176,7 +142,12 @@ public abstract class InterruptableSensorBase extends SensorBase {
     }
     int result = InterruptJNI.waitForInterrupt(m_interrupt, timeout, ignorePrevious);
 
-    return WaitResult.valueOf(result);
+    for (WaitResult mode : WaitResult.values()) {
+      if (mode.value == result) {
+        return mode;
+      }
+    }
+    return null;
   }
 
   /**
@@ -228,7 +199,7 @@ public abstract class InterruptableSensorBase extends SensorBase {
     if (m_interrupt == 0) {
       throw new IllegalStateException("The interrupt is not allocated.");
     }
-    return InterruptJNI.readRisingTimestamp(m_interrupt);
+    return InterruptJNI.readInterruptRisingTimestamp(m_interrupt);
   }
 
   /**
@@ -242,7 +213,7 @@ public abstract class InterruptableSensorBase extends SensorBase {
     if (m_interrupt == 0) {
       throw new IllegalStateException("The interrupt is not allocated.");
     }
-    return InterruptJNI.readFallingTimestamp(m_interrupt);
+    return InterruptJNI.readInterruptFallingTimestamp(m_interrupt);
   }
 
   /**

@@ -7,8 +7,6 @@
 
 #include "Timer.h"
 
-#include <time.h>
-
 #include "Utility.h"
 #include "simulation/simTime.h"
 
@@ -26,7 +24,7 @@ void time_callback(const msgs::ConstFloat64Ptr& msg) {
   time_wait.notify_all();
 }
 }
-}
+}  // namespace wpilib
 
 /**
  * Pause the task for a specified time.
@@ -88,7 +86,7 @@ Timer::Timer() : m_startTime(0.0), m_accumulatedTime(0.0), m_running(false) {
  * start time stored in the timer class. If the clock is not running, then
  * return the time when it was last stopped.
  *
- * @return unsigned Current time value for this timer in seconds
+ * @return Current time value for this timer in seconds
  */
 double Timer::Get() const {
   double result;
@@ -186,9 +184,3 @@ double Timer::GetFPGATimestamp() {
  * Not in a match.
  */
 double Timer::GetMatchTime() { return Timer::GetFPGATimestamp(); }
-
-// Internal function that reads the PPC timestamp counter.
-extern "C" {
-uint32_t niTimestamp32(void);
-uint64_t niTimestamp64(void);
-}
